@@ -1,10 +1,15 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { PdvProvider } from "@/context/PdvContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import WelcomeScreen from "./pages/WelcomeScreen";
+import StartScreen from "./pages/StartScreen";
+import ScanScreen from "./pages/ScanScreen";
 
 const queryClient = new QueryClient();
 
@@ -13,13 +18,17 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <PdvProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/welcome" element={<WelcomeScreen />} />
+            <Route path="/start" element={<StartScreen />} />
+            <Route path="/scan" element={<ScanScreen />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </PdvProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
