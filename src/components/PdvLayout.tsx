@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -32,7 +33,7 @@ const PdvLayout = ({
         </div>}
 
       <div className="mt-4 text-center text-gray-500 text-sm">
-        Simulador PDV Self-Checkout
+        <span className="text-dotz-laranja">RLIINFO</span>
       </div>
     </div>;
 };
