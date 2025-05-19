@@ -3,14 +3,34 @@ import PdvLayout from "@/components/PdvLayout";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { useState } from "react";
 
 const StartScreen = () => {
   const navigate = useNavigate();
+  const [showDialog, setShowDialog] = useState(true);
 
   const handleContinue = () => {
     // Simular preparação de sessão para leitura de produtos
     console.log('API Call: POST /api/sessions/customer/identify - Sessão pronta para leitura de produtos');
+    console.log('Cliente optou por não participar do programa de fidelidade');
     navigate('/scan');
+  };
+
+  const handleYes = () => {
+    console.log('Cliente optou por participar do programa de fidelidade');
+    navigate('/cpf');
+  };
+
+  const handleNo = () => {
+    setShowDialog(false);
+    console.log('Cliente optou por não participar do programa de fidelidade');
   };
 
   return (
@@ -22,6 +42,36 @@ const StartScreen = () => {
         description: "Este endpoint identifica o cliente (opcional) e prepara a sessão para leitura de produtos."
       }}
     >
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center mb-4">
+              <div className="flex items-center justify-center mb-4">
+                <div className="bg-red-600 rounded-full p-3">
+                  <span className="text-white text-xl font-bold">A+</span>
+                </div>
+              </div>
+              <span className="text-xl">Deseja participar do<br />Cliente A + Dotz?</span>
+            </DialogTitle>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-center gap-4">
+            <Button 
+              variant="outline" 
+              onClick={handleNo}
+              className="w-28 bg-gray-200 hover:bg-gray-300 text-gray-800 border-none"
+            >
+              Não
+            </Button>
+            <Button 
+              onClick={handleYes}
+              className="w-28 bg-red-600 hover:bg-red-700 text-white"
+            >
+              Sim
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="space-y-8 flex flex-col items-center">
         <div className="mb-4 p-6 bg-blue-50 rounded-full">
           <svg 

@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import WelcomeScreen from "./pages/WelcomeScreen";
 import StartScreen from "./pages/StartScreen";
 import ScanScreen from "./pages/ScanScreen";
+import CpfScreen from "./pages/CpfScreen";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/welcome" element={<WelcomeScreen />} />
             <Route path="/start" element={<StartScreen />} />
+            <Route path="/cpf" element={<CpfScreen />} />
             <Route path="/scan" element={<ScanScreen />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
