@@ -20,8 +20,8 @@ const Index = () => {
         </CardHeader>
         
         <CardContent className="space-y-6">
-          <div className="p-4 bg-blue-50 rounded-md border border-blue-200">
-            <h2 className="font-semibold mb-2 text-blue-700">Sobre esta simulação</h2>
+          <div className="p-4 bg-dotz-offwhite rounded-md border border-dotz-pessego">
+            <h2 className="font-semibold mb-2 text-dotz-laranja">Sobre esta simulação</h2>
             <p>
               Este simulador demonstra o fluxo de atendimento em um PDV self-checkout 
               e as chamadas à API necessárias para integração. Cada tela destaca os 
@@ -42,7 +42,7 @@ const Index = () => {
             <PdvProvider>
               <Button 
                 size="lg" 
-                className="px-8 py-6 text-lg bg-blue-600 hover:bg-blue-700"
+                className="px-8 py-6 text-lg bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
                 onClick={() => navigate('/welcome')}
               >
                 Iniciar Simulação

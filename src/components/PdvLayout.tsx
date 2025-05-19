@@ -21,12 +21,12 @@ const PdvLayout = ({ children, className, apiCall }: PdvLayoutProps) => {
       </Card>
       
       {apiCall && (
-        <div className="mt-8 w-full max-w-3xl bg-white p-4 rounded-md shadow border-l-4 border-blue-500">
+        <div className="mt-8 w-full max-w-3xl bg-white p-4 rounded-md shadow border-l-4 border-dotz-laranja">
           <h3 className="text-lg font-semibold mb-2">API Call</h3>
           <div className="bg-gray-50 p-3 rounded font-mono text-sm">
             <div className="flex gap-2">
               <span className="text-green-600 font-bold">{apiCall.method}</span>
-              <span className="text-blue-600">{apiCall.endpoint}</span>
+              <span className="text-dotz-laranja">{apiCall.endpoint}</span>
             </div>
             <p className="mt-2 text-gray-600">{apiCall.description}</p>
           </div>

@@ -18,14 +18,14 @@ const NotFound = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-md">
-        <h1 className="text-4xl font-bold mb-4 text-blue-600">404</h1>
+        <h1 className="text-4xl font-bold mb-4 text-dotz-laranja">404</h1>
         <p className="text-xl text-gray-600 mb-6">Oops! Página não encontrada</p>
         <p className="mb-6 text-gray-500">
           A página que você está procurando não existe ou foi movida.
         </p>
         <Button 
           onClick={() => navigate('/')}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-dotz-laranja hover:bg-dotz-laranja/90"
         >
           Voltar para o Início
         </Button>

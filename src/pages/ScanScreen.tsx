@@ -72,7 +72,7 @@ const ScanScreen = () => {
         <Button 
           onClick={handleScan} 
           disabled={scanning || !barcode}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-dotz-laranja hover:bg-dotz-laranja/90"
         >
           Ler
         </Button>
@@ -130,7 +130,7 @@ const ScanScreen = () => {
           <Button 
             size="lg" 
             disabled={cart.length === 0}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-dotz-laranja hover:bg-dotz-laranja/90"
           >
             Finalizar compra
           </Button>

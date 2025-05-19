@@ -23,8 +23,8 @@ const WelcomeScreen = () => {
       }}
     >
       <div className="space-y-8 flex flex-col items-center">
-        <div className="p-6 bg-blue-50 rounded-full">
-          <Barcode className="w-24 h-24 text-blue-500" strokeWidth={1.5} />
+        <div className="p-6 bg-dotz-offwhite rounded-full">
+          <Barcode className="w-24 h-24 text-dotz-laranja" strokeWidth={1.5} />
         </div>
         
         <div className="space-y-4">
@@ -37,7 +37,7 @@ const WelcomeScreen = () => {
         <Button 
           onClick={handleStart} 
           size="lg" 
-          className="mt-8 px-6 py-6 text-lg bg-blue-600 hover:bg-blue-700"
+          className="mt-8 px-6 py-6 text-lg bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
         >
           INICIAR COMPRA <ArrowRight className="ml-2" />
         </Button>
