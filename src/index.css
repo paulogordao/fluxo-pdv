@@ -14,10 +14,12 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    /* Primary color - Dotz Orange */
+    --primary: 16 100% 53%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
+    /* Secondary color - Amarelo Solar */
+    --secondary: 47 99% 55%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
@@ -31,13 +33,9 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 16 100% 53%;
 
-    --radius: 0.5rem;
-
-    --pdv-primary: 210 100% 50%;
-    --pdv-secondary: 200 98% 39%;
-    --pdv-accent: 199 89% 48%;
+    --radius: 0.75rem; /* Rounded corners like in the reference */
   }
 
   .dark {
@@ -50,10 +48,10 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
+    --primary: 16 100% 53%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 47 99% 55%;
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217.2 32.6% 17.5%;
@@ -79,5 +77,15 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Arial', sans-serif; /* Fallback to Arial, since Factor A might not be available */
+  }
+
+  /* Add more Dotz brand styling */
+  .dotz-gradient {
+    @apply bg-gradient-to-r from-dotz-laranja to-dotz-amarelo-solar;
+  }
+
+  .dotz-logo {
+    @apply text-dotz-laranja font-bold;
   }
 }

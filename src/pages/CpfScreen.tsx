@@ -63,7 +63,7 @@ const CpfScreen = () => {
             return (
               <Button
                 key={key}
-                className="h-16 bg-red-600 hover:bg-red-700 text-white"
+                className="h-16 bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
                 disabled={cpf.length !== 11}
                 onClick={handleSubmit}
               >

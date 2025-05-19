@@ -47,7 +47,7 @@ const StartScreen = () => {
           <DialogHeader>
             <DialogTitle className="text-center mb-4">
               <div className="flex items-center justify-center mb-4">
-                <div className="bg-red-600 rounded-full p-3">
+                <div className="bg-dotz-laranja rounded-full p-3">
                   <span className="text-white text-xl font-bold">A+</span>
                 </div>
               </div>
@@ -64,7 +64,7 @@ const StartScreen = () => {
             </Button>
             <Button 
               onClick={handleYes}
-              className="w-28 bg-red-600 hover:bg-red-700 text-white"
+              className="w-28 bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
             >
               Sim
             </Button>
@@ -73,9 +73,9 @@ const StartScreen = () => {
       </Dialog>
 
       <div className="space-y-8 flex flex-col items-center">
-        <div className="mb-4 p-6 bg-blue-50 rounded-full">
+        <div className="mb-4 p-6 bg-dotz-offwhite rounded-full">
           <svg 
-            className="w-24 h-24 text-blue-500" 
+            className="w-24 h-24 text-dotz-laranja" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24" 
@@ -115,7 +115,7 @@ const StartScreen = () => {
           
           <Button
             size="lg"
-            className="h-24 text-lg bg-blue-600 hover:bg-blue-700"
+            className="h-24 text-lg bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
             onClick={handleContinue}
           >
             <span>Continuar para produtos</span>

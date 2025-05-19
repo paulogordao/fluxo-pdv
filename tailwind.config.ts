@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,20 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Dotz brand colors
+				dotz: {
+					'laranja': '#FF4F0E',  // Laranja Dotz (FF4F0E)
+					'laranja-medio': '#FF9670', // Laranja Médio
+					'pessego': '#FFC3AD', // Pêssego
+					'amarelo-solar': '#FEC114', // Amarelo Solar
+					'amarelo-medio': '#FED971', // Amarelo Médio
+					'manteiga': '#FFE9AE', // Manteiga
+					'preto': '#000000', // Preto
+					'cinza-medio': '#878787', // Cinza Médio
+					'cinza-claro': '#EBEBEB', // Cinza Claro
+					'offwhite': '#FDF6F2', // Offwhite
+					'branco': '#FFFFFF', // Branco
 				}
 			},
 			borderRadius: {
@@ -89,6 +104,9 @@ export default {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out'
+			},
+			fontFamily: {
+				'factor-a': ['Factor A', 'sans-serif'], // The Dotz brand font from the reference
 			}
 		}
 	},
