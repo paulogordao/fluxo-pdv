@@ -28,9 +28,9 @@ const WelcomeScreen = () => {
         </div>
         
         <div className="space-y-4">
-          <h1 className="text-3xl font-bold">Bem-vindo ao Self-Checkout</h1>
+          <h1 className="text-3xl font-bold">Escanei seus produtos para iniciar</h1>
           <p className="text-gray-500 text-lg">
-            Toque na tela para começar
+            ou toque no botão abaixo
           </p>
         </div>
         
