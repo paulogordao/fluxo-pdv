@@ -39,7 +39,7 @@ const WelcomeScreen = () => {
           size="lg" 
           className="mt-8 px-6 py-6 text-lg bg-blue-600 hover:bg-blue-700"
         >
-          Iniciar Atendimento <ArrowRight className="ml-2" />
+          INICIAR COMPRA <ArrowRight className="ml-2" />
         </Button>
         
         <div className="mt-12 text-sm text-gray-400 border-t border-gray-200 pt-6 w-full">
