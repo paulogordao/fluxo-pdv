@@ -40,7 +40,7 @@ const TechnicalDocumentation = ({
       {/* Response Collapsible */}
       <Collapsible open={isResponseOpen} onOpenChange={setIsResponseOpen} className="border border-gray-200 rounded-md shadow overflow-hidden">
         <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
-          <span>🔻 Response do serviço anterior (RLIPAYS)</span>
+          <span>🔻 Response do serviço anterior (RLIDEAL)</span>
           {isResponseOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </CollapsibleTrigger>
         <CollapsibleContent>
