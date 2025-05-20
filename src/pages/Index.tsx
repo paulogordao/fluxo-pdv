@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PdvProvider } from "@/context/PdvContext";
@@ -23,8 +24,14 @@ const Index = () => {
             <h2 className="font-semibold mb-2">Fluxo demonstrado</h2>
             <ol className="list-decimal list-inside space-y-2 ml-2">
               <li>Tela de boas-vindas ao PDV</li>
-              <li>Tela de início de atendimento</li>
-              <li>Tela de leitura de produto</li>
+              <li>Tela de início da compra</li>
+              <li>Questionamento se cliente quer participar do programa</li>
+              <li>Tela de identificação do cliente</li>
+              <li>Tela de captura de celular</li>
+              <li>Tela de pagamento</li>
+              <li>Tela de tipos de pagamento</li>
+              <li>Telas de confirmação de pagamento</li>
+              <li>Tela de finalização de compra</li>
             </ol>
           </div>
           
