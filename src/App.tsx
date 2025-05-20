@@ -14,6 +14,7 @@ import CpfScreen from "./pages/CpfScreen";
 import TelefoneScreen from "./pages/TelefoneScreen";
 import TransicaoCadastroScreen from "./pages/TransicaoCadastroScreen";
 import InteressePagamentoScreen from "./pages/InteressePagamentoScreen";
+import MeiosDePagamentoScreen from "./pages/MeiosDePagamentoScreen";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/transicao-cadastro" element={<TransicaoCadastroScreen />} />
             <Route path="/scan" element={<ScanScreen />} />
             <Route path="/interesse_pagamento" element={<InteressePagamentoScreen />} />
+            <Route path="/meios_de_pagamento" element={<MeiosDePagamentoScreen />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

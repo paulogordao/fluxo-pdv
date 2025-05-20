@@ -13,6 +13,11 @@ const InteressePagamentoScreen = () => {
     setOpen(false);
     navigate("/scan");
   };
+  
+  const handleUsePoints = () => {
+    setOpen(false);
+    navigate("/meios_de_pagamento");
+  };
 
   return (
     <>
@@ -49,7 +54,7 @@ const InteressePagamentoScreen = () => {
               
               <Button
                 className="min-w-[120px] bg-dotz-laranja hover:bg-dotz-laranja/90"
-                onClick={handleClose}
+                onClick={handleUsePoints}
               >
                 Sim, quero usar!
               </Button>
