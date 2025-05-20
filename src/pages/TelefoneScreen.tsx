@@ -57,7 +57,8 @@ const TelefoneScreen = () => {
 
   const handleSubmit = () => {
     console.log(`Celular informado: ${formatTelefone(telefone)}`);
-    navigate("/scan");
+    // Updated to redirect to the transition screen instead of directly to scan
+    navigate("/transicao-cadastro");
   };
 
   const handleSkip = () => {
