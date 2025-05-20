@@ -1,8 +1,6 @@
-
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-
 interface PdvLayoutProps {
   children: React.ReactNode;
   className?: string;
@@ -12,7 +10,6 @@ interface PdvLayoutProps {
     description: string;
   };
 }
-
 const PdvLayout = ({
   children,
   className
@@ -22,10 +19,7 @@ const PdvLayout = ({
         {children}
       </Card>
 
-      <div className="mt-4 text-center text-gray-500 text-sm">
-        /RLIINFO
-      </div>
+      <div className="mt-4 text-center text-gray-500 text-sm">Simulador PDV - Guia Técnico de Integração</div>
     </div>;
 };
-
 export default PdvLayout;
