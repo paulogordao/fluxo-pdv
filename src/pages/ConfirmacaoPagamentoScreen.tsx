@@ -1,7 +1,9 @@
 
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
+import { useNavigate } from "react-router-dom";
 import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
 import { 
   CreditCard,
@@ -14,6 +16,7 @@ import {
 } from "lucide-react";
 
 const ConfirmacaoPagamentoScreen = () => {
+  const navigate = useNavigate();
   // Technical documentation states
   const [apiData, setApiData] = useState<{
     request_servico?: string | null;
@@ -46,6 +49,10 @@ const ConfirmacaoPagamentoScreen = () => {
     
     fetchApiData();
   }, []);
+
+  const handleRestartFlow = () => {
+    navigate('/welcome');
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
@@ -150,6 +157,17 @@ const ConfirmacaoPagamentoScreen = () => {
             responseData={apiData.response_servico_anterior}
             isLoading={isLoading}
           />
+        </div>
+
+        {/* Restart Flow Button - Added at the bottom of the page */}
+        <div className="flex justify-center mt-8">
+          <Button 
+            variant="secondary" 
+            onClick={handleRestartFlow}
+            className="px-4 py-2 rounded mt-2"
+          >
+            Reiniciar fluxo de atendimento
+          </Button>
         </div>
       </div>
     </div>
