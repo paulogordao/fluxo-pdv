@@ -3,9 +3,15 @@ import PdvLayout from "@/components/PdvLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePdv, Product } from "@/context/PdvContext";
-import { Check, ShoppingCart } from "lucide-react";
+import { Check, ShoppingCart, ChevronDown, ChevronUp } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+
 const ScanScreen = () => {
   const [barcode, setBarcode] = useState("");
   const [scanning, setScanning] = useState(false);
@@ -17,6 +23,68 @@ const ScanScreen = () => {
     totalAmount,
     setInitialCart
   } = usePdv();
+  
+  // API integration states
+  const [apiSlug, setApiSlug] = useState<string | null>(null);
+  const [apiData, setApiData] = useState<{
+    request_servico?: string;
+    response_servico_anterior?: string;
+  }>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRequestOpen, setIsRequestOpen] = useState(false);
+  const [isResponseOpen, setIsResponseOpen] = useState(false);
+  
+  // Fetch initial slug
+  useEffect(() => {
+    const fetchSlug = async () => {
+      try {
+        const url = "https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=32373222884&SLUG=RLIFUND";
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`Error in request: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        if (data && data.SLUG) {
+          setApiSlug(data.SLUG);
+          console.log("API Slug fetched:", data.SLUG);
+        } else {
+          console.error("No SLUG in response:", data);
+        }
+      } catch (error) {
+        console.error("Error fetching slug:", error);
+      }
+    };
+    
+    fetchSlug();
+  }, []);
+  
+  // Fetch API data with the slug
+  useEffect(() => {
+    if (!apiSlug) return;
+    
+    const fetchApiData = async () => {
+      try {
+        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=${apiSlug}`;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`Error in request: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setApiData(data);
+        console.log("API data:", data);
+      } catch (error) {
+        console.error("Error fetching API data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchApiData();
+  }, [apiSlug]);
 
   // Preencher com produtos mockados iniciais ao carregar a tela
   useEffect(() => {
@@ -47,6 +115,7 @@ const ScanScreen = () => {
     // Definir o carrinho inicial com os produtos mockados
     setInitialCart(mockProducts);
   }, [setInitialCart]);
+  
   const handleScan = () => {
     if (!barcode) return;
     setScanning(true);
@@ -66,6 +135,7 @@ const ScanScreen = () => {
       setScanning(false);
     }, 800);
   };
+  
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       handleScan();
@@ -76,6 +146,17 @@ const ScanScreen = () => {
   const formatCurrency = (value: number) => {
     return value.toFixed(2).replace(".", ",");
   };
+  
+  // Format text with proper line breaks and spacing
+  const formatText = (text: string | null | undefined) => {
+    if (!text) return "";
+    
+    // Replace escaped newlines and tabs with actual line breaks and spaces
+    return text
+      .replace(/\\n/g, '\n')
+      .replace(/\\t/g, '  ');
+  };
+  
   return <PdvLayout className="p-0 overflow-hidden" apiCall={{
     endpoint: "/api/products/{barcode}",
     method: "GET",
@@ -175,7 +256,65 @@ const ScanScreen = () => {
         {scanning && <div className="text-center p-4 mb-4 bg-blue-50 rounded-md">
             <div className="animate-pulse">Escaneando...</div>
           </div>}
+          
+        {/* API integration collapsible sections */}
+        <div className="mt-8 space-y-4">
+          {/* Request Collapsible */}
+          <Collapsible
+            open={isRequestOpen}
+            onOpenChange={setIsRequestOpen}
+            className="border border-gray-200 rounded-md shadow overflow-hidden"
+          >
+            <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
+              <span>Request do serviço atual (RLIFUND)</span>
+              {isRequestOpen ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="p-4 bg-white">
+                {isLoading ? (
+                  <div className="p-4 text-center">Carregando...</div>
+                ) : (
+                  <pre className="text-sm font-mono bg-gray-100 p-4 rounded overflow-x-auto whitespace-pre-wrap">
+                    {formatText(apiData.request_servico)}
+                  </pre>
+                )}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* Response Collapsible */}
+          <Collapsible
+            open={isResponseOpen}
+            onOpenChange={setIsResponseOpen}
+            className="border border-gray-200 rounded-md shadow overflow-hidden"
+          >
+            <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
+              <span>Response do serviço anterior (RLICELL)</span>
+              {isResponseOpen ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="p-4 bg-white">
+                {isLoading ? (
+                  <div className="p-4 text-center">Carregando...</div>
+                ) : (
+                  <pre className="text-sm font-mono bg-gray-100 p-4 rounded overflow-x-auto whitespace-pre-wrap">
+                    {formatText(apiData.response_servico_anterior)}
+                  </pre>
+                )}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
       </div>
     </PdvLayout>;
 };
+
 export default ScanScreen;
