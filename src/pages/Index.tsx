@@ -1,19 +1,13 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PdvProvider } from "@/context/PdvContext";
 import { useNavigate } from "react-router-dom";
-
 const Index = () => {
   const navigate = useNavigate();
-
-  return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+  return <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
       <Card className="w-full max-w-3xl">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl">
-            Simulador PDV Self-Checkout
-          </CardTitle>
+          <CardTitle className="text-3xl">Simulador PDV</CardTitle>
           <CardDescription className="text-lg">
             Demonstração técnica para integração com API
           </CardDescription>
@@ -40,11 +34,7 @@ const Index = () => {
           
           <div className="flex justify-center">
             <PdvProvider>
-              <Button 
-                size="lg" 
-                className="px-8 py-6 text-lg bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
-                onClick={() => navigate('/welcome')}
-              >
+              <Button size="lg" className="px-8 py-6 text-lg bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" onClick={() => navigate('/welcome')}>
                 Iniciar Simulação
               </Button>
             </PdvProvider>
@@ -55,8 +45,6 @@ const Index = () => {
       <footer className="mt-8 text-center text-gray-500 text-sm">
         <p>Simulador PDV Self-Checkout - Guia Técnico de Integração</p>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
