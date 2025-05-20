@@ -10,20 +10,11 @@ interface PaymentOptionsResponse {
   SLUG?: string;
 }
 
-interface ApiDataResponse {
-  request_servico?: string;
-  response_servico_anterior?: string;
-}
-
 export const usePaymentOptions = () => {
   const navigate = useNavigate();
   // Payment options state
   const [paymentOptions, setPaymentOptions] = useState<PaymentOptionsResponse>({});
   const [paymentOptionsLoading, setPaymentOptionsLoading] = useState(true);
-  
-  // API integration states for technical documentation
-  const [apiData, setApiData] = useState<ApiDataResponse>({});
-  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch payment options with stored CPF
   useEffect(() => {
@@ -63,37 +54,8 @@ export const usePaymentOptions = () => {
     fetchPaymentOptions();
   }, [navigate]);
 
-  // Fetch API data for technical documentation (fixed SLUG)
-  useEffect(() => {
-    const fetchApiData = async () => {
-      try {
-        const fixedSlug = "RLIFUNDRLIDEAL";
-        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=${fixedSlug}`;
-        console.log("Fetching API details:", url);
-        
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Error in request: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        setApiData(data);
-        console.log("API data:", data);
-      } catch (error) {
-        console.error("Error fetching API data:", error);
-        toast.error("Erro ao carregar detalhes");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchApiData();
-  }, []);
-
   return {
     paymentOptions,
-    paymentOptionsLoading,
-    apiData,
-    isLoading
+    paymentOptionsLoading
   };
 };

@@ -6,15 +6,17 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 interface TechnicalDocumentationProps {
   requestData?: string | null;
   responseData?: string | null;
-  isLoading: boolean;
+  isLoading?: boolean;
   slug?: string;
+  loadOnMount?: boolean;
 }
 
 const TechnicalDocumentation = ({
-  requestData,
-  responseData,
-  isLoading,
-  slug
+  requestData: initialRequestData,
+  responseData: initialResponseData,
+  isLoading: initialIsLoading,
+  slug,
+  loadOnMount = true
 }: TechnicalDocumentationProps) => {
   const [isRequestOpen, setIsRequestOpen] = useState(false);
   const [isResponseOpen, setIsResponseOpen] = useState(false);
@@ -22,7 +24,12 @@ const TechnicalDocumentation = ({
     nome_request_servico: "",
     nome_response_servico: ""
   });
-
+  const [isLoading, setIsLoading] = useState(initialIsLoading || false);
+  const [apiData, setApiData] = useState({
+    request_servico: initialRequestData || "",
+    response_servico_anterior: initialResponseData || ""
+  });
+  
   // Format text with proper line breaks and spacing
   const formatText = (text: string | null | undefined) => {
     if (!text) return "";
@@ -31,12 +38,13 @@ const TechnicalDocumentation = ({
     return text.replace(/\\n/g, '\n').replace(/\\t/g, '  ');
   };
 
-  // Fetch service names if not provided directly
+  // Fetch data when slug is provided or changed
   useEffect(() => {
-    const fetchServiceNames = async () => {
-      // Only fetch if we have a slug
-      if (!slug) return;
-      
+    // Skip if no slug or if we shouldn't load on mount
+    if (!slug || (!loadOnMount && !initialRequestData)) return;
+    
+    const fetchServiceDetails = async () => {
+      setIsLoading(true);
       try {
         const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=${slug}`;
         const response = await fetch(url);
@@ -52,18 +60,25 @@ const TechnicalDocumentation = ({
           nome_response_servico: data.nome_response_servico || "Desconhecido"
         });
         
-        console.log("Service names fetched:", data);
+        setApiData({
+          request_servico: data.request_servico || "",
+          response_servico_anterior: data.response_servico_anterior || ""
+        });
+        
+        console.log("Service data fetched:", data);
       } catch (error) {
-        console.error("Error fetching service names:", error);
+        console.error("Error fetching service details:", error);
         setServiceNames({
           nome_request_servico: "Desconhecido",
           nome_response_servico: "Desconhecido"
         });
+      } finally {
+        setIsLoading(false);
       }
     };
     
-    fetchServiceNames();
-  }, [slug]);
+    fetchServiceDetails();
+  }, [slug, loadOnMount, initialRequestData]);
 
   return (
     <div className="mt-8 space-y-4">
@@ -76,7 +91,7 @@ const TechnicalDocumentation = ({
         <CollapsibleContent>
           <div className="p-4 bg-white">
             {isLoading ? <div className="p-4 text-center">Carregando...</div> : <pre className="text-sm font-mono bg-gray-100 p-4 rounded overflow-x-auto whitespace-pre-wrap">
-                {formatText(requestData)}
+                {formatText(apiData.request_servico)}
               </pre>}
           </div>
         </CollapsibleContent>
@@ -91,7 +106,7 @@ const TechnicalDocumentation = ({
         <CollapsibleContent>
           <div className="p-4 bg-white">
             {isLoading ? <div className="p-4 text-center">Carregando...</div> : <pre className="text-sm font-mono bg-gray-100 p-4 rounded overflow-x-auto whitespace-pre-wrap">
-                {formatText(responseData)}
+                {formatText(apiData.response_servico_anterior)}
               </pre>}
           </div>
         </CollapsibleContent>

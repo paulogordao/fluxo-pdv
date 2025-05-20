@@ -11,15 +11,25 @@ const MeiosDePagamentoScreen = () => {
   const [selectedOption, setSelectedOption] = useState("app");
   const navigate = useNavigate();
   
-  const { paymentOptions, paymentOptionsLoading, apiData, isLoading } = usePaymentOptions();
+  // For loading technical documentation only when option 1 is selected
+  const [loadDocumentation, setLoadDocumentation] = useState(false);
+  const [documentationSlug, setDocumentationSlug] = useState("");
+  
+  const { paymentOptions, paymentOptionsLoading } = usePaymentOptions();
   
   // Handle option selection
   const handleOptionSelect = (option: string) => {
     setSelectedOption(option);
     
-    // If "app" option is selected, navigate to the confirmation page
+    // If "app" option is selected, load technical documentation and navigate
     if (option === "app") {
+      setLoadDocumentation(true);
+      setDocumentationSlug("RLIFUNDRLIDEAL");
       navigate('/confirmacao_pagamento_app');
+    } else {
+      // Don't load documentation for other options
+      setLoadDocumentation(false);
+      setDocumentationSlug("");
     }
   };
 
@@ -81,13 +91,13 @@ const MeiosDePagamentoScreen = () => {
             </div>
           </div>
           
-          {/* Technical documentation section */}
-          <TechnicalDocumentation
-            requestData={apiData.request_servico}
-            responseData={apiData.response_servico_anterior}
-            isLoading={isLoading}
-            slug="RLIDEALRLIWAIT"
-          />
+          {/* Technical documentation section - Only render when loadDocumentation is true */}
+          {loadDocumentation && documentationSlug && (
+            <TechnicalDocumentation 
+              slug={documentationSlug} 
+              loadOnMount={false} 
+            />
+          )}
         </CardContent>
       </Card>
     </PdvLayout>
