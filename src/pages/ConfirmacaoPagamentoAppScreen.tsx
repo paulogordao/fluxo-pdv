@@ -4,9 +4,11 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
+import { useNavigate } from "react-router-dom";
 import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
 
 const ConfirmacaoPagamentoAppScreen = () => {
+  const navigate = useNavigate();
   // Technical documentation states
   const [apiData, setApiData] = useState<{
     request_servico?: string | null;
@@ -39,6 +41,10 @@ const ConfirmacaoPagamentoAppScreen = () => {
     
     fetchApiData();
   }, []);
+
+  const handlePaymentConfirmation = () => {
+    navigate("/confirmacao_pagamento");
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
@@ -152,6 +158,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
                 {/* Pay Button */}
                 <Button 
                   className="w-full bg-dotz-laranja hover:bg-dotz-laranja/90 text-white font-medium rounded-full py-6"
+                  onClick={handlePaymentConfirmation}
                 >
                   Pagar
                 </Button>
