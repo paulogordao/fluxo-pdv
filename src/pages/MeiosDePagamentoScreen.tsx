@@ -13,7 +13,6 @@ const MeiosDePagamentoScreen = () => {
   const navigate = useNavigate();
   
   // API integration states
-  const [apiSlug, setApiSlug] = useState<string | null>(null);
   const [apiData, setApiData] = useState<{
     request_servico?: string;
     response_servico_anterior?: string;
@@ -22,11 +21,11 @@ const MeiosDePagamentoScreen = () => {
   const [isRequestOpen, setIsRequestOpen] = useState(false);
   const [isResponseOpen, setIsResponseOpen] = useState(false);
 
-  // Fetch initial slug with stored CPF
+  // Fetch API data with fixed SLUG
   useEffect(() => {
-    const fetchSlug = async () => {
+    const fetchApiData = async () => {
       try {
-        // Get stored CPF from localStorage
+        // Get stored CPF from localStorage (still needed for logging/context)
         const cpf = localStorage.getItem('cpfDigitado');
         
         // Fallback if CPF is not available
@@ -37,38 +36,9 @@ const MeiosDePagamentoScreen = () => {
           return;
         }
         
-        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=${cpf}&SLUG=RLFUND`;
-        console.log("Fetching payment options data:", url);
-        
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Error in request: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        if (data && data.SLUG) {
-          setApiSlug(data.SLUG);
-          console.log("API Slug fetched:", data.SLUG);
-        } else {
-          console.error("No SLUG in response:", data);
-          toast.error("Erro ao carregar dados");
-        }
-      } catch (error) {
-        console.error("Error fetching slug:", error);
-        toast.error("Erro na comunicação com o servidor");
-      }
-    };
-    
-    fetchSlug();
-  }, [navigate]);
-  
-  // Fetch API data with the slug
-  useEffect(() => {
-    if (!apiSlug) return;
-    
-    const fetchApiData = async () => {
-      try {
-        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=${apiSlug}`;
+        // Use the fixed SLUG directly
+        const fixedSlug = "RLIFUNDRLIDEAL";
+        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=${fixedSlug}`;
         console.log("Fetching API details:", url);
         
         const response = await fetch(url);
@@ -88,7 +58,7 @@ const MeiosDePagamentoScreen = () => {
     };
     
     fetchApiData();
-  }, [apiSlug]);
+  }, [navigate]);
 
   // Format text with proper line breaks and spacing
   const formatText = (text: string | null | undefined) => {
@@ -183,7 +153,7 @@ const MeiosDePagamentoScreen = () => {
               className="border border-gray-200 rounded-md shadow overflow-hidden"
             >
               <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
-                <span>🔻 Request do serviço atual (RLFUND)</span>
+                <span>🔻 Request do serviço atual (RLIDEAL)</span>
                 {isRequestOpen ? (
                   <ChevronUp className="h-4 w-4" />
                 ) : (
@@ -210,7 +180,7 @@ const MeiosDePagamentoScreen = () => {
               className="border border-gray-200 rounded-md shadow overflow-hidden"
             >
               <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
-                <span>🔻 Response do serviço anterior (RLIFUND)</span>
+                <span>🔻 Response do serviço anterior (RLFUND)</span>
                 {isResponseOpen ? (
                   <ChevronUp className="h-4 w-4" />
                 ) : (
