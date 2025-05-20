@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { useNavigate } from "react-router-dom";
 import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
+import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
 
 const ConfirmacaoPagamentoAppScreen = () => {
   const navigate = useNavigate();
@@ -176,6 +176,9 @@ const ConfirmacaoPagamentoAppScreen = () => {
           isLoading={isLoading}
         />
       </div>
+
+      {/* Navigation Guide Component */}
+      <GuiaDeNavegacaoAPI />
     </div>
   );
 };

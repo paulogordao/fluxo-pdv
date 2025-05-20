@@ -1,9 +1,9 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import ScanScreen from "./ScanScreen";
+import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
 
 const InteressePagamentoScreen = () => {
   const [open, setOpen] = useState(true);
@@ -62,6 +62,9 @@ const InteressePagamentoScreen = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Navigation Guide Component */}
+      <GuiaDeNavegacaoAPI />
     </>
   );
 };

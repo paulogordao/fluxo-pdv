@@ -1,7 +1,10 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PdvProvider } from "@/context/PdvContext";
 import { useNavigate } from "react-router-dom";
+import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
+
 const Index = () => {
   const navigate = useNavigate();
   return <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
@@ -47,6 +50,9 @@ const Index = () => {
       <footer className="mt-8 text-center text-gray-500 text-sm">
         <p>Simulador PDV - Guia Técnico de Integração</p>
       </footer>
+      
+      {/* Navigation Guide Component */}
+      <GuiaDeNavegacaoAPI />
     </div>;
 };
 export default Index;

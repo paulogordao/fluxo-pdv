@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { useNavigate } from "react-router-dom";
 import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
+import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
 import { 
   CreditCard,
   CreditCard as DebitCard,
@@ -170,6 +170,9 @@ const ConfirmacaoPagamentoScreen = () => {
           </Button>
         </div>
       </div>
+
+      {/* Navigation Guide Component */}
+      <GuiaDeNavegacaoAPI />
     </div>
   );
 };
