@@ -4,6 +4,7 @@ import PdvLayout from "@/components/PdvLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
 import {
   Collapsible,
   CollapsibleContent,
@@ -17,8 +18,6 @@ const TelefoneScreen = () => {
     request_servico?: any;
     response_servico_anterior?: any;
   }>({});
-  const [isRequestOpen, setIsRequestOpen] = useState(false);
-  const [isResponseOpen, setIsResponseOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -174,60 +173,14 @@ const TelefoneScreen = () => {
         </div>
       </Card>
 
-      <div className="mt-8 w-full max-w-3xl space-y-4">
-        {/* Request Collapsible */}
-        <Collapsible
-          open={isRequestOpen}
-          onOpenChange={setIsRequestOpen}
-          className="w-full border border-gray-200 rounded-md shadow overflow-hidden"
-        >
-          <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
-            <span>Request do serviço atual (RLICELL)</span>
-            {isRequestOpen ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="p-4 bg-white">
-              {isLoading ? (
-                <div className="p-4 text-center">Carregando...</div>
-              ) : (
-                <pre className="text-sm font-mono bg-gray-100 p-4 rounded overflow-x-auto whitespace-pre-wrap">
-                  {formatText(apiData.request_servico)}
-                </pre>
-              )}
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-
-        {/* Response Collapsible */}
-        <Collapsible
-          open={isResponseOpen}
-          onOpenChange={setIsResponseOpen}
-          className="w-full border border-gray-200 rounded-md shadow overflow-hidden"
-        >
-          <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
-            <span>Response do serviço anterior (RLIINFO)</span>
-            {isResponseOpen ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="p-4 bg-white">
-              {isLoading ? (
-                <div className="p-4 text-center">Carregando...</div>
-              ) : (
-                <pre className="text-sm font-mono bg-gray-100 p-4 rounded overflow-x-auto whitespace-pre-wrap">
-                  {formatText(apiData.response_servico_anterior)}
-                </pre>
-              )}
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+      <div className="mt-8 w-full max-w-3xl">
+        {/* Technical documentation */}
+        <TechnicalDocumentation
+          requestData={apiData.request_servico}
+          responseData={apiData.response_servico_anterior}
+          isLoading={isLoading}
+          slug="RLIINFORLICELL"
+        />
       </div>
     </PdvLayout>
   );

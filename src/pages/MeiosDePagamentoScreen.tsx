@@ -86,6 +86,7 @@ const MeiosDePagamentoScreen = () => {
             requestData={apiData.request_servico}
             responseData={apiData.response_servico_anterior}
             isLoading={isLoading}
+            slug="RLIDEALRLIWAIT"
           />
         </CardContent>
       </Card>

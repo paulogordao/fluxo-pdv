@@ -174,6 +174,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
           requestData={apiData.request_servico} 
           responseData={apiData.response_servico_anterior}
           isLoading={isLoading}
+          slug="RLIDEALRLIWAIT"
         />
       </div>
 
