@@ -47,7 +47,7 @@ const MeiosDePagamentoScreen = () => {
           return;
         }
         
-        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=${cpf}&SLUG=RLIFUND`;
+        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=${cpf}&SLUG=RLFUND`;
         console.log("Fetching payment options data:", url);
         
         const response = await fetch(url);
@@ -109,6 +109,11 @@ const MeiosDePagamentoScreen = () => {
   // Handle option selection
   const handleOptionSelect = (option: string) => {
     setSelectedOption(option);
+    
+    // If "app" option is selected, navigate to the confirmation page
+    if (option === "app") {
+      navigate('/confirmacao_pagamento_app');
+    }
   };
 
   return (
