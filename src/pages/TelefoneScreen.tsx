@@ -79,6 +79,15 @@ const TelefoneScreen = () => {
     return value;
   };
 
+  const formatText = (text: string | null | undefined) => {
+    if (!text) return "";
+    
+    // Replace escaped newlines and tabs with actual line breaks and spaces
+    return text
+      .replace(/\\n/g, '\n')
+      .replace(/\\t/g, '  ');
+  };
+
   const NumPad = () => {
     const keys = [
       ["7", "8", "9"],
@@ -174,8 +183,8 @@ const TelefoneScreen = () => {
               {isLoading ? (
                 <div className="p-4 text-center">Carregando...</div>
               ) : (
-                <pre className="font-mono bg-gray-100 p-4 rounded overflow-x-auto text-xs">
-                  {JSON.stringify(apiData.request_servico, null, 2)}
+                <pre className="text-sm font-mono bg-gray-100 p-4 rounded overflow-x-auto whitespace-pre-wrap">
+                  {formatText(apiData.request_servico)}
                 </pre>
               )}
             </div>
@@ -201,8 +210,8 @@ const TelefoneScreen = () => {
               {isLoading ? (
                 <div className="p-4 text-center">Carregando...</div>
               ) : (
-                <pre className="font-mono bg-gray-100 p-4 rounded overflow-x-auto text-xs">
-                  {JSON.stringify(apiData.response_servico_anterior, null, 2)}
+                <pre className="text-sm font-mono bg-gray-100 p-4 rounded overflow-x-auto whitespace-pre-wrap">
+                  {formatText(apiData.response_servico_anterior)}
                 </pre>
               )}
             </div>
