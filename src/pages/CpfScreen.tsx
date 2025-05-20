@@ -1,5 +1,7 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import PdvLayout from "@/components/PdvLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,6 +16,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 const CpfScreen = () => {
   const [cpf, setCpf] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleKeyPress = (value: string) => {
@@ -26,10 +29,42 @@ const CpfScreen = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (cpf.length !== 11) return;
+    
+    setIsLoading(true);
     console.log(`Cliente identificado com CPF: ${formatCPF(cpf)}`);
-    // Keeping the navigation commented out as per constraints
-    // navigate('/scan');
+    
+    try {
+      const response = await fetch("https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          cpf: cpf,
+          slug: "RLIINFO"
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro na requisição: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("API response:", data);
+      
+      if (data.pedir_telefone) {
+        navigate("/telefone");
+      } else {
+        navigate("/scan");
+      }
+    } catch (error) {
+      console.error("Erro ao consultar API:", error);
+      toast.error("Erro ao processar seu CPF. Tente novamente.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const formatCPF = (value: string) => {
@@ -71,10 +106,10 @@ const CpfScreen = () => {
               <Button
                 key={key}
                 className="h-16 bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
-                disabled={cpf.length !== 11}
+                disabled={cpf.length !== 11 || isLoading}
                 onClick={handleSubmit}
               >
-                ENTRA
+                {isLoading ? "..." : "ENTRA"}
               </Button>
             );
           } else {
@@ -84,6 +119,7 @@ const CpfScreen = () => {
                 variant="outline"
                 className="h-16 text-xl font-medium bg-white hover:bg-gray-100"
                 onClick={() => handleKeyPress(key)}
+                disabled={isLoading}
               >
                 {key}
               </Button>

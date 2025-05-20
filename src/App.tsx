@@ -11,6 +11,7 @@ import WelcomeScreen from "./pages/WelcomeScreen";
 import StartScreen from "./pages/StartScreen";
 import ScanScreen from "./pages/ScanScreen";
 import CpfScreen from "./pages/CpfScreen";
+import TelefoneScreen from "./pages/TelefoneScreen";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/welcome" element={<WelcomeScreen />} />
             <Route path="/start" element={<StartScreen />} />
             <Route path="/cpf" element={<CpfScreen />} />
+            <Route path="/telefone" element={<TelefoneScreen />} />
             <Route path="/scan" element={<ScanScreen />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
