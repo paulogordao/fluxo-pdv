@@ -16,11 +16,7 @@ const Index = () => {
         <CardContent className="space-y-6">
           <div className="p-4 bg-dotz-offwhite rounded-md border border-dotz-pessego">
             <h2 className="font-semibold mb-2 text-dotz-laranja">Sobre esta simulação</h2>
-            <p>
-              Este simulador demonstra o fluxo de atendimento em um PDV self-checkout 
-              e as chamadas à API necessárias para integração. Cada tela destaca os 
-              endpoints que devem ser utilizados e em qual momento.
-            </p>
+            <p>Este simulador demonstra o fluxo de atendimento em um PDV e as chamadas à API necessárias para integração. Cada tela destaca os endpoints que devem ser utilizados e em qual momento.</p>
           </div>
           
           <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
