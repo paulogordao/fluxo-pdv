@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PdvProvider } from "@/context/PdvContext";
@@ -46,7 +45,7 @@ const Index = () => {
       </Card>
       
       <footer className="mt-8 text-center text-gray-500 text-sm">
-        <p>Simulador PDV Self-Checkout - Guia Técnico de Integração</p>
+        <p>Simulador PDV - Guia Técnico de Integração</p>
       </footer>
     </div>;
 };
