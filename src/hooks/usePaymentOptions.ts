@@ -40,7 +40,8 @@ export const usePaymentOptions = () => {
           return;
         }
         
-        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=${cpf}&SLUG=RLFUND`;
+        // Using the correct SLUG value: RLIFUND instead of RLFUND
+        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=${cpf}&SLUG=RLIFUND`;
         console.log("Fetching payment options data:", url);
         
         const response = await fetch(url);
