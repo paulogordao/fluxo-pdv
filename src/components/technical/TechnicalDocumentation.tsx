@@ -25,7 +25,7 @@ const TechnicalDocumentation = ({
       {/* Request Collapsible */}
       <Collapsible open={isRequestOpen} onOpenChange={setIsRequestOpen} className="border border-gray-200 rounded-md shadow overflow-hidden">
         <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
-          <span>🔻 Request do serviço atual (RLIWAIT)</span>
+          <span>🔻 Request do serviço atual (RLIDEAL)</span>
           {isRequestOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </CollapsibleTrigger>
         <CollapsibleContent>
