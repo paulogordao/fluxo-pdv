@@ -12,7 +12,7 @@ const GuiaDeNavegacaoAPI = () => {
 
   // Navigation items with routes and API endpoints
   const navigationItems = [
-    { label: "Boas-vindas (tela "Home")", route: "/", endpoint: null },
+    { label: "Boas-vindas (tela \"Home\")", route: "/", endpoint: null },
     { label: "Início de compra", route: "/welcome", endpoint: null },
     { label: "Identificação cliente", route: "/cpf", endpoint: "RLIINFO" },
     { label: "Captura do telefone", route: "/telefone", endpoint: "RLICELL" },
