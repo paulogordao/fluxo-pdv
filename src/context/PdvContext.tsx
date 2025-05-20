@@ -47,6 +47,7 @@ interface PdvContextType {
   clearCart: () => void;
   findProductByBarcode: (barcode: string) => Product | undefined;
   totalAmount: number;
+  setInitialCart: (products: Product[]) => void;
 }
 
 // Criando contexto
@@ -97,6 +98,11 @@ export const PdvProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     console.log('API Call: DELETE /api/cart');
   };
 
+  // Adicionar função para definir o carrinho inicial com produtos mockados
+  const setInitialCart = (products: Product[]) => {
+    setCart(products);
+  };
+
   const findProductByBarcode = (barcode: string): Product | undefined => {
     return MOCK_PRODUCTS.find(p => p.barcode === barcode);
   };
@@ -116,6 +122,7 @@ export const PdvProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         clearCart,
         findProductByBarcode,
         totalAmount,
+        setInitialCart,
       }}
     >
       {children}
