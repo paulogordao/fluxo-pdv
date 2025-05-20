@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -36,16 +35,10 @@ const CpfScreen = () => {
     console.log(`Cliente identificado com CPF: ${formatCPF(cpf)}`);
     
     try {
-      const response = await fetch("https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          cpf: cpf,
-          slug: "RLIINFO"
-        }),
-      });
+      const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=${cpf}&SLUG=RLIINFO`;
+      console.log(`Chamando API: ${url}`);
+      
+      const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error(`Erro na requisição: ${response.status}`);
