@@ -35,6 +35,7 @@ const ScanScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRequestOpen, setIsRequestOpen] = useState(false);
   const [isResponseOpen, setIsResponseOpen] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   
   // Fetch initial slug with stored CPF
   useEffect(() => {
@@ -98,6 +99,44 @@ const ScanScreen = () => {
     fetchApiData();
   }, [apiSlug]);
 
+  // Handle payment button click
+  const handlePaymentClick = async () => {
+    try {
+      setIsProcessingPayment(true);
+      // Get CPF from localStorage
+      const cpf = localStorage.getItem('cpfDigitado');
+      
+      if (!cpf) {
+        console.error('CPF não encontrado. Redirecionando para a etapa de identificação.');
+        navigate('/cpf');
+        return;
+      }
+      
+      const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=${cpf}&SLUG=RLIFUND`;
+      console.log("Checking for Dotz benefits:", url);
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Error checking benefits: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("Payment benefits check response:", data);
+      
+      if (data.possui_dotz === true) {
+        // If user has Dotz points, redirect to interest page
+        navigate('/interesse_pagamento');
+      } else {
+        // If no Dotz points, do nothing for now
+        console.log("User has no Dotz points. No action taken.");
+      }
+    } catch (error) {
+      console.error("Error processing payment check:", error);
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
   // Preencher com produtos mockados iniciais ao carregar a tela
   useEffect(() => {
     // Produtos mockados conforme solicitado
@@ -154,11 +193,6 @@ const ScanScreen = () => {
     }
   };
 
-  // Função para formatar valor em reais
-  const formatCurrency = (value: number) => {
-    return value.toFixed(2).replace(".", ",");
-  };
-  
   // Format text with proper line breaks and spacing
   const formatText = (text: string | null | undefined) => {
     if (!text) return "";
@@ -167,6 +201,11 @@ const ScanScreen = () => {
     return text
       .replace(/\\n/g, '\n')
       .replace(/\\t/g, '  ');
+  };
+  
+  // Função para formatar valor em reais
+  const formatCurrency = (value: number) => {
+    return value.toFixed(2).replace(".", ",");
   };
   
   return <PdvLayout className="p-0 overflow-hidden" apiCall={{
@@ -244,8 +283,11 @@ const ScanScreen = () => {
           </div>
 
           {/* Botão de pagamento */}
-          <div className="bg-emerald-500 text-white p-4 text-center font-bold">
-            PAGAMENTO
+          <div 
+            onClick={handlePaymentClick}
+            className={`bg-emerald-500 text-white p-4 text-center font-bold cursor-pointer ${isProcessingPayment ? 'opacity-70' : 'hover:bg-emerald-600'}`}
+          >
+            {isProcessingPayment ? "PROCESSANDO..." : "PAGAMENTO"}
           </div>
         </div>
       </div>
