@@ -1,10 +1,45 @@
 
+import { useState, useEffect } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import PdvLayout from "@/components/PdvLayout";
+import { toast } from "@/components/ui/sonner";
+import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
 
 const ConfirmacaoPagamentoAppScreen = () => {
+  // Technical documentation states
+  const [apiData, setApiData] = useState<{
+    request_servico?: string | null;
+    response_servico_anterior?: string | null;
+  }>({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch API data for technical documentation
+  useEffect(() => {
+    const fetchApiData = async () => {
+      try {
+        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=RLIDEALRLIWAIT`;
+        console.log("Fetching API details:", url);
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Error in request: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setApiData(data);
+        console.log("API data:", data);
+      } catch (error) {
+        console.error("Error fetching API data:", error);
+        toast.error("Erro ao carregar detalhes técnicos");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchApiData();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -124,6 +159,15 @@ const ConfirmacaoPagamentoAppScreen = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Technical Documentation - Added below the main content */}
+      <div className="w-full max-w-6xl mx-auto mt-8">
+        <TechnicalDocumentation 
+          requestData={apiData.request_servico} 
+          responseData={apiData.response_servico_anterior}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );
