@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import PdvLayout from "@/components/PdvLayout";
@@ -11,9 +11,8 @@ const MeiosDePagamentoScreen = () => {
   const [selectedOption, setSelectedOption] = useState("app");
   const navigate = useNavigate();
   
-  // For loading technical documentation only when option 1 is selected
-  const [loadDocumentation, setLoadDocumentation] = useState(false);
-  const [documentationSlug, setDocumentationSlug] = useState("");
+  // Always load documentation when the component mounts
+  const [documentationSlug, setDocumentationSlug] = useState("RLIFUNDRLIDEAL");
   
   const { paymentOptions, paymentOptionsLoading } = usePaymentOptions();
   
@@ -21,15 +20,9 @@ const MeiosDePagamentoScreen = () => {
   const handleOptionSelect = (option: string) => {
     setSelectedOption(option);
     
-    // If "app" option is selected, load technical documentation and navigate
+    // If "app" option is selected, navigate
     if (option === "app") {
-      setLoadDocumentation(true);
-      setDocumentationSlug("RLIFUNDRLIDEAL");
       navigate('/confirmacao_pagamento_app');
-    } else {
-      // Don't load documentation for other options
-      setLoadDocumentation(false);
-      setDocumentationSlug("");
     }
   };
 
@@ -91,13 +84,11 @@ const MeiosDePagamentoScreen = () => {
             </div>
           </div>
           
-          {/* Technical documentation section - Only render when loadDocumentation is true */}
-          {loadDocumentation && documentationSlug && (
-            <TechnicalDocumentation 
-              slug={documentationSlug} 
-              loadOnMount={false} 
-            />
-          )}
+          {/* Technical documentation section - Always render with the fixed slug */}
+          <TechnicalDocumentation 
+            slug={documentationSlug} 
+            loadOnMount={true} 
+          />
         </CardContent>
       </Card>
     </PdvLayout>

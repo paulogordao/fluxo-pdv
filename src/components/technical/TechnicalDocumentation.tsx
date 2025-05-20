@@ -40,13 +40,15 @@ const TechnicalDocumentation = ({
 
   // Fetch data when slug is provided or changed
   useEffect(() => {
-    // Skip if no slug or if we shouldn't load on mount
-    if (!slug || (!loadOnMount && !initialRequestData)) return;
+    // Skip if no slug
+    if (!slug) return;
     
     const fetchServiceDetails = async () => {
       setIsLoading(true);
       try {
         const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=${slug}`;
+        console.log("Fetching technical documentation for:", url);
+        
         const response = await fetch(url);
         
         if (!response.ok) {
@@ -65,7 +67,7 @@ const TechnicalDocumentation = ({
           response_servico_anterior: data.response_servico_anterior || ""
         });
         
-        console.log("Service data fetched:", data);
+        console.log("Technical documentation data fetched:", data);
       } catch (error) {
         console.error("Error fetching service details:", error);
         setServiceNames({
@@ -77,8 +79,11 @@ const TechnicalDocumentation = ({
       }
     };
     
-    fetchServiceDetails();
-  }, [slug, loadOnMount, initialRequestData]);
+    // Always fetch data if loadOnMount is true
+    if (loadOnMount) {
+      fetchServiceDetails();
+    }
+  }, [slug, loadOnMount]);
 
   return (
     <div className="mt-8 space-y-4">
