@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import PdvLayout from "@/components/PdvLayout";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,6 @@ import { usePdv, Product } from "@/context/PdvContext";
 import { Check, ShoppingCart } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
 const ScanScreen = () => {
   const [barcode, setBarcode] = useState("");
   const [scanning, setScanning] = useState(false);
@@ -23,37 +21,32 @@ const ScanScreen = () => {
   // Preencher com produtos mockados iniciais ao carregar a tela
   useEffect(() => {
     // Produtos mockados conforme solicitado
-    const mockProducts = [
-      {
-        id: '1',
-        name: 'Deo Aero Suave Men 200ml',
-        price: 9.99,
-        barcode: '7891000315507',
-        quantity: 2
-      },
-      {
-        id: '2',
-        name: 'AmacConfort Brisa 1L',
-        price: 14.00,
-        barcode: '7891008086697',
-        quantity: 1
-      },
-      {
-        id: '3',
-        name: 'Sabão Líquido Ba 300ml',
-        price: 6.99,
-        barcode: '7896002301428',
-        quantity: 5
-      }
-    ];
-    
+    const mockProducts = [{
+      id: '1',
+      name: 'Deo Aero Suave Men 200ml',
+      price: 9.99,
+      barcode: '7891000315507',
+      quantity: 2
+    }, {
+      id: '2',
+      name: 'AmacConfort Brisa 1L',
+      price: 14.00,
+      barcode: '7891008086697',
+      quantity: 1
+    }, {
+      id: '3',
+      name: 'Sabão Líquido Ba 300ml',
+      price: 6.99,
+      barcode: '7896002301428',
+      quantity: 5
+    }];
+
     // Configurar o último item escaneado como o último da lista
     setLastScanned(mockProducts[mockProducts.length - 1]);
-    
+
     // Definir o carrinho inicial com os produtos mockados
     setInitialCart(mockProducts);
   }, [setInitialCart]);
-
   const handleScan = () => {
     if (!barcode) return;
     setScanning(true);
@@ -73,7 +66,6 @@ const ScanScreen = () => {
       setScanning(false);
     }, 800);
   };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       handleScan();
@@ -84,13 +76,11 @@ const ScanScreen = () => {
   const formatCurrency = (value: number) => {
     return value.toFixed(2).replace(".", ",");
   };
-
-  return (
-    <PdvLayout className="p-0 overflow-hidden" apiCall={{
-      endpoint: "/api/products/{barcode}",
-      method: "GET",
-      description: "Este endpoint busca informações do produto pelo código de barras."
-    }}>
+  return <PdvLayout className="p-0 overflow-hidden" apiCall={{
+    endpoint: "/api/products/{barcode}",
+    method: "GET",
+    description: "Este endpoint busca informações do produto pelo código de barras."
+  }}>
       {/* Header com nome do cliente e promoção */}
       <div className="bg-dotz-laranja text-white p-4 flex justify-between items-center">
         <div className="font-medium">Manoel, R$3 à R$1000 em opções de pagamento</div>
@@ -116,14 +106,12 @@ const ScanScreen = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {cart.map((item) => (
-                  <TableRow key={item.id} className="hover:bg-gray-50">
+                {cart.map(item => <TableRow key={item.id} className="hover:bg-gray-50">
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
                     <TableCell className="text-right">{item.quantity}</TableCell>
                     <TableCell className="text-right">{formatCurrency(item.price * (item.quantity || 1))}</TableCell>
-                  </TableRow>
-                ))}
+                  </TableRow>)}
               </TableBody>
             </Table>
           </div>
@@ -133,7 +121,7 @@ const ScanScreen = () => {
         <div className="w-1/3 flex flex-col">
           {/* Logo */}
           <div className="text-center p-4">
-            <div className="text-dotz-laranja text-2xl font-bold underline">americanas</div>
+            
           </div>
 
           {/* Último item escaneado */}
@@ -143,8 +131,7 @@ const ScanScreen = () => {
           </div>
 
           <div className="p-4 flex-1">
-            {lastScanned ? (
-              <div className="space-y-4">
+            {lastScanned ? <div className="space-y-4">
                 <div className="flex justify-between">
                   <div className="text-gray-600">Preço</div>
                   <div className="font-bold">{formatCurrency(lastScanned.price)}</div>
@@ -157,13 +144,10 @@ const ScanScreen = () => {
                   <div className="text-gray-600">Total do item (R$)</div>
                   <div className="font-bold">{formatCurrency((lastScanned.quantity || 1) * lastScanned.price)}</div>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center text-gray-400 py-6">
+              </div> : <div className="text-center text-gray-400 py-6">
                 <ShoppingCart className="mx-auto mb-2" />
                 <div>Nenhum produto escaneado</div>
-              </div>
-            )}
+              </div>}
           </div>
 
           {/* Botão de pagamento */}
@@ -177,18 +161,8 @@ const ScanScreen = () => {
       <div className="bg-white border-t p-4">
         <div className="flex justify-between mb-4">
           <div className="flex gap-2 flex-1">
-            <Input 
-              value={barcode} 
-              onChange={e => setBarcode(e.target.value)} 
-              onKeyDown={handleKeyDown} 
-              placeholder="Digite ou escaneie o código de barras" 
-              className="text-lg" 
-              disabled={scanning} 
-            />
-            <Button 
-              onClick={handleScan} 
-              disabled={scanning || !barcode} 
-              className="bg-dotz-laranja hover:bg-dotz-laranja/90">
+            <Input value={barcode} onChange={e => setBarcode(e.target.value)} onKeyDown={handleKeyDown} placeholder="Digite ou escaneie o código de barras" className="text-lg" disabled={scanning} />
+            <Button onClick={handleScan} disabled={scanning || !barcode} className="bg-dotz-laranja hover:bg-dotz-laranja/90">
               Ler
             </Button>
           </div>
@@ -198,14 +172,10 @@ const ScanScreen = () => {
           </div>
         </div>
 
-        {scanning && (
-          <div className="text-center p-4 mb-4 bg-blue-50 rounded-md">
+        {scanning && <div className="text-center p-4 mb-4 bg-blue-50 rounded-md">
             <div className="animate-pulse">Escaneando...</div>
-          </div>
-        )}
+          </div>}
       </div>
-    </PdvLayout>
-  );
+    </PdvLayout>;
 };
-
 export default ScanScreen;
