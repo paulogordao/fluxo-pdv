@@ -8,11 +8,22 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import PdvLayout from "@/components/PdvLayout";
 import { toast } from "@/components/ui/sonner";
 
+interface PaymentOptionsResponse {
+  possui_dotz?: boolean;
+  outros_meios_pagamento?: boolean;
+  dotz_sem_app?: boolean;
+  SLUG?: string;
+}
+
 const MeiosDePagamentoScreen = () => {
   const [selectedOption, setSelectedOption] = useState("app");
   const navigate = useNavigate();
   
-  // API integration states
+  // Payment options state
+  const [paymentOptions, setPaymentOptions] = useState<PaymentOptionsResponse>({});
+  const [paymentOptionsLoading, setPaymentOptionsLoading] = useState(true);
+  
+  // API integration states for technical documentation
   const [apiData, setApiData] = useState<{
     request_servico?: string;
     response_servico_anterior?: string;
@@ -21,11 +32,11 @@ const MeiosDePagamentoScreen = () => {
   const [isRequestOpen, setIsRequestOpen] = useState(false);
   const [isResponseOpen, setIsResponseOpen] = useState(false);
 
-  // Fetch API data with fixed SLUG
+  // Fetch payment options with stored CPF
   useEffect(() => {
-    const fetchApiData = async () => {
+    const fetchPaymentOptions = async () => {
       try {
-        // Get stored CPF from localStorage (still needed for logging/context)
+        // Get stored CPF from localStorage
         const cpf = localStorage.getItem('cpfDigitado');
         
         // Fallback if CPF is not available
@@ -36,7 +47,32 @@ const MeiosDePagamentoScreen = () => {
           return;
         }
         
-        // Use the fixed SLUG directly
+        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=${cpf}&SLUG=RLIFUND`;
+        console.log("Fetching payment options data:", url);
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Error in request: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log("Payment options data:", data);
+        setPaymentOptions(data);
+      } catch (error) {
+        console.error("Error fetching payment options:", error);
+        toast.error("Erro ao carregar opções de pagamento");
+      } finally {
+        setPaymentOptionsLoading(false);
+      }
+    };
+    
+    fetchPaymentOptions();
+  }, [navigate]);
+
+  // Fetch API data for technical documentation (fixed SLUG)
+  useEffect(() => {
+    const fetchApiData = async () => {
+      try {
         const fixedSlug = "RLIFUNDRLIDEAL";
         const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=${fixedSlug}`;
         console.log("Fetching API details:", url);
@@ -58,7 +94,7 @@ const MeiosDePagamentoScreen = () => {
     };
     
     fetchApiData();
-  }, [navigate]);
+  }, []);
 
   // Format text with proper line breaks and spacing
   const formatText = (text: string | null | undefined) => {
@@ -90,57 +126,70 @@ const MeiosDePagamentoScreen = () => {
             </h3>
             
             <div className="space-y-3 mt-6">
-              {/* App option */}
-              <Button 
-                onClick={() => handleOptionSelect("app")}
-                variant={selectedOption === "app" ? "default" : "outline"}
-                className={`w-full py-6 text-base font-medium ${
-                  selectedOption === "app" 
-                    ? "bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" 
-                    : "bg-gray-300 hover:bg-gray-400 text-black"
-                }`}
-              >
-                1. Até R$68,93 no APP
-              </Button>
-              
-              {/* Livelo option */}
-              <Button 
-                onClick={() => handleOptionSelect("livelo")}
-                variant={selectedOption === "livelo" ? "default" : "outline"}
-                className={`w-full py-6 text-base font-medium ${
-                  selectedOption === "livelo" 
-                    ? "bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" 
-                    : "bg-gray-300 hover:bg-gray-400 text-black"
-                }`}
-              >
-                2. R$60 (Livelo) sem APP
-              </Button>
-              
-              {/* Dotz option */}
-              <Button 
-                onClick={() => handleOptionSelect("dotz")}
-                variant={selectedOption === "dotz" ? "default" : "outline"}
-                className={`w-full py-6 text-base font-medium ${
-                  selectedOption === "dotz" 
-                    ? "bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" 
-                    : "bg-gray-300 hover:bg-gray-400 text-black"
-                }`}
-              >
-                3. R$3 (Dotz) sem APP
-              </Button>
-              
-              {/* None option */}
-              <Button 
-                onClick={() => handleOptionSelect("none")}
-                variant={selectedOption === "none" ? "default" : "outline"}
-                className={`w-full py-6 text-base font-medium ${
-                  selectedOption === "none" 
-                    ? "bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" 
-                    : "bg-gray-300 hover:bg-gray-400 text-black"
-                }`}
-              >
-                4. Nenhum
-              </Button>
+              {/* Loading state */}
+              {paymentOptionsLoading ? (
+                <div className="py-4 text-center">Carregando opções de pagamento...</div>
+              ) : (
+                <>
+                  {/* App option - Show if possui_dotz is true */}
+                  {paymentOptions.possui_dotz && (
+                    <Button 
+                      onClick={() => handleOptionSelect("app")}
+                      variant={selectedOption === "app" ? "default" : "outline"}
+                      className={`w-full py-6 text-base font-medium ${
+                        selectedOption === "app" 
+                          ? "bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" 
+                          : "bg-gray-300 hover:bg-gray-400 text-black"
+                      }`}
+                    >
+                      1. Até R$68,93 no APP
+                    </Button>
+                  )}
+                  
+                  {/* Livelo option - Show if outros_meios_pagamento is true */}
+                  {paymentOptions.outros_meios_pagamento && (
+                    <Button 
+                      onClick={() => handleOptionSelect("livelo")}
+                      variant={selectedOption === "livelo" ? "default" : "outline"}
+                      className={`w-full py-6 text-base font-medium ${
+                        selectedOption === "livelo" 
+                          ? "bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" 
+                          : "bg-gray-300 hover:bg-gray-400 text-black"
+                      }`}
+                    >
+                      2. R$60 (Outros pagamentos) sem APP
+                    </Button>
+                  )}
+                  
+                  {/* Dotz option - Show if dotz_sem_app is true */}
+                  {paymentOptions.dotz_sem_app && (
+                    <Button 
+                      onClick={() => handleOptionSelect("dotz")}
+                      variant={selectedOption === "dotz" ? "default" : "outline"}
+                      className={`w-full py-6 text-base font-medium ${
+                        selectedOption === "dotz" 
+                          ? "bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" 
+                          : "bg-gray-300 hover:bg-gray-400 text-black"
+                      }`}
+                    >
+                      3. R$3 (Dotz) sem APP
+                    </Button>
+                  )}
+                  
+                  {/* None option - Always show */}
+                  <Button 
+                    onClick={() => handleOptionSelect("none")}
+                    variant={selectedOption === "none" ? "default" : "outline"}
+                    className={`w-full py-6 text-base font-medium ${
+                      selectedOption === "none" 
+                        ? "bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" 
+                        : "bg-gray-300 hover:bg-gray-400 text-black"
+                    }`}
+                  >
+                    4. Nenhum
+                  </Button>
+                </>
+              )}
             </div>
           </div>
           
