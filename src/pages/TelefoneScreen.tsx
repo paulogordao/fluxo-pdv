@@ -1,14 +1,49 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PdvLayout from "@/components/PdvLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 const TelefoneScreen = () => {
   const [telefone, setTelefone] = useState("");
+  const [apiData, setApiData] = useState<{
+    request_servico?: any;
+    response_servico_anterior?: any;
+  }>({});
+  const [isRequestOpen, setIsRequestOpen] = useState(false);
+  const [isResponseOpen, setIsResponseOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchApiData = async () => {
+      try {
+        const url = "https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=RLIINFORLICELL";
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`Erro na requisição: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setApiData(data);
+        console.log("API response:", data);
+      } catch (error) {
+        console.error("Erro ao consultar detalhes do fluxo:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchApiData();
+  }, []);
 
   const handleKeyPress = (value: string) => {
     if (value === "CLEAR") {
@@ -118,6 +153,62 @@ const TelefoneScreen = () => {
           </div>
         </div>
       </Card>
+
+      <div className="mt-8 w-full max-w-3xl space-y-4">
+        {/* Request Collapsible */}
+        <Collapsible
+          open={isRequestOpen}
+          onOpenChange={setIsRequestOpen}
+          className="w-full border border-gray-200 rounded-md shadow overflow-hidden"
+        >
+          <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
+            <span>Request do serviço atual (RLICELL)</span>
+            {isRequestOpen ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="p-4 bg-white">
+              {isLoading ? (
+                <div className="p-4 text-center">Carregando...</div>
+              ) : (
+                <pre className="font-mono bg-gray-100 p-4 rounded overflow-x-auto text-xs">
+                  {JSON.stringify(apiData.request_servico, null, 2)}
+                </pre>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* Response Collapsible */}
+        <Collapsible
+          open={isResponseOpen}
+          onOpenChange={setIsResponseOpen}
+          className="w-full border border-gray-200 rounded-md shadow overflow-hidden"
+        >
+          <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
+            <span>Response do serviço anterior (RLIINFO)</span>
+            {isResponseOpen ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="p-4 bg-white">
+              {isLoading ? (
+                <div className="p-4 text-center">Carregando...</div>
+              ) : (
+                <pre className="font-mono bg-gray-100 p-4 rounded overflow-x-auto text-xs">
+                  {JSON.stringify(apiData.response_servico_anterior, null, 2)}
+                </pre>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
     </PdvLayout>
   );
 };
