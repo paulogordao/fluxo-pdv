@@ -1,23 +1,21 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import PdvLayout from "@/components/PdvLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePdv, Product } from "@/context/PdvContext";
-import { Check, ShoppingCart, ChevronDown, ChevronUp } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
 
 const ScanScreen = () => {
   const [barcode, setBarcode] = useState("");
   const [scanning, setScanning] = useState(false);
   const [lastScanned, setLastScanned] = useState<Product | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  
   const {
     addToCart,
     findProductByBarcode,
@@ -33,9 +31,12 @@ const ScanScreen = () => {
     response_servico_anterior?: string;
   }>({});
   const [isLoading, setIsLoading] = useState(true);
-  const [isRequestOpen, setIsRequestOpen] = useState(false);
-  const [isResponseOpen, setIsResponseOpen] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  
+  // Determine the source page from the URL query parameter
+  const from = new URLSearchParams(location.search).get('from');
+  // Set the appropriate slug based on the source page
+  const detailSlug = from === 'telefone' ? 'RLICELLRLIFUND' : 'RLIINFORLIFUND';
   
   // Fetch initial slug with stored CPF
   useEffect(() => {
@@ -73,13 +74,15 @@ const ScanScreen = () => {
     fetchSlug();
   }, [navigate]);
   
-  // Fetch API data with the slug
+  // Fetch API data with the dynamic slug based on the source page
   useEffect(() => {
-    if (!apiSlug) return;
-    
     const fetchApiData = async () => {
       try {
-        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=${apiSlug}`;
+        setIsLoading(true);
+        // Use the dynamic slug determined from the source page
+        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=${detailSlug}`;
+        console.log(`Fetching flow details with slug: ${detailSlug}`);
+        
         const response = await fetch(url);
         
         if (!response.ok) {
@@ -97,7 +100,7 @@ const ScanScreen = () => {
     };
     
     fetchApiData();
-  }, [apiSlug]);
+  }, [detailSlug]);
 
   // Handle payment button click
   const handlePaymentClick = async () => {
@@ -311,62 +314,13 @@ const ScanScreen = () => {
             <div className="animate-pulse">Escaneando...</div>
           </div>}
           
-        {/* API integration collapsible sections */}
-        <div className="mt-8 space-y-4">
-          {/* Request Collapsible */}
-          <Collapsible
-            open={isRequestOpen}
-            onOpenChange={setIsRequestOpen}
-            className="border border-gray-200 rounded-md shadow overflow-hidden"
-          >
-            <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
-              <span>Request do serviço atual (RLIFUND)</span>
-              {isRequestOpen ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="p-4 bg-white">
-                {isLoading ? (
-                  <div className="p-4 text-center">Carregando...</div>
-                ) : (
-                  <pre className="text-sm font-mono bg-gray-100 p-4 rounded overflow-x-auto whitespace-pre-wrap">
-                    {formatText(apiData.request_servico)}
-                  </pre>
-                )}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-
-          {/* Response Collapsible */}
-          <Collapsible
-            open={isResponseOpen}
-            onOpenChange={setIsResponseOpen}
-            className="border border-gray-200 rounded-md shadow overflow-hidden"
-          >
-            <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
-              <span>Response do serviço anterior (RLICELL)</span>
-              {isResponseOpen ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="p-4 bg-white">
-                {isLoading ? (
-                  <div className="p-4 text-center">Carregando...</div>
-                ) : (
-                  <pre className="text-sm font-mono bg-gray-100 p-4 rounded overflow-x-auto whitespace-pre-wrap">
-                    {formatText(apiData.response_servico_anterior)}
-                  </pre>
-                )}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
+        {/* Replace the old Collapsible sections with the TechnicalDocumentation component */}
+        <TechnicalDocumentation
+          requestData={apiData.request_servico}
+          responseData={apiData.response_servico_anterior}
+          isLoading={isLoading}
+          slug={detailSlug}
+        />
       </div>
     </PdvLayout>;
 };

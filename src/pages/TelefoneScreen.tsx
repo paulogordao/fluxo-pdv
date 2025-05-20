@@ -66,12 +66,13 @@ const TelefoneScreen = () => {
 
   const handleSubmit = () => {
     console.log(`Celular informado: ${formatTelefone(telefone)}`);
-    // Updated to redirect to the transition screen instead of directly to scan
-    navigate("/transicao-cadastro");
+    // Updated to redirect to the transition screen with query parameter
+    navigate("/transicao-cadastro?from=telefone");
   };
 
   const handleSkip = () => {
-    navigate("/scan");
+    // Add query parameter when skipping
+    navigate("/scan?from=telefone");
   };
 
   const formatTelefone = (value: string) => {

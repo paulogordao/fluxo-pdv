@@ -54,7 +54,8 @@ const CpfScreen = () => {
       if (data.pedir_telefone) {
         navigate("/telefone");
       } else {
-        navigate("/scan");
+        // Add query parameter when navigating to the scan screen
+        navigate("/scan?from=cpf");
       }
     } catch (error) {
       console.error("Erro ao consultar API:", error);
