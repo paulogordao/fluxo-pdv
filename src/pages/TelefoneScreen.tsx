@@ -25,6 +25,16 @@ const TelefoneScreen = () => {
   useEffect(() => {
     const fetchApiData = async () => {
       try {
+        // Get stored CPF from localStorage
+        const cpf = localStorage.getItem('cpfDigitado');
+        
+        // Fallback if CPF is not available
+        if (!cpf) {
+          console.error('CPF não encontrado. Redirecionando para a etapa de identificação.');
+          navigate('/cpf');
+          return;
+        }
+        
         const url = "https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=RLIINFORLICELL";
         const response = await fetch(url);
         
@@ -43,7 +53,7 @@ const TelefoneScreen = () => {
     };
     
     fetchApiData();
-  }, []);
+  }, [navigate]);
 
   const handleKeyPress = (value: string) => {
     if (value === "CLEAR") {

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -35,6 +36,9 @@ const CpfScreen = () => {
     console.log(`Cliente identificado com CPF: ${formatCPF(cpf)}`);
     
     try {
+      // Store the CPF in localStorage for future use
+      localStorage.setItem('cpfDigitado', cpf);
+      
       const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=${cpf}&SLUG=RLIINFO`;
       console.log(`Chamando API: ${url}`);
       

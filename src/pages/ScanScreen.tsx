@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import PdvLayout from "@/components/PdvLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ const ScanScreen = () => {
   const [barcode, setBarcode] = useState("");
   const [scanning, setScanning] = useState(false);
   const [lastScanned, setLastScanned] = useState<Product | null>(null);
+  const navigate = useNavigate();
   const {
     addToCart,
     findProductByBarcode,
@@ -34,11 +36,21 @@ const ScanScreen = () => {
   const [isRequestOpen, setIsRequestOpen] = useState(false);
   const [isResponseOpen, setIsResponseOpen] = useState(false);
   
-  // Fetch initial slug
+  // Fetch initial slug with stored CPF
   useEffect(() => {
     const fetchSlug = async () => {
       try {
-        const url = "https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=32373222884&SLUG=RLIFUND";
+        // Get stored CPF from localStorage
+        const cpf = localStorage.getItem('cpfDigitado');
+        
+        // Fallback if CPF is not available
+        if (!cpf) {
+          console.error('CPF não encontrado. Redirecionando para a etapa de identificação.');
+          navigate('/cpf');
+          return;
+        }
+        
+        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=${cpf}&SLUG=RLIFUND`;
         const response = await fetch(url);
         
         if (!response.ok) {
@@ -58,7 +70,7 @@ const ScanScreen = () => {
     };
     
     fetchSlug();
-  }, []);
+  }, [navigate]);
   
   // Fetch API data with the slug
   useEffect(() => {
