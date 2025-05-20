@@ -9,8 +9,8 @@ import {
   ShoppingCart as CartaoA,
   Gift as Vale,
   Award as Resgate,
-  Pix,
-  Cutlery as ValeRefeicao
+  QrCode as Pix,
+  Utensils as ValeRefeicao
 } from "lucide-react";
 
 const ConfirmacaoPagamentoScreen = () => {
