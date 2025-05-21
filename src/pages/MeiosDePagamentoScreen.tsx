@@ -108,25 +108,28 @@ const MeiosDePagamentoScreen = () => {
             loadOnMount={true} 
           />
           
-          {/* Alert Dialog for Option 2 */}
+          {/* Alert Dialog for Option 2 - Styled to match /interesse_pagamento modal */}
           <AlertDialog open={showAlertDialog} onOpenChange={setShowAlertDialog}>
-            <AlertDialogContent className="max-w-md">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="flex items-center gap-2 text-xl font-bold">
-                  <AlertTriangle className="h-6 w-6 text-amber-500" />
+            <AlertDialogContent className="max-w-md mx-auto p-0 overflow-hidden">
+              <AlertDialogHeader className="bg-dotz-laranja p-4 text-white mb-4">
+                <AlertDialogTitle className="text-center">
                   Atenção!!!
                 </AlertDialogTitle>
+              </AlertDialogHeader>
+              
+              <div className="p-4 text-center">
                 <AlertDialogDescription className="text-base">
-                  <p className="mt-2">
+                  <p className="mb-3">
                     Na chamada do serviço RLIDEAL é retornado a variável <span className="font-mono font-medium">otp_payment_enabled</span>.
                   </p>
-                  <p className="mt-2">
+                  <p>
                     Quando <span className="font-bold">TRUE</span>, é necessário solicitar uma autenticação do cliente (token, data de nascimento, etc).
                   </p>
                 </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogAction className="bg-dotz-laranja hover:bg-dotz-laranja/90">
+              </div>
+              
+              <AlertDialogFooter className="p-4 justify-center">
+                <AlertDialogAction className="min-w-[120px] bg-dotz-laranja hover:bg-dotz-laranja/90">
                   OK
                 </AlertDialogAction>
               </AlertDialogFooter>
