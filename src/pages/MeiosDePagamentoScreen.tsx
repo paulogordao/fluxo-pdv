@@ -43,6 +43,16 @@ const MeiosDePagamentoScreen = () => {
       setShowAlertDialog(true);
     }
   };
+  
+  // Handle confirmation from the alert dialog
+  const handleAlertConfirm = () => {
+    setShowAlertDialog(false);
+    
+    // If "livelo" option was selected, navigate to OTP data nascimento screen
+    if (selectedOption === "livelo") {
+      navigate('/otp_data_nascimento');
+    }
+  };
 
   return (
     <PdvLayout>
@@ -129,7 +139,10 @@ const MeiosDePagamentoScreen = () => {
               </div>
               
               <AlertDialogFooter className="p-4 justify-center">
-                <AlertDialogAction className="min-w-[120px] bg-dotz-laranja hover:bg-dotz-laranja/90">
+                <AlertDialogAction 
+                  className="min-w-[120px] bg-dotz-laranja hover:bg-dotz-laranja/90"
+                  onClick={handleAlertConfirm}
+                >
                   OK
                 </AlertDialogAction>
               </AlertDialogFooter>

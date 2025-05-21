@@ -15,6 +15,7 @@ import TelefoneScreen from "./pages/TelefoneScreen";
 import TransicaoCadastroScreen from "./pages/TransicaoCadastroScreen";
 import InteressePagamentoScreen from "./pages/InteressePagamentoScreen";
 import MeiosDePagamentoScreen from "./pages/MeiosDePagamentoScreen";
+import OtpDataNascimentoScreen from "./pages/OtpDataNascimentoScreen";
 import ConfirmacaoPagamentoAppScreen from "./pages/ConfirmacaoPagamentoAppScreen";
 import ConfirmacaoPagamentoScreen from "./pages/ConfirmacaoPagamentoScreen";
 
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/scan" element={<ScanScreen />} />
             <Route path="/interesse_pagamento" element={<InteressePagamentoScreen />} />
             <Route path="/meios_de_pagamento" element={<MeiosDePagamentoScreen />} />
+            <Route path="/otp_data_nascimento" element={<OtpDataNascimentoScreen />} />
             <Route path="/confirmacao_pagamento_app" element={<ConfirmacaoPagamentoAppScreen />} />
             <Route path="/confirmacao_pagamento" element={<ConfirmacaoPagamentoScreen />} />
             <Route path="*" element={<NotFound />} />
