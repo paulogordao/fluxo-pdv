@@ -8,6 +8,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 interface TechnicalDocumentationProps {
   slug?: string;
+  requestData?: string | null;
+  responseData?: string | null;
+  isLoading?: boolean;
+  loadOnMount?: boolean;
 }
 
 interface ApiResponse {
@@ -17,10 +21,16 @@ interface ApiResponse {
   response_servico_anterior: string;
 }
 
-const TechnicalDocumentation = ({ slug }: TechnicalDocumentationProps) => {
+const TechnicalDocumentation = ({ 
+  slug,
+  requestData: initialRequestData,
+  responseData: initialResponseData,
+  isLoading: externalIsLoading,
+  loadOnMount = true 
+}: TechnicalDocumentationProps) => {
   const [isRequestOpen, setIsRequestOpen] = useState(false);
   const [isResponseOpen, setIsResponseOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(externalIsLoading ?? true);
   const [apiData, setApiData] = useState<ApiResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   
@@ -38,6 +48,24 @@ const TechnicalDocumentation = ({ slug }: TechnicalDocumentationProps) => {
 
   // Fetch technical documentation from the API
   useEffect(() => {
+    // If external data is provided, use that instead of fetching
+    if (initialRequestData || initialResponseData) {
+      setApiData({
+        nome_request_servico: "Serviço Atual",
+        nome_response_servico: "Serviço Anterior",
+        request_servico: initialRequestData || "",
+        response_servico_anterior: initialResponseData || ""
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // If not supposed to load on mount, exit early
+    if (!loadOnMount) {
+      setIsLoading(false);
+      return;
+    }
+
     const fetchDocumentation = async () => {
       if (!slug) {
         setError("Slug não fornecido");
@@ -76,7 +104,7 @@ const TechnicalDocumentation = ({ slug }: TechnicalDocumentationProps) => {
     };
     
     fetchDocumentation();
-  }, [slug]);
+  }, [slug, initialRequestData, initialResponseData, loadOnMount]);
 
   if (isLoading) {
     return <div className="mt-8 text-center">Carregando documentação técnica...</div>;
