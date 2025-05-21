@@ -2,6 +2,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertTriangle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import PdvLayout from "@/components/PdvLayout";
 import PaymentOptionButton from "@/components/payment/PaymentOptionButton";
 import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
@@ -14,6 +24,9 @@ const MeiosDePagamentoScreen = () => {
   // Always load documentation when the component mounts
   const [documentationSlug, setDocumentationSlug] = useState("RLIFUNDRLIDEAL");
   
+  // State for the alert dialog
+  const [showAlertDialog, setShowAlertDialog] = useState(false);
+  
   const { paymentOptions, paymentOptionsLoading } = usePaymentOptions();
   
   // Handle option selection
@@ -23,6 +36,11 @@ const MeiosDePagamentoScreen = () => {
     // If "app" option is selected, navigate
     if (option === "app") {
       navigate('/confirmacao_pagamento_app');
+    }
+    
+    // If "livelo" option (option 2) is selected, show the alert dialog
+    if (option === "livelo") {
+      setShowAlertDialog(true);
     }
   };
 
@@ -89,6 +107,31 @@ const MeiosDePagamentoScreen = () => {
             slug={documentationSlug} 
             loadOnMount={true} 
           />
+          
+          {/* Alert Dialog for Option 2 */}
+          <AlertDialog open={showAlertDialog} onOpenChange={setShowAlertDialog}>
+            <AlertDialogContent className="max-w-md">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2 text-xl font-bold">
+                  <AlertTriangle className="h-6 w-6 text-amber-500" />
+                  Atenção!!!
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-base">
+                  <p className="mt-2">
+                    Na chamada do serviço RLIDEAL é retornado a variável <span className="font-mono font-medium">otp_payment_enabled</span>.
+                  </p>
+                  <p className="mt-2">
+                    Quando <span className="font-bold">TRUE</span>, é necessário solicitar uma autenticação do cliente (token, data de nascimento, etc).
+                  </p>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction className="bg-dotz-laranja hover:bg-dotz-laranja/90">
+                  OK
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
     </PdvLayout>
