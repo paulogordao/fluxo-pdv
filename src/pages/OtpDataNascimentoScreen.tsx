@@ -1,9 +1,12 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import PdvLayout from "@/components/PdvLayout";
+import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
+
 const OtpDataNascimentoScreen = () => {
   const [digits, setDigits] = useState<string[]>([]);
   const navigate = useNavigate();
@@ -46,7 +49,9 @@ const OtpDataNascimentoScreen = () => {
 
   // Check if enter button should be enabled
   const isEnterEnabled = digits.length === 8;
-  return <PdvLayout>
+
+  return (
+    <PdvLayout>
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="bg-dotz-laranja text-white">
           <CardTitle className="text-center">
@@ -113,8 +118,13 @@ const OtpDataNascimentoScreen = () => {
               </Button>
             </div>
           </div>
+          
+          {/* Technical Documentation Component */}
+          <TechnicalDocumentation slug="RLIDEALRLIAUTH" />
         </CardContent>
       </Card>
-    </PdvLayout>;
+    </PdvLayout>
+  );
 };
+
 export default OtpDataNascimentoScreen;
