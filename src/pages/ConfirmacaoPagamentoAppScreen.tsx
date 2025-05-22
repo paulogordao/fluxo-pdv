@@ -18,6 +18,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 const ConfirmacaoPagamentoAppScreen = () => {
   const navigate = useNavigate();
@@ -34,6 +41,9 @@ const ConfirmacaoPagamentoAppScreen = () => {
   
   // Token payment modal state
   const [tokenModalOpen, setTokenModalOpen] = useState(false);
+  
+  // Alert dialog state - New addition
+  const [alertDialogOpen, setAlertDialogOpen] = useState(false);
   
   // Get client name from localStorage (fallback to empty string if not available)
   const clientName = localStorage.getItem('nomeCliente') || '';
@@ -115,7 +125,15 @@ const ConfirmacaoPagamentoAppScreen = () => {
     navigate("/meios_de_pagamento");
   };
   
+  // Updated to show alert dialog first
   const handleTokenPaymentClick = () => {
+    console.log("Alerta exibido: necessário executar break step via RLIFUND antes do token.");
+    setAlertDialogOpen(true);
+  };
+  
+  // Handler for when alert OK button is clicked
+  const handleAlertConfirm = () => {
+    setAlertDialogOpen(false);
     setTokenModalOpen(true);
   };
   
@@ -285,6 +303,33 @@ const ConfirmacaoPagamentoAppScreen = () => {
 
       {/* Navigation Guide Component */}
       <GuiaDeNavegacaoAPI />
+      
+      {/* Alert Dialog - New Addition */}
+      <AlertDialog open={alertDialogOpen} onOpenChange={setAlertDialogOpen}>
+        <AlertDialogContent 
+          className="p-0 overflow-hidden max-w-md" 
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <AlertDialogHeader className="bg-dotz-laranja text-white px-6 py-4">
+            <AlertDialogTitle className="text-lg font-semibold text-center">Atenção!!!</AlertDialogTitle>
+          </AlertDialogHeader>
+          <div className="p-6">
+            <p className="text-center mb-6">
+              Nesta etapa já há um checkout esperando pagamento, portanto, é necessário fazer uso de um break step, neste caso chamar o serviço RLIFUND novamente.
+            </p>
+            <div className="flex justify-center">
+              <AlertDialogAction 
+                className="bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
+                onClick={handleAlertConfirm}
+              >
+                OK
+              </AlertDialogAction>
+            </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
       
       {/* Token Payment Modal */}
       <Dialog open={tokenModalOpen} onOpenChange={setTokenModalOpen}>
