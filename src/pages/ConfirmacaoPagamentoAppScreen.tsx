@@ -13,6 +13,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const ConfirmacaoPagamentoAppScreen = () => {
   const navigate = useNavigate();
@@ -26,6 +32,12 @@ const ConfirmacaoPagamentoAppScreen = () => {
   // Token payment button visibility state
   const [showTokenPaymentButton, setShowTokenPaymentButton] = useState(false);
   const [tokenButtonLoading, setTokenButtonLoading] = useState(true);
+  
+  // Token payment modal state
+  const [tokenModalOpen, setTokenModalOpen] = useState(false);
+  
+  // Get client name from localStorage (fallback to empty string if not available)
+  const clientName = localStorage.getItem('nomeCliente') || '';
 
   // Fetch API data for technical documentation
   useEffect(() => {
@@ -99,6 +111,20 @@ const ConfirmacaoPagamentoAppScreen = () => {
   const handlePaymentConfirmation = () => {
     navigate("/confirmacao_pagamento");
   };
+  
+  const handleCancel = () => {
+    navigate("/meios_de_pagamento");
+  };
+  
+  const handleTokenPaymentClick = () => {
+    setTokenModalOpen(true);
+  };
+  
+  const handleNoneOption = () => {
+    console.log("Usuário retornou para meios de pagamento a partir do modal de token.");
+    setTokenModalOpen(false);
+    navigate("/meios_de_pagamento");
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
@@ -127,6 +153,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
                         <Button 
                           variant="token"
                           className="bg-gray-800 hover:bg-gray-700"
+                          onClick={handleTokenPaymentClick}
                         >
                           Pagar com Token
                         </Button>
@@ -141,6 +168,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
               <Button 
                 variant="outline" 
                 className="bg-gray-300 hover:bg-gray-400 text-gray-900"
+                onClick={handleCancel}
               >
                 Cancelar
               </Button>
@@ -252,6 +280,34 @@ const ConfirmacaoPagamentoAppScreen = () => {
 
       {/* Navigation Guide Component */}
       <GuiaDeNavegacaoAPI />
+      
+      {/* Token Payment Modal */}
+      <Dialog open={tokenModalOpen} onOpenChange={setTokenModalOpen}>
+        <DialogContent className="p-0 overflow-hidden max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader className="bg-dotz-laranja text-white px-6 py-4">
+            <DialogTitle className="text-lg font-semibold text-center">Pagamento com Token</DialogTitle>
+          </DialogHeader>
+          <div className="p-6">
+            <p className="text-center text-lg mb-6">
+              {clientName ? `${clientName}, você quer pagar com seus pontos?` : 'Você quer pagar com seus pontos?'}
+            </p>
+            <div className="space-y-4">
+              <Button 
+                className="w-full bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
+              >
+                1. Até R$30 com token
+              </Button>
+              <Button 
+                variant="cancel" 
+                className="w-full"
+                onClick={handleNoneOption}
+              >
+                4. Nenhum
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
