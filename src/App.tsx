@@ -19,6 +19,7 @@ import MeiosDePagamentoScreen from "./pages/MeiosDePagamentoScreen";
 import OtpDataNascimentoScreen from "./pages/OtpDataNascimentoScreen";
 import ConfirmacaoPagamentoAppScreen from "./pages/ConfirmacaoPagamentoAppScreen";
 import ConfirmacaoPagamentoScreen from "./pages/ConfirmacaoPagamentoScreen";
+import ConfirmacaoPagamentoTokenScreen from "./pages/ConfirmacaoPagamentoTokenScreen";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/otp_data_nascimento" element={<OtpDataNascimentoScreen />} />
               <Route path="/confirmacao_pagamento_app" element={<ConfirmacaoPagamentoAppScreen />} />
               <Route path="/confirmacao_pagamento" element={<ConfirmacaoPagamentoScreen />} />
+              <Route path="/confirmacao_pagamento_token" element={<ConfirmacaoPagamentoTokenScreen />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

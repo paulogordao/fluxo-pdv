@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
@@ -124,6 +123,12 @@ const ConfirmacaoPagamentoAppScreen = () => {
     console.log("Usuário retornou para meios de pagamento a partir do modal de token.");
     setTokenModalOpen(false);
     navigate("/meios_de_pagamento");
+  };
+
+  // Handle option 1 in token payment modal - navigate to token screen
+  const handleTokenAmountOption = () => {
+    setTokenModalOpen(false);
+    navigate("/confirmacao_pagamento_token");
   };
 
   return (
@@ -294,6 +299,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
             <div className="space-y-4">
               <Button 
                 className="w-full bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
+                onClick={handleTokenAmountOption}
               >
                 1. Até R$30 com token
               </Button>
