@@ -12,6 +12,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import PdvLayout from "@/components/PdvLayout";
 import PaymentOptionButton from "@/components/payment/PaymentOptionButton";
 import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
@@ -24,8 +33,10 @@ const MeiosDePagamentoScreen = () => {
   // Always load documentation when the component mounts
   const [documentationSlug, setDocumentationSlug] = useState("RLIFUNDRLIDEAL");
   
-  // State for the alert dialog
+  // State for the alert dialogs
   const [showAlertDialog, setShowAlertDialog] = useState(false);
+  const [showDotzAlertDialog, setShowDotzAlertDialog] = useState(false);
+  const [showDotzConfirmDialog, setShowDotzConfirmDialog] = useState(false);
   
   const { paymentOptions, paymentOptionsLoading } = usePaymentOptions();
   
@@ -42,9 +53,14 @@ const MeiosDePagamentoScreen = () => {
     if (option === "livelo") {
       setShowAlertDialog(true);
     }
+    
+    // If "dotz" option (option 3) is selected, show the first dotz alert dialog
+    if (option === "dotz") {
+      setShowDotzAlertDialog(true);
+    }
   };
   
-  // Handle confirmation from the alert dialog
+  // Handle confirmation from the first alert dialog (Option 2 - Livelo)
   const handleAlertConfirm = () => {
     setShowAlertDialog(false);
     
@@ -52,6 +68,26 @@ const MeiosDePagamentoScreen = () => {
     if (selectedOption === "livelo") {
       navigate('/otp_data_nascimento');
     }
+  };
+
+  // Handle confirmation from the first dotz alert dialog (Option 3 - Dotz)
+  const handleDotzAlertConfirm = () => {
+    setShowDotzAlertDialog(false);
+    setShowDotzConfirmDialog(true);
+  };
+
+  // Handle confirmation from the second dotz dialog (Option 3 - Dotz)
+  const handleDotzConfirmUse = () => {
+    setShowDotzConfirmDialog(false);
+    // Navigate to the appropriate screen or perform the action
+    // For now, just navigate to the confirmation page as an example
+    navigate('/confirmacao_pagamento');
+  };
+
+  // Handle cancel from the second dotz dialog (Option 3 - Dotz)
+  const handleDotzConfirmCancel = () => {
+    setShowDotzConfirmDialog(false);
+    // No further action needed - just close the dialog
   };
 
   return (
@@ -148,6 +184,77 @@ const MeiosDePagamentoScreen = () => {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+          
+          {/* First Alert Dialog for Option 3 (Dotz) - Uses the same styling as Option 2 */}
+          <AlertDialog 
+            open={showDotzAlertDialog} 
+            onOpenChange={setShowDotzAlertDialog}
+          >
+            <AlertDialogContent className="max-w-md mx-auto p-0 overflow-hidden">
+              <AlertDialogHeader className="bg-dotz-laranja p-4 text-white mb-4">
+                <AlertDialogTitle className="text-center">
+                  Atenção!!!
+                </AlertDialogTitle>
+              </AlertDialogHeader>
+              
+              <div className="p-4 text-center">
+                <AlertDialogDescription className="text-base">
+                  <p className="mb-3">
+                    Na chamada do serviço RLIDEAL é retornado a variável <span className="font-mono font-medium">otp_payment_enabled</span>.
+                  </p>
+                  <p>
+                    Quando <span className="font-bold">TRUE</span>, é necessário solicitar uma autenticação do cliente (token, data de nascimento, etc).
+                  </p>
+                </AlertDialogDescription>
+              </div>
+              
+              <AlertDialogFooter className="p-4 justify-center">
+                <AlertDialogAction 
+                  className="min-w-[120px] bg-dotz-laranja hover:bg-dotz-laranja/90"
+                  onClick={handleDotzAlertConfirm}
+                >
+                  OK
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          
+          {/* Second Dialog for Option 3 (Dotz) - Confirmation dialog */}
+          <Dialog 
+            open={showDotzConfirmDialog} 
+            onOpenChange={setShowDotzConfirmDialog}
+          >
+            <DialogContent className="max-w-md mx-auto p-0 overflow-hidden">
+              <DialogHeader className="bg-dotz-laranja p-4 text-white mb-4">
+                <DialogTitle className="text-center">
+                  Confirmação
+                </DialogTitle>
+              </DialogHeader>
+              
+              <div className="p-6 text-center">
+                <DialogDescription className="text-base text-black font-medium">
+                  R$3 em Dotz.
+                </DialogDescription>
+              </div>
+              
+              <DialogFooter className="p-4 flex justify-center gap-4">
+                <Button 
+                  variant="cancel" 
+                  className="min-w-[120px]"
+                  onClick={handleDotzConfirmCancel}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  variant="dotz" 
+                  className="min-w-[120px]"
+                  onClick={handleDotzConfirmUse}
+                >
+                  Usar
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
     </PdvLayout>
