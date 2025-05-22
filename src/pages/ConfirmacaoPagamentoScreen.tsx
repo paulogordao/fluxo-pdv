@@ -30,6 +30,7 @@ const ConfirmacaoPagamentoScreen = () => {
     response_servico_anterior?: string | null;
   }>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [documentationSlug, setDocumentationSlug] = useState("RLIWAITRLIPAYS");
 
   // Set payment amount based on selected option
   useEffect(() => {
@@ -39,6 +40,8 @@ const ConfirmacaoPagamentoScreen = () => {
     } else if (selectedPaymentOption === "dotz") {
       setPaymentAmount({ encargos: "3,00", recebido: "3,00" });
       console.log("Opção selecionada: 3 – Aplicando valores na confirmação.");
+      // Set the documentation slug for option 3
+      setDocumentationSlug("RLIDEALRLIPAYS");
     } else {
       setPaymentAmount({ encargos: "68,93", recebido: "68,93" });
       console.log("Opção selecionada: 1 – Aplicando valores na confirmação.");
@@ -49,8 +52,8 @@ const ConfirmacaoPagamentoScreen = () => {
   useEffect(() => {
     const fetchApiData = async () => {
       try {
-        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=RLIWAITRLIPAYS`;
-        console.log("Fetching API details:", url);
+        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=${documentationSlug}`;
+        console.log(`Carregando documentação técnica para ${documentationSlug}`);
         
         const response = await fetch(url);
         if (!response.ok) {
@@ -69,7 +72,7 @@ const ConfirmacaoPagamentoScreen = () => {
     };
     
     fetchApiData();
-  }, []);
+  }, [documentationSlug]);
 
   const handleRestartFlow = () => {
     navigate('/welcome');
@@ -171,13 +174,11 @@ const ConfirmacaoPagamentoScreen = () => {
           </div>
         </div>
 
-        {/* Technical Documentation - Added below the main content */}
+        {/* Technical Documentation - Uses the dynamically set slug based on the payment option */}
         <div className="mt-8">
           <TechnicalDocumentation 
-            requestData={apiData.request_servico} 
-            responseData={apiData.response_servico_anterior}
-            isLoading={isLoading}
-            slug="RLIWAITRLIPAYS"
+            slug={documentationSlug}
+            loadOnMount={true}
           />
         </div>
 
