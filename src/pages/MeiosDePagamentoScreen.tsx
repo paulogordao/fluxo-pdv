@@ -25,10 +25,12 @@ import PdvLayout from "@/components/PdvLayout";
 import PaymentOptionButton from "@/components/payment/PaymentOptionButton";
 import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
 import { usePaymentOptions } from "@/hooks/usePaymentOptions";
+import { usePaymentOption } from "@/context/PaymentOptionContext";
 
 const MeiosDePagamentoScreen = () => {
   const [selectedOption, setSelectedOption] = useState("app");
   const navigate = useNavigate();
+  const { setSelectedPaymentOption } = usePaymentOption();
   
   // Always load documentation when the component mounts
   const [documentationSlug, setDocumentationSlug] = useState("RLIFUNDRLIDEAL");
@@ -43,6 +45,9 @@ const MeiosDePagamentoScreen = () => {
   // Handle option selection
   const handleOptionSelect = (option: string) => {
     setSelectedOption(option);
+    setSelectedPaymentOption(option as any);
+    
+    console.log(`Opção selecionada: ${option === "app" ? "1" : option === "livelo" ? "2" : option === "dotz" ? "3" : "4"} – Aplicando valores na confirmação.`);
     
     // If "app" option is selected, navigate
     if (option === "app") {
@@ -79,8 +84,7 @@ const MeiosDePagamentoScreen = () => {
   // Handle confirmation from the second dotz dialog (Option 3 - Dotz)
   const handleDotzConfirmUse = () => {
     setShowDotzConfirmDialog(false);
-    // Navigate to the appropriate screen or perform the action
-    // For now, just navigate to the confirmation page as an example
+    // Navigate to the confirmation page
     navigate('/confirmacao_pagamento');
   };
 

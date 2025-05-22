@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PdvProvider } from "@/context/PdvContext";
+import { PaymentOptionProvider } from "@/context/PaymentOptionContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import WelcomeScreen from "./pages/WelcomeScreen";
@@ -27,23 +28,25 @@ const App = () => (
       <Toaster />
       <Sonner />
       <PdvProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/welcome" element={<WelcomeScreen />} />
-            <Route path="/start" element={<StartScreen />} />
-            <Route path="/cpf" element={<CpfScreen />} />
-            <Route path="/telefone" element={<TelefoneScreen />} />
-            <Route path="/transicao-cadastro" element={<TransicaoCadastroScreen />} />
-            <Route path="/scan" element={<ScanScreen />} />
-            <Route path="/interesse_pagamento" element={<InteressePagamentoScreen />} />
-            <Route path="/meios_de_pagamento" element={<MeiosDePagamentoScreen />} />
-            <Route path="/otp_data_nascimento" element={<OtpDataNascimentoScreen />} />
-            <Route path="/confirmacao_pagamento_app" element={<ConfirmacaoPagamentoAppScreen />} />
-            <Route path="/confirmacao_pagamento" element={<ConfirmacaoPagamentoScreen />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <PaymentOptionProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/welcome" element={<WelcomeScreen />} />
+              <Route path="/start" element={<StartScreen />} />
+              <Route path="/cpf" element={<CpfScreen />} />
+              <Route path="/telefone" element={<TelefoneScreen />} />
+              <Route path="/transicao-cadastro" element={<TransicaoCadastroScreen />} />
+              <Route path="/scan" element={<ScanScreen />} />
+              <Route path="/interesse_pagamento" element={<InteressePagamentoScreen />} />
+              <Route path="/meios_de_pagamento" element={<MeiosDePagamentoScreen />} />
+              <Route path="/otp_data_nascimento" element={<OtpDataNascimentoScreen />} />
+              <Route path="/confirmacao_pagamento_app" element={<ConfirmacaoPagamentoAppScreen />} />
+              <Route path="/confirmacao_pagamento" element={<ConfirmacaoPagamentoScreen />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </PaymentOptionProvider>
       </PdvProvider>
     </TooltipProvider>
   </QueryClientProvider>

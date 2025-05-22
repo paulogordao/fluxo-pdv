@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { toast } from "@/components/ui/sonner";
 import { useNavigate } from "react-router-dom";
 import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
 import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
+import { usePaymentOption } from "@/context/PaymentOptionContext";
 import { 
   CreditCard,
   CreditCard as DebitCard,
@@ -17,12 +19,31 @@ import {
 
 const ConfirmacaoPagamentoScreen = () => {
   const navigate = useNavigate();
+  const { selectedPaymentOption } = usePaymentOption();
+  
+  // Payment amounts based on selected option
+  const [paymentAmount, setPaymentAmount] = useState({ encargos: "68,93", recebido: "68,93" });
+  
   // Technical documentation states
   const [apiData, setApiData] = useState<{
     request_servico?: string | null;
     response_servico_anterior?: string | null;
   }>({});
   const [isLoading, setIsLoading] = useState(true);
+
+  // Set payment amount based on selected option
+  useEffect(() => {
+    if (selectedPaymentOption === "livelo") {
+      setPaymentAmount({ encargos: "60,00", recebido: "60,00" });
+      console.log("Opção selecionada: 2 – Aplicando valores na confirmação.");
+    } else if (selectedPaymentOption === "dotz") {
+      setPaymentAmount({ encargos: "3,00", recebido: "3,00" });
+      console.log("Opção selecionada: 3 – Aplicando valores na confirmação.");
+    } else {
+      setPaymentAmount({ encargos: "68,93", recebido: "68,93" });
+      console.log("Opção selecionada: 1 – Aplicando valores na confirmação.");
+    }
+  }, [selectedPaymentOption]);
 
   // Fetch API data for technical documentation
   useEffect(() => {
@@ -79,14 +100,14 @@ const ConfirmacaoPagamentoScreen = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Encargos (R$):</span>
-                  <span className="text-red-600 font-medium">68,93</span>
+                  <span className="text-red-600 font-medium">{paymentAmount.encargos}</span>
                 </div>
               </div>
               
               {/* Total */}
               <div className="bg-gray-200 p-3 mt-4 flex justify-between">
                 <span className="font-medium">Recebido (R$):</span>
-                <span className="font-medium">68,93</span>
+                <span className="font-medium">{paymentAmount.recebido}</span>
               </div>
             </div>
             
