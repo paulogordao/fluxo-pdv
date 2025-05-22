@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,12 @@ import { toast } from "@/components/ui/sonner";
 import { useNavigate } from "react-router-dom";
 import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
 import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const ConfirmacaoPagamentoAppScreen = () => {
   const navigate = useNavigate();
@@ -15,6 +22,10 @@ const ConfirmacaoPagamentoAppScreen = () => {
     response_servico_anterior?: string | null;
   }>({});
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Token payment button visibility state
+  const [showTokenPaymentButton, setShowTokenPaymentButton] = useState(false);
+  const [tokenButtonLoading, setTokenButtonLoading] = useState(true);
 
   // Fetch API data for technical documentation
   useEffect(() => {
@@ -42,6 +53,49 @@ const ConfirmacaoPagamentoAppScreen = () => {
     fetchApiData();
   }, []);
 
+  // New effect to check if token payment should be enabled
+  useEffect(() => {
+    const checkTokenPaymentEligibility = async () => {
+      try {
+        setTokenButtonLoading(true);
+        
+        // Get stored CPF from localStorage
+        const cpf = localStorage.getItem('cpfDigitado');
+        
+        // Fallback if CPF is not available
+        if (!cpf) {
+          console.error('CPF não encontrado para verificação de pagamento por token.');
+          setShowTokenPaymentButton(false);
+          return;
+        }
+        
+        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=${cpf}&SLUG=RLIWAIT`;
+        console.log("Verificando elegibilidade para pagamento com token:", url);
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Error in token eligibility request: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const canUseToken = data.permitir_pagamento_token === true;
+        setShowTokenPaymentButton(canUseToken);
+        
+        // Log the result for debugging
+        console.log(`permitir_pagamento_token = ${canUseToken ? 'true ➝ Botão exibido' : 'false ➝ Botão oculto'}`);
+        
+      } catch (error) {
+        console.error("Error checking token payment eligibility:", error);
+        // Fail-safe: hide button if there's an error
+        setShowTokenPaymentButton(false);
+      } finally {
+        setTokenButtonLoading(false);
+      }
+    };
+    
+    checkTokenPaymentEligibility();
+  }, []);
+
   const handlePaymentConfirmation = () => {
     navigate("/confirmacao_pagamento");
   };
@@ -60,12 +114,30 @@ const ConfirmacaoPagamentoAppScreen = () => {
               <Loader2 className="h-10 w-10 animate-spin text-dotz-laranja" />
             </div>
             <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
-              <Button 
-                variant="default" 
-                className="bg-gray-800 hover:bg-gray-700"
-              >
-                Pagar com Token
-              </Button>
+              {/* Token Payment Button - Conditionally rendered */}
+              {tokenButtonLoading ? (
+                <div className="h-10 w-36 flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
+                </div>
+              ) : (
+                showTokenPaymentButton && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="token"
+                          className="bg-gray-800 hover:bg-gray-700"
+                        >
+                          Pagar com Token
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Este meio de pagamento requer autenticação por token.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )
+              )}
               <Button 
                 variant="outline" 
                 className="bg-gray-300 hover:bg-gray-400 text-gray-900"
