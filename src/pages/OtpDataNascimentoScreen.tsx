@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,9 +27,8 @@ const OtpDataNascimentoScreen = () => {
   // Handle enter button
   const handleEnter = () => {
     if (digits.length === 8) {
-      // Navigate to next screen or handle confirmation
-      // For now, let's navigate back to meios_de_pagamento as a placeholder
-      navigate("/confirmacao_pagamento");
+      // Navigate to confirmation page with state indicating where we're coming from
+      navigate("/confirmacao_pagamento", { state: { fromOtpScreen: true } });
     }
   };
 

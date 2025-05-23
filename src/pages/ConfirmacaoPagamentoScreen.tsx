@@ -22,8 +22,9 @@ const ConfirmacaoPagamentoScreen = () => {
   const location = useLocation();
   const { selectedPaymentOption } = usePaymentOption();
   
-  // Check if coming from token screen
+  // Check if coming from token screen or otp screen
   const comingFromTokenScreen = location.state?.fromTokenScreen || false;
+  const comingFromOtpScreen = location.state?.fromOtpScreen || false;
   
   // Payment amounts based on selected option
   const [paymentAmount, setPaymentAmount] = useState({ encargos: "68,93", recebido: "68,93" });
@@ -38,11 +39,11 @@ const ConfirmacaoPagamentoScreen = () => {
 
   // Set payment amount based on selected option and navigation source
   useEffect(() => {
-    if (comingFromTokenScreen) {
-      // Special values when coming from token screen
+    if (comingFromTokenScreen || comingFromOtpScreen) {
+      // Special values when coming from token screen or OTP data nascimento screen
       setPaymentAmount({ encargos: "30,00", recebido: "30,00" });
       setDocumentationSlug("RLIAUTHRLIPAYS");
-      console.log("Origem: tela de token. Usando valores R$ 30,00 e documentação específica RLIAUTHRLIPAYS.");
+      console.log("Origem: tela especial. Usando valores R$ 30,00 e documentação específica RLIAUTHRLIPAYS.");
     } else if (selectedPaymentOption === "livelo") {
       setPaymentAmount({ encargos: "60,00", recebido: "60,00" });
       console.log("Opção selecionada: 2 – Aplicando valores na confirmação.");
@@ -50,14 +51,14 @@ const ConfirmacaoPagamentoScreen = () => {
       setPaymentAmount({ encargos: "3,00", recebido: "3,00" });
       console.log("Opção selecionada: 3 – Aplicando valores na confirmação.");
       // Set the documentation slug for option 3 if not from token screen
-      if (!comingFromTokenScreen) {
+      if (!comingFromTokenScreen && !comingFromOtpScreen) {
         setDocumentationSlug("RLIDEALRLIPAYS");
       }
     } else {
       setPaymentAmount({ encargos: "68,93", recebido: "68,93" });
       console.log("Opção selecionada: 1 – Aplicando valores na confirmação.");
     }
-  }, [selectedPaymentOption, comingFromTokenScreen]);
+  }, [selectedPaymentOption, comingFromTokenScreen, comingFromOtpScreen]);
 
   // Fetch API data for technical documentation
   useEffect(() => {
