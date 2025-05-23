@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
@@ -314,12 +315,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
       
       {/* First Alert Dialog - RLIFUND Break Step */}
       <AlertDialog open={alertDialogOpen} onOpenChange={setAlertDialogOpen}>
-        <AlertDialogContent 
-          className="p-0 overflow-hidden max-w-md" 
-          onEscapeKeyDown={(e) => e.preventDefault()}
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onInteractOutside={(e) => e.preventDefault()}
-        >
+        <AlertDialogContent className="p-0 overflow-hidden max-w-md">
           <AlertDialogHeader className="bg-dotz-laranja text-white px-6 py-4">
             <AlertDialogTitle className="text-lg font-semibold text-center">Atenção!!!</AlertDialogTitle>
           </AlertDialogHeader>
@@ -341,12 +337,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
       
       {/* New Alert Dialog - RLIDEAL Validation */}
       <AlertDialog open={rlidealAlertOpen} onOpenChange={setRlidealAlertOpen}>
-        <AlertDialogContent 
-          className="p-0 overflow-hidden max-w-md" 
-          onEscapeKeyDown={(e) => e.preventDefault()}
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onInteractOutside={(e) => e.preventDefault()}
-        >
+        <AlertDialogContent className="p-0 overflow-hidden max-w-md">
           <AlertDialogHeader className="bg-dotz-laranja text-white px-6 py-4">
             <div className="flex items-center justify-center space-x-2">
               <AlertTriangle className="h-5 w-5" />
