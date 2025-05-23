@@ -10,31 +10,74 @@ import { toast } from "@/components/ui/sonner";
 
 const LoginScreen = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate fields
-    if (!username || !password) {
+    if (!email || !password) {
+      setErrorMessage("Preencha email e senha para continuar.");
+      setShowError(true);
+      return;
+    }
+
+    // Validate email format
+    if (!validateEmail(email)) {
+      setErrorMessage("Digite um email válido.");
       setShowError(true);
       return;
     }
     
     // Hide error if previously shown
     setShowError(false);
-    
-    // Save user session data
-    sessionStorage.setItem("user.login", username);
-    sessionStorage.setItem("user.senha", password);
-    
-    // Display success toast
-    toast.success("Login realizado com sucesso");
-    
-    // Navigate to main page
-    navigate("/welcome");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("https://umbrelosn8n.plsm.com.br/webhook-test/simuladorPDV/validaUsuario", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": "0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975"
+        },
+        body: JSON.stringify({
+          email: email,
+          senha: password
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.mensagem === "senha correta" && data.code === 200) {
+        // Save user session data
+        sessionStorage.setItem("user.login", email);
+        sessionStorage.setItem("user.senha", password);
+        
+        // Display success toast
+        toast.success("Login realizado com sucesso");
+        
+        // Navigate to main page
+        navigate("/welcome");
+      } else {
+        setErrorMessage("Email ou senha inválidos. Tente novamente.");
+        setShowError(true);
+      }
+    } catch (error) {
+      console.error("Erro na autenticação:", error);
+      setErrorMessage("Erro de conexão. Tente novamente.");
+      setShowError(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -49,19 +92,20 @@ const LoginScreen = () => {
             {showError && (
               <Alert variant="destructive" className="mb-4">
                 <AlertDescription>
-                  Preencha usuário e senha para continuar.
+                  {errorMessage}
                 </AlertDescription>
               </Alert>
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="username">Usuário</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Digite seu usuário"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Digite seu email"
+                disabled={isLoading}
               />
             </div>
             
@@ -73,11 +117,18 @@ const LoginScreen = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Digite sua senha"
+                disabled={isLoading}
               />
             </div>
             
-            <Button type="submit" size="full" variant="dotz" className="mt-6">
-              Entrar
+            <Button 
+              type="submit" 
+              size="full" 
+              variant="dotz" 
+              className="mt-6"
+              disabled={isLoading}
+            >
+              {isLoading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
         </CardContent>
