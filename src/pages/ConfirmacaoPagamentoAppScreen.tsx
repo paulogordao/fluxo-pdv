@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { useNavigate } from "react-router-dom";
 import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
@@ -42,8 +43,9 @@ const ConfirmacaoPagamentoAppScreen = () => {
   // Token payment modal state
   const [tokenModalOpen, setTokenModalOpen] = useState(false);
   
-  // Alert dialog state - New addition
+  // Alert dialogs state
   const [alertDialogOpen, setAlertDialogOpen] = useState(false);
+  const [rlidealAlertOpen, setRlidealAlertOpen] = useState(false);
   
   // Get client name from localStorage (fallback to empty string if not available)
   const clientName = localStorage.getItem('nomeCliente') || '';
@@ -74,7 +76,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
     fetchApiData();
   }, []);
 
-  // New effect to check if token payment should be enabled
+  // Effect to check if token payment should be enabled
   useEffect(() => {
     const checkTokenPaymentEligibility = async () => {
       try {
@@ -125,7 +127,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
     navigate("/meios_de_pagamento");
   };
   
-  // Updated to show alert dialog first
+  // Show alert dialog first
   const handleTokenPaymentClick = () => {
     console.log("Alerta exibido: necessário executar break step via RLIFUND antes do token.");
     setAlertDialogOpen(true);
@@ -143,9 +145,16 @@ const ConfirmacaoPagamentoAppScreen = () => {
     navigate("/meios_de_pagamento");
   };
 
-  // Handle option 1 in token payment modal - navigate to token screen
+  // Handle option 1 in token payment modal - now shows the RLIDEAL alert first
   const handleTokenAmountOption = () => {
+    console.log("Alerta exibido: RLIDEAL deve ser chamado novamente para validar a cesta antes do token.");
     setTokenModalOpen(false);
+    setRlidealAlertOpen(true);
+  };
+  
+  // Handler for the RLIDEAL alert OK button
+  const handleRlidealAlertConfirm = () => {
+    setRlidealAlertOpen(false);
     navigate("/confirmacao_pagamento_token");
   };
 
@@ -304,7 +313,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
       {/* Navigation Guide Component */}
       <GuiaDeNavegacaoAPI />
       
-      {/* Alert Dialog - New Addition */}
+      {/* First Alert Dialog - RLIFUND Break Step */}
       <AlertDialog open={alertDialogOpen} onOpenChange={setAlertDialogOpen}>
         <AlertDialogContent 
           className="p-0 overflow-hidden max-w-md" 
@@ -323,6 +332,36 @@ const ConfirmacaoPagamentoAppScreen = () => {
               <AlertDialogAction 
                 className="bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
                 onClick={handleAlertConfirm}
+              >
+                OK
+              </AlertDialogAction>
+            </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* New Alert Dialog - RLIDEAL Validation */}
+      <AlertDialog open={rlidealAlertOpen} onOpenChange={setRlidealAlertOpen}>
+        <AlertDialogContent 
+          className="p-0 overflow-hidden max-w-md" 
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <AlertDialogHeader className="bg-dotz-laranja text-white px-6 py-4">
+            <div className="flex items-center justify-center space-x-2">
+              <AlertTriangle className="h-5 w-5" />
+              <AlertDialogTitle className="text-lg font-semibold">Atenção</AlertDialogTitle>
+            </div>
+          </AlertDialogHeader>
+          <div className="p-6">
+            <p className="text-center mb-6">
+              Nesta etapa é necessário fazer uma nova chamada ao serviço RLIDEAL para enviar novamente a cesta de produtos e verificar se é necessário solicitação de autenticação.
+            </p>
+            <div className="flex justify-center">
+              <AlertDialogAction 
+                className="bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
+                onClick={handleRlidealAlertConfirm}
               >
                 OK
               </AlertDialogAction>
