@@ -1,11 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-
 interface TechnicalDocumentationProps {
   slug?: string;
   requestData?: string | null;
@@ -14,15 +12,13 @@ interface TechnicalDocumentationProps {
   loadOnMount?: boolean;
   sourceScreen?: string;
 }
-
 interface ApiResponse {
   nome_request_servico: string;
   nome_response_servico: string;
   request_servico: string;
   response_servico_anterior: string;
 }
-
-const TechnicalDocumentation = ({ 
+const TechnicalDocumentation = ({
   slug,
   requestData: initialRequestData,
   responseData: initialResponseData,
@@ -35,7 +31,7 @@ const TechnicalDocumentation = ({
   const [isLoading, setIsLoading] = useState(externalIsLoading ?? true);
   const [apiData, setApiData] = useState<ApiResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Format text with proper line breaks and spacing
   const formatText = (text: string) => {
     // Replace escaped newlines and tabs with actual line breaks and spaces
@@ -67,35 +63,27 @@ const TechnicalDocumentation = ({
       setIsLoading(false);
       return;
     }
-
     const fetchDocumentation = async () => {
       if (!slug) {
         setError("Slug não fornecido");
         setIsLoading(false);
         return;
       }
-      
       setIsLoading(true);
-      
       try {
         const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=${slug}`;
         console.log("Fetching technical documentation for:", url);
-        
         const response = await fetch(url);
-        
         if (!response.ok) {
           throw new Error(`Erro ao buscar documentação: ${response.status}`);
         }
-        
         const data = await response.json();
-        
         setApiData({
           nome_request_servico: data.nome_request_servico || "Desconhecido",
           nome_response_servico: data.nome_response_servico || "Desconhecido",
           request_servico: data.request_servico || "",
           response_servico_anterior: data.response_servico_anterior || ""
         });
-        
         console.log("Technical documentation data fetched:", data);
       } catch (err) {
         console.error("Error fetching documentation:", err);
@@ -104,30 +92,20 @@ const TechnicalDocumentation = ({
         setIsLoading(false);
       }
     };
-    
     fetchDocumentation();
   }, [slug, initialRequestData, initialResponseData, loadOnMount]);
-
   if (isLoading) {
     return <div className="mt-8 text-center">Carregando documentação técnica...</div>;
   }
-
   if (error) {
     return <div className="mt-8 text-center text-red-500">{error}</div>;
   }
-
   if (!apiData) {
     return <div className="mt-8 text-center">Documentação técnica indisponível no momento.</div>;
   }
-
-  return (
-    <div className="mt-8 space-y-4">
+  return <div className="mt-8 space-y-4">
       {/* Optional source indicator */}
-      {sourceScreen && (
-        <div className="text-sm text-gray-500 mb-2 px-2">
-          Documentação dinâmica: origem {sourceScreen}
-        </div>
-      )}
+      {sourceScreen}
       
       {/* Request Collapsible */}
       <Collapsible open={isRequestOpen} onOpenChange={setIsRequestOpen} className="border border-gray-200 rounded-md shadow overflow-hidden">
@@ -140,13 +118,7 @@ const TechnicalDocumentation = ({
         <CollapsibleContent>
           <div className="p-4 bg-white">
             <div className="flex justify-end mb-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1 text-xs" 
-                onClick={() => handleCopy(apiData.request_servico, "Request")}
-                title="Copiar para área de transferência"
-              >
+              <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs" onClick={() => handleCopy(apiData.request_servico, "Request")} title="Copiar para área de transferência">
                 <Copy className="h-3 w-3" />
                 Copiar JSON
               </Button>
@@ -169,13 +141,7 @@ const TechnicalDocumentation = ({
         <CollapsibleContent>
           <div className="p-4 bg-white">
             <div className="flex justify-end mb-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1 text-xs" 
-                onClick={() => handleCopy(apiData.response_servico_anterior, "Response")}
-                title="Copiar para área de transferência"
-              >
+              <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs" onClick={() => handleCopy(apiData.response_servico_anterior, "Response")} title="Copiar para área de transferência">
                 <Copy className="h-3 w-3" />
                 Copiar JSON
               </Button>
@@ -186,8 +152,6 @@ const TechnicalDocumentation = ({
           </div>
         </CollapsibleContent>
       </Collapsible>
-    </div>
-  );
+    </div>;
 };
-
 export default TechnicalDocumentation;
