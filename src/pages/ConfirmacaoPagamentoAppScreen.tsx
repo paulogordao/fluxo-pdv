@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
@@ -145,7 +144,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
     navigate("/meios_de_pagamento");
   };
 
-  // Handle option 1 in token payment modal - now shows the RLIDEAL alert first
+  // Handle option 1 in token payment modal
   const handleTokenAmountOption = () => {
     console.log("Alerta exibido: RLIDEAL deve ser chamado novamente para validar a cesta antes do token.");
     setTokenModalOpen(false);
