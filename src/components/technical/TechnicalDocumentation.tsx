@@ -12,6 +12,7 @@ interface TechnicalDocumentationProps {
   responseData?: string | null;
   isLoading?: boolean;
   loadOnMount?: boolean;
+  sourceScreen?: string;
 }
 
 interface ApiResponse {
@@ -26,7 +27,8 @@ const TechnicalDocumentation = ({
   requestData: initialRequestData,
   responseData: initialResponseData,
   isLoading: externalIsLoading,
-  loadOnMount = true 
+  loadOnMount = true,
+  sourceScreen
 }: TechnicalDocumentationProps) => {
   const [isRequestOpen, setIsRequestOpen] = useState(false);
   const [isResponseOpen, setIsResponseOpen] = useState(false);
@@ -120,6 +122,13 @@ const TechnicalDocumentation = ({
 
   return (
     <div className="mt-8 space-y-4">
+      {/* Optional source indicator */}
+      {sourceScreen && (
+        <div className="text-sm text-gray-500 mb-2 px-2">
+          Documentação dinâmica: origem {sourceScreen}
+        </div>
+      )}
+      
       {/* Request Collapsible */}
       <Collapsible open={isRequestOpen} onOpenChange={setIsRequestOpen} className="border border-gray-200 rounded-md shadow overflow-hidden">
         <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">

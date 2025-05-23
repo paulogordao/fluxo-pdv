@@ -48,9 +48,10 @@ const ConfirmacaoPagamentoTokenScreen = () => {
   // Handle enter button
   const handleEnter = () => {
     if (tokenDigits.length === 6) {
-      // For now, just navigate to confirmation page as a placeholder
-      // This will be updated in the next phase
-      navigate("/confirmacao_pagamento");
+      // Navigate to confirmation page and pass information about the source screen
+      navigate("/confirmacao_pagamento", { 
+        state: { fromTokenScreen: true } 
+      });
     }
   };
 

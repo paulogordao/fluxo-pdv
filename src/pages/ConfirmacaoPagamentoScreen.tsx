@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
 import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
 import { usePaymentOption } from "@/context/PaymentOptionContext";
@@ -19,7 +19,11 @@ import {
 
 const ConfirmacaoPagamentoScreen = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { selectedPaymentOption } = usePaymentOption();
+  
+  // Check if coming from token screen
+  const comingFromTokenScreen = location.state?.fromTokenScreen || false;
   
   // Payment amounts based on selected option
   const [paymentAmount, setPaymentAmount] = useState({ encargos: "68,93", recebido: "68,93" });
@@ -40,13 +44,21 @@ const ConfirmacaoPagamentoScreen = () => {
     } else if (selectedPaymentOption === "dotz") {
       setPaymentAmount({ encargos: "3,00", recebido: "3,00" });
       console.log("Opção selecionada: 3 – Aplicando valores na confirmação.");
-      // Set the documentation slug for option 3
-      setDocumentationSlug("RLIDEALRLIPAYS");
+      // Set the documentation slug for option 3 if not from token screen
+      if (!comingFromTokenScreen) {
+        setDocumentationSlug("RLIDEALRLIPAYS");
+      }
     } else {
       setPaymentAmount({ encargos: "68,93", recebido: "68,93" });
       console.log("Opção selecionada: 1 – Aplicando valores na confirmação.");
     }
-  }, [selectedPaymentOption]);
+    
+    // If coming from token screen, use the specific documentation
+    if (comingFromTokenScreen) {
+      setDocumentationSlug("RLIAUTHRLIPAYS");
+      console.log("Origem: tela de token. Usando documentação específica RLIAUTHRLIPAYS.");
+    }
+  }, [selectedPaymentOption, comingFromTokenScreen]);
 
   // Fetch API data for technical documentation
   useEffect(() => {
@@ -174,11 +186,12 @@ const ConfirmacaoPagamentoScreen = () => {
           </div>
         </div>
 
-        {/* Technical Documentation - Uses the dynamically set slug based on the payment option */}
+        {/* Technical Documentation - Uses the dynamically set slug based on the payment option and navigation source */}
         <div className="mt-8">
           <TechnicalDocumentation 
             slug={documentationSlug}
             loadOnMount={true}
+            sourceScreen={comingFromTokenScreen ? "/confirmacao_pagamento_token" : undefined}
           />
         </div>
 
