@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
 
 const ConfirmacaoPagamentoTokenScreen = () => {
   const [tokenDigits, setTokenDigits] = useState<string[]>([]);
@@ -257,6 +258,12 @@ const ConfirmacaoPagamentoTokenScreen = () => {
           </div>
         </div>
       </div>
+      
+      {/* Technical Documentation Section */}
+      <TechnicalDocumentation 
+        slug="RLIDEALRLIAUTH"
+        loadOnMount={true}
+      />
     </div>
   );
 };
