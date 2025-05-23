@@ -36,9 +36,14 @@ const ConfirmacaoPagamentoScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [documentationSlug, setDocumentationSlug] = useState("RLIWAITRLIPAYS");
 
-  // Set payment amount based on selected option
+  // Set payment amount based on selected option and navigation source
   useEffect(() => {
-    if (selectedPaymentOption === "livelo") {
+    if (comingFromTokenScreen) {
+      // Special values when coming from token screen
+      setPaymentAmount({ encargos: "30,00", recebido: "30,00" });
+      setDocumentationSlug("RLIAUTHRLIPAYS");
+      console.log("Origem: tela de token. Usando valores R$ 30,00 e documentação específica RLIAUTHRLIPAYS.");
+    } else if (selectedPaymentOption === "livelo") {
       setPaymentAmount({ encargos: "60,00", recebido: "60,00" });
       console.log("Opção selecionada: 2 – Aplicando valores na confirmação.");
     } else if (selectedPaymentOption === "dotz") {
@@ -51,12 +56,6 @@ const ConfirmacaoPagamentoScreen = () => {
     } else {
       setPaymentAmount({ encargos: "68,93", recebido: "68,93" });
       console.log("Opção selecionada: 1 – Aplicando valores na confirmação.");
-    }
-    
-    // If coming from token screen, use the specific documentation
-    if (comingFromTokenScreen) {
-      setDocumentationSlug("RLIAUTHRLIPAYS");
-      console.log("Origem: tela de token. Usando documentação específica RLIAUTHRLIPAYS.");
     }
   }, [selectedPaymentOption, comingFromTokenScreen]);
 
@@ -191,7 +190,6 @@ const ConfirmacaoPagamentoScreen = () => {
           <TechnicalDocumentation 
             slug={documentationSlug}
             loadOnMount={true}
-            sourceScreen={comingFromTokenScreen ? "/confirmacao_pagamento_token" : undefined}
           />
         </div>
 
