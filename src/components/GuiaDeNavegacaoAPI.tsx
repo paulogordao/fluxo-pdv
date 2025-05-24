@@ -31,26 +31,26 @@ const GuiaDeNavegacaoAPI = () => {
   ];
 
   return (
-    <div className="fixed top-0 right-0 h-screen w-72 bg-white border-l border-gray-200 p-4 text-sm shadow-sm overflow-y-auto z-50 hidden md:block">
-      <h2 className="text-base font-semibold mb-4">🧭 Navegação API's</h2>
-      <ul className="space-y-2">
+    <div className="fixed top-0 right-0 h-screen w-64 bg-white border-l border-gray-200 p-3 text-xs shadow-sm overflow-y-auto z-50 hidden lg:block">
+      <h2 className="text-sm font-semibold mb-3 text-gray-800">🧭 Navegação API's</h2>
+      <ul className="space-y-1.5">
         {navigationItems.map((item, index) => {
           // Handle single route or multiple routes
           const isItemActive = item.route 
             ? isActive(item.route) 
             : item.routes?.some(route => pathname === route);
             
-          // Special case for the final step
-          const isLastItem = index === navigationItems.length - 1;
-          
           return (
             <li 
               key={item.route || index} 
-              className={`${isItemActive ? 'text-blue-600 font-bold' : 'text-gray-700'}`}
+              className={`${isItemActive ? 'text-blue-600 font-semibold' : 'text-gray-700'} leading-tight`}
             >
-              {isItemActive ? '➡️ ' : ''}{item.label}
+              <div className="flex items-start">
+                {isItemActive ? '➡️ ' : ''}
+                <span className="flex-1">{item.label}</span>
+              </div>
               {item.endpoint && (
-                <div className="ml-4 text-sm text-gray-600">• {item.endpoint}</div>
+                <div className="ml-3 text-xs text-gray-500 font-mono">• {item.endpoint}</div>
               )}
             </li>
           );

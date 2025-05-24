@@ -10,16 +10,16 @@ const Index = () => {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-      {/* Settings Icon - positioned in top left */}
+      {/* Settings Icon - positioned in top left with larger size */}
       <div className="absolute top-6 left-6">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => navigate("/config_empresa")}
-          className="text-gray-600 hover:text-dotz-laranja h-12 w-12"
+          className="text-gray-600 hover:text-dotz-laranja h-16 w-16 rounded-xl"
           title="Configurações"
         >
-          <Settings className="h-8 w-8" />
+          <Settings className="h-10 w-10" />
         </Button>
       </div>
 

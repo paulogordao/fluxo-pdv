@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -49,16 +50,17 @@ const ConfigEmpresaScreen = () => {
   const checkUserPermissions = async () => {
     try {
       const userEmail = sessionStorage.getItem("user.login");
-      if (!userEmail) {
+      const userUUID = sessionStorage.getItem("user.uuid");
+      
+      if (!userEmail || !userUUID) {
         setPermissionMessage("Sessão expirada. Faça login novamente.");
         setShowPermissionModal(true);
         return;
       }
 
-      // Generate a mock UUID for demonstration - in a real app this would come from login response
-      const mockUUID = "12345678-1234-1234-1234-123456789abc";
+      console.log("Verificando permissões para usuário:", userUUID);
       
-      const response = await fetch(`https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/permissoes_usuario?id_usuario=${mockUUID}`, {
+      const response = await fetch(`https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/permissoes_usuario?id_usuario=${userUUID}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -67,6 +69,7 @@ const ConfigEmpresaScreen = () => {
       });
 
       const data = await response.json();
+      console.log("Resposta da API de permissões:", data);
       
       // Check if user has the required permission
       if (!data.permissoes || !data.permissoes.includes("cadastrar_empresa")) {

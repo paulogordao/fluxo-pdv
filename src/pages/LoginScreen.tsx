@@ -58,9 +58,14 @@ const LoginScreen = () => {
       const data = await response.json();
 
       if (data.mensagem === "senha correta" && data.code === 200) {
-        // Save user session data
+        // Save user session data including UUID
         sessionStorage.setItem("user.login", email);
         sessionStorage.setItem("user.senha", password);
+        
+        // Save user UUID from API response - this is critical for permission checks
+        if (data.id_usuario) {
+          sessionStorage.setItem("user.uuid", data.id_usuario);
+        }
         
         // Display success toast
         toast.success("Login realizado com sucesso");
