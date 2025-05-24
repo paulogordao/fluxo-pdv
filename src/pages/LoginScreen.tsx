@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "@/components/ui/sonner";
+import { Settings } from "lucide-react";
 
 const LoginScreen = () => {
   const navigate = useNavigate();
@@ -81,6 +83,19 @@ const LoginScreen = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
+      {/* Settings Icon */}
+      <div className="absolute top-4 right-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate("/configuracoes")}
+          className="text-gray-600 hover:text-dotz-laranja"
+          title="Configurações"
+        >
+          <Settings className="h-6 w-6" />
+        </Button>
+      </div>
+
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-dotz-laranja">Login do Simulador de PDV</CardTitle>
