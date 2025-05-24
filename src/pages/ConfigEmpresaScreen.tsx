@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/sonner";
 import { Building2 } from "lucide-react";
 import PermissionModal from "@/components/PermissionModal";
+import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 
 const empresaSchema = z.object({
   nome: z.string().min(1, "Nome da empresa é obrigatório"),
@@ -157,7 +158,7 @@ const ConfigEmpresaScreen = () => {
 
   const handleCancel = () => {
     reset();
-    navigate(-1);
+    navigate("/configuracoes");
   };
 
   const handlePermissionModalClose = () => {
@@ -167,20 +168,20 @@ const ConfigEmpresaScreen = () => {
 
   if (isCheckingPermission) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
+      <ConfigLayoutWithSidebar>
         <Card className="w-full max-w-md p-6 shadow-lg">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-dotz-laranja mx-auto mb-4"></div>
             <p>Verificando permissões...</p>
           </div>
         </Card>
-      </div>
+      </ConfigLayoutWithSidebar>
     );
   }
 
   return (
     <>
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
+      <ConfigLayoutWithSidebar>
         <Card className="w-full max-w-2xl shadow-lg">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center space-x-3 text-2xl text-dotz-laranja">
@@ -286,9 +287,7 @@ const ConfigEmpresaScreen = () => {
             </form>
           </CardContent>
         </Card>
-        
-        <div className="mt-4 text-center text-gray-500 text-sm">Simulador PDV - Guia Técnico de Integração</div>
-      </div>
+      </ConfigLayoutWithSidebar>
 
       <PermissionModal
         isOpen={showPermissionModal}
