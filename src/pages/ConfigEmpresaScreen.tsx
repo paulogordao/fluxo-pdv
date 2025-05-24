@@ -70,11 +70,26 @@ const ConfigEmpresaScreen = () => {
 
       const data = await response.json();
       console.log("Resposta da API de permissões:", data);
+      console.log("Tipo dos dados retornados:", typeof data);
+      console.log("É um array?", Array.isArray(data));
       
-      // Check if user has the required permission - API returns array of permission objects
-      const hasPermission = Array.isArray(data) && data.some(permissionObj => 
-        permissionObj.permissao === "criar_empresa"
-      );
+      // Check if user has the required permission
+      let hasPermission = false;
+      
+      // Handle both array and object responses
+      if (Array.isArray(data)) {
+        // If it's an array of permission objects
+        hasPermission = data.some(permissionObj => 
+          permissionObj && permissionObj.permissao === "criar_empresa"
+        );
+        console.log("Verificação em array - possui permissão:", hasPermission);
+      } else if (data && typeof data === 'object') {
+        // If it's a single object
+        hasPermission = data.permissao === "criar_empresa";
+        console.log("Verificação em objeto - possui permissão:", hasPermission);
+      }
+      
+      console.log("Resultado final da verificação:", hasPermission);
       
       if (!hasPermission) {
         setPermissionMessage("Você não possui permissão para acessar esta funcionalidade.");
