@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -55,6 +54,7 @@ const ConfigEmpresaScreen = () => {
       if (!userEmail || !userUUID) {
         setPermissionMessage("Sessão expirada. Faça login novamente.");
         setShowPermissionModal(true);
+        setIsCheckingPermission(false);
         return;
       }
 
@@ -71,18 +71,22 @@ const ConfigEmpresaScreen = () => {
       const data = await response.json();
       console.log("Resposta da API de permissões:", data);
       
-      // Check if user has the required permission
-      if (!data.permissoes || !data.permissoes.includes("cadastrar_empresa")) {
-        setPermissionMessage("Você não possui permissão para acessar essa funcionalidade.");
+      // Check if user has the required permission - API returns array of permission objects
+      const hasPermission = Array.isArray(data) && data.some(permissionObj => 
+        permissionObj.permissao === "criar_empresa"
+      );
+      
+      if (!hasPermission) {
+        setPermissionMessage("Você não possui permissão para acessar esta funcionalidade.");
         setShowPermissionModal(true);
-        return;
       }
-
+      
       setIsCheckingPermission(false);
     } catch (error) {
       console.error("Erro ao verificar permissões:", error);
       setPermissionMessage("Erro ao verificar permissões. Tente novamente.");
       setShowPermissionModal(true);
+      setIsCheckingPermission(false);
     }
   };
 
@@ -143,7 +147,7 @@ const ConfigEmpresaScreen = () => {
 
   const handlePermissionModalClose = () => {
     setShowPermissionModal(false);
-    navigate(-1);
+    navigate("/index");
   };
 
   if (isCheckingPermission) {
