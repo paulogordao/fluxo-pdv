@@ -3,11 +3,26 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PdvProvider } from "@/context/PdvContext";
 import { useNavigate } from "react-router-dom";
+import { Settings } from "lucide-react";
 import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
 
 const Index = () => {
   const navigate = useNavigate();
-  return <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+      {/* Settings Icon - positioned in top left */}
+      <div className="absolute top-6 left-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate("/config_empresa")}
+          className="text-gray-600 hover:text-dotz-laranja h-12 w-12"
+          title="Configurações"
+        >
+          <Settings className="h-8 w-8" />
+        </Button>
+      </div>
+
       <Card className="w-full max-w-3xl">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl">Simulador PDV</CardTitle>
@@ -39,7 +54,7 @@ const Index = () => {
           
           <div className="flex justify-center">
             <PdvProvider>
-              <Button size="lg" className="px-8 py-6 text-lg bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" onClick={() => navigate('/login')}>
+              <Button size="lg" className="px-8 py-6 text-lg bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" onClick={() => navigate('/welcome')}>
                 Iniciar Simulação
               </Button>
             </PdvProvider>
@@ -53,6 +68,8 @@ const Index = () => {
       
       {/* Navigation Guide Component */}
       <GuiaDeNavegacaoAPI />
-    </div>;
+    </div>
+  );
 };
+
 export default Index;

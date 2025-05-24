@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "@/components/ui/sonner";
-import { Settings } from "lucide-react";
 
 const LoginScreen = () => {
   const navigate = useNavigate();
@@ -66,8 +65,8 @@ const LoginScreen = () => {
         // Display success toast
         toast.success("Login realizado com sucesso");
         
-        // Navigate to main page
-        navigate("/welcome");
+        // Navigate to index page
+        navigate("/index");
       } else {
         setErrorMessage("Email ou senha inválidos. Tente novamente.");
         setShowError(true);
@@ -83,19 +82,6 @@ const LoginScreen = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
-      {/* Settings Icon - repositioned to top left and larger */}
-      <div className="absolute top-6 left-6">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate("/config_empresa")}
-          className="text-gray-600 hover:text-dotz-laranja h-12 w-12"
-          title="Configurações"
-        >
-          <Settings className="h-8 w-8" />
-        </Button>
-      </div>
-
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-dotz-laranja">Login do Simulador de PDV</CardTitle>

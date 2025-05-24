@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -59,7 +58,7 @@ const ConfigEmpresaScreen = () => {
       // Generate a mock UUID for demonstration - in a real app this would come from login response
       const mockUUID = "12345678-1234-1234-1234-123456789abc";
       
-      const response = await fetch(`https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/permissoes_usuario?id=${mockUUID}`, {
+      const response = await fetch(`https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/permissoes_usuario?id_usuario=${mockUUID}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
