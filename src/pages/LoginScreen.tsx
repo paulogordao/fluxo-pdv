@@ -83,16 +83,16 @@ const LoginScreen = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
-      {/* Settings Icon */}
-      <div className="absolute top-4 right-4">
+      {/* Settings Icon - repositioned to top left and larger */}
+      <div className="absolute top-6 left-6">
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate("/configuracoes")}
-          className="text-gray-600 hover:text-dotz-laranja"
+          onClick={() => navigate("/config_empresa")}
+          className="text-gray-600 hover:text-dotz-laranja h-12 w-12"
           title="Configurações"
         >
-          <Settings className="h-6 w-6" />
+          <Settings className="h-8 w-8" />
         </Button>
       </div>
 
