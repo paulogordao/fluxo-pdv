@@ -30,7 +30,7 @@ const menuItems = [
         title: "Editar",
         url: "/config_empresa_editar",
         icon: Edit,
-        disabled: true, // Temporariamente desabilitado
+        disabled: false, // Agora habilitado
       },
     ],
   },
