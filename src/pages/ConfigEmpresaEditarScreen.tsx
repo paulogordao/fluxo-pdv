@@ -35,15 +35,16 @@ const ConfigEmpresaEditarScreen = () => {
       setLoading(true);
       setError(null);
 
-      // Recuperar dados do localStorage com as chaves corretas
-      const apiKey = localStorage.getItem('apiKey') || localStorage.getItem('x-api-key');
-      const idUsuario = localStorage.getItem('userId') || localStorage.getItem('id_usuario');
+      // Recuperar dados do sessionStorage com as chaves corretas do login
+      const apiKey = '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975';
+      const idUsuario = sessionStorage.getItem('user.uuid');
 
-      console.log('API Key encontrada:', apiKey ? 'Sim' : 'Não');
+      console.log('API Key:', apiKey ? 'Configurada' : 'Não encontrada');
       console.log('ID Usuário encontrado:', idUsuario ? 'Sim' : 'Não');
+      console.log('ID Usuário valor:', idUsuario);
 
-      if (!apiKey || !idUsuario) {
-        throw new Error('Dados de autenticação não encontrados no localStorage');
+      if (!idUsuario) {
+        throw new Error('Usuário não autenticado. Faça login novamente.');
       }
 
       console.log('Fazendo requisição para buscar empresas...');
