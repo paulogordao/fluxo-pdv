@@ -67,7 +67,18 @@ const ConfigEmpresaEditarScreen = () => {
 
       const data = await response.json();
       console.log('Dados das empresas recebidos:', data);
-      setEmpresas(data);
+      
+      // Verificar se a resposta é um array ou um objeto único
+      if (Array.isArray(data)) {
+        console.log('Resposta é um array com', data.length, 'empresas');
+        setEmpresas(data);
+      } else if (data && typeof data === 'object' && data.id) {
+        console.log('Resposta é um objeto único, convertendo para array');
+        setEmpresas([data]);
+      } else {
+        console.log('Resposta não contém dados de empresas válidos');
+        setEmpresas([]);
+      }
     } catch (err) {
       console.error('Erro ao buscar empresas:', err);
       setError('Erro ao carregar a lista de empresas. Verifique sua autenticação.');
