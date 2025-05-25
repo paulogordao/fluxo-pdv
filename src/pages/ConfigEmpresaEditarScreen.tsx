@@ -35,27 +35,41 @@ const ConfigEmpresaEditarScreen = () => {
       setLoading(true);
       setError(null);
 
-      // Recuperar dados do localStorage (simulando dados de login)
-      const apiKey = localStorage.getItem('x-api-key') || 'demo-api-key';
-      const idUsuario = localStorage.getItem('id_usuario') || 'demo-user-id';
+      // Recuperar dados do localStorage com as chaves corretas
+      const apiKey = localStorage.getItem('apiKey') || localStorage.getItem('x-api-key');
+      const idUsuario = localStorage.getItem('userId') || localStorage.getItem('id_usuario');
 
+      console.log('API Key encontrada:', apiKey ? 'Sim' : 'Não');
+      console.log('ID Usuário encontrado:', idUsuario ? 'Sim' : 'Não');
+
+      if (!apiKey || !idUsuario) {
+        throw new Error('Dados de autenticação não encontrados no localStorage');
+      }
+
+      console.log('Fazendo requisição para buscar empresas...');
       const response = await fetch('https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/empresas', {
         method: 'GET',
         headers: {
           'x-api-key': apiKey,
           'id_usuario': idUsuario,
+          'Content-Type': 'application/json',
         },
       });
 
+      console.log('Status da resposta:', response.status);
+
       if (!response.ok) {
-        throw new Error(`Erro na requisição: ${response.status}`);
+        const errorText = await response.text();
+        console.log('Erro da API:', errorText);
+        throw new Error(`Erro na requisição: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('Dados das empresas recebidos:', data);
       setEmpresas(data);
     } catch (err) {
       console.error('Erro ao buscar empresas:', err);
-      setError('Erro ao carregar a lista de empresas. Tente novamente.');
+      setError('Erro ao carregar a lista de empresas. Verifique sua autenticação.');
     } finally {
       setLoading(false);
     }
