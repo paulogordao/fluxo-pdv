@@ -28,9 +28,9 @@ const menuItems = [
       },
       {
         title: "Editar",
-        url: "/config_empresa_editar",
+        url: "/config_empresa_list",
         icon: Edit,
-        disabled: false, // Agora habilitado
+        disabled: false,
       },
     ],
   },
