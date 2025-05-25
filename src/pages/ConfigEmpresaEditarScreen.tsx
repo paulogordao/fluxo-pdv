@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -65,18 +64,15 @@ const ConfigEmpresaEditarScreen = () => {
         throw new Error(`Erro na requisição: ${response.status} - ${errorText}`);
       }
 
-      const data = await response.json();
-      console.log('Dados das empresas recebidos:', data);
+      const responseData = await response.json();
+      console.log('Dados das empresas recebidos:', responseData);
       
-      // Verificar se a resposta é um array ou um objeto único
-      if (Array.isArray(data)) {
-        console.log('Resposta é um array com', data.length, 'empresas');
-        setEmpresas(data);
-      } else if (data && typeof data === 'object' && data.id) {
-        console.log('Resposta é um objeto único, convertendo para array');
-        setEmpresas([data]);
+      // Verificar se a resposta contém a propriedade 'data' com array de empresas
+      if (responseData && responseData.data && Array.isArray(responseData.data)) {
+        console.log('Resposta contém array de empresas na propriedade data com', responseData.data.length, 'empresas');
+        setEmpresas(responseData.data);
       } else {
-        console.log('Resposta não contém dados de empresas válidos');
+        console.log('Resposta não contém dados de empresas válidos na propriedade data');
         setEmpresas([]);
       }
     } catch (err) {
