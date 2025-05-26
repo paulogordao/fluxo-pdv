@@ -135,9 +135,72 @@ const ConfigEmpresaEditScreen = () => {
   };
 
   const onSubmit = async (data: EmpresaEditFormData) => {
-    // Funcionalidade de salvar será implementada posteriormente
-    console.log("Dados para salvar:", data);
-    toast.success("Funcionalidade de salvar será implementada em breve!");
+    if (!id || !empresaData) {
+      toast.error("Erro: dados da empresa não encontrados.");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      const userUUID = sessionStorage.getItem("user.uuid");
+      const apiKey = '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975';
+      
+      if (!userUUID) {
+        setPermissionMessage("Sessão expirada. Faça login novamente.");
+        setShowPermissionModal(true);
+        return;
+      }
+
+      console.log("Atualizando empresa:", id, "com dados:", data);
+
+      const requestBody = {
+        nome: data.nome,
+        cnpj: data.cnpj,
+        email: data.email || null,
+        telefone: data.telefone || null,
+        endereco: data.endereco || null,
+        descricao: data.descricao || null,
+      };
+
+      const response = await fetch(`https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/empresas?id=${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "id_usuario": userUUID,
+          "User-Agent": "SimuladorPDV/1.0"
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      console.log("Status da resposta de atualização:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log("Erro na atualização:", errorText);
+        throw new Error(`Erro na atualização: ${response.status} - ${errorText}`);
+      }
+
+      const responseData = await response.json();
+      console.log("Resposta da atualização:", responseData);
+
+      if (responseData.code === "200" || response.status === 200) {
+        toast.success("Empresa atualizada com sucesso!");
+        // Aguardar um pouco antes de redirecionar para que o usuário veja a mensagem
+        setTimeout(() => {
+          navigate("/config_empresa_list");
+        }, 1500);
+      } else {
+        throw new Error(responseData.mensagem || "Erro ao atualizar empresa");
+      }
+      
+    } catch (error) {
+      console.error("Erro ao atualizar empresa:", error);
+      toast.error("Erro ao atualizar empresa. Tente novamente.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCancel = () => {
