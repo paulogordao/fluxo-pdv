@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,6 +24,7 @@ import ConfiguracoesScreen from "./pages/ConfiguracoesScreen";
 import CadastroEmpresaScreen from "./pages/CadastroEmpresaScreen";
 import ConfigEmpresaScreen from "./pages/ConfigEmpresaScreen";
 import ConfigEmpresaEditarScreen from "./pages/ConfigEmpresaEditarScreen";
+import ConfigEmpresaEditScreen from "./pages/ConfigEmpresaEditScreen";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +56,7 @@ const App = () => (
               <Route path="/configuracoes/empresa" element={<CadastroEmpresaScreen />} />
               <Route path="/config_empresa" element={<ConfigEmpresaScreen />} />
               <Route path="/config_empresa_list" element={<ConfigEmpresaEditarScreen />} />
+              <Route path="/config_empresa_edit/:id" element={<ConfigEmpresaEditScreen />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

@@ -89,7 +89,7 @@ const ConfigEmpresaEditarScreen = () => {
 
   const handleEdit = (empresa: Empresa) => {
     console.log('Editar empresa:', empresa);
-    // Funcionalidade será implementada posteriormente
+    navigate(`/config_empresa_edit/${empresa.id}`);
   };
 
   const handleDelete = (empresa: Empresa) => {
