@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -140,17 +141,68 @@ const ConfigEmpresaScreen = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call - replace with actual endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Recuperar dados do sessionStorage
+      const apiKey = '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975';
+      const idUsuario = sessionStorage.getItem('user.uuid');
+
+      console.log('Dados para envio:', data);
+      console.log('API Key:', apiKey ? 'Configurada' : 'Não encontrada');
+      console.log('ID Usuário:', idUsuario);
+
+      if (!idUsuario) {
+        throw new Error('Usuário não autenticado. Faça login novamente.');
+      }
+
+      // Preparar payload
+      const payload = {
+        nome: data.nome,
+        cnpj: data.cnpj,
+        email: data.email || null,
+        telefone: data.telefone || null,
+        endereco: data.endereco || null,
+        descricao: data.descricao || null,
+      };
+
+      console.log('Payload para envio:', payload);
+
+      // Fazer requisição POST
+      const response = await fetch('https://umbrelosn8n.plsm.com.br/webhook-test/simuladorPDV/empresas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'id_usuario': idUsuario,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      console.log('Status da resposta:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('Erro da API:', errorText);
+        throw new Error(`Erro na requisição: ${response.status} - ${errorText}`);
+      }
+
+      const responseData = await response.json();
+      console.log('Resposta da API:', responseData);
       
-      console.log("Dados da empresa:", data);
-      toast.success("Empresa cadastrada com sucesso!");
+      // Verificar se a criação foi bem-sucedida
+      if (responseData.code === "201" || responseData.code === 201) {
+        toast.success(responseData.mensagem || "Empresa criada com sucesso!");
+        
+        // Clear form after success
+        reset();
+        
+        // Redirecionar para a tela de listagem de empresas
+        navigate("/config_empresa_list");
+      } else {
+        throw new Error(responseData.mensagem || "Erro ao criar empresa");
+      }
       
-      // Clear form after success
-      reset();
     } catch (error) {
       console.error("Erro ao salvar empresa:", error);
-      toast.error("Erro ao salvar os dados da empresa. Tente novamente.");
+      toast.error(error instanceof Error ? error.message : "Erro ao criar empresa. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
