@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -46,13 +47,15 @@ const ConfigEmpresaEditarScreen = () => {
         throw new Error('Usuário não autenticado. Faça login novamente.');
       }
 
-      console.log('Fazendo requisição para buscar empresas...');
+      console.log('Fazendo requisição para listar todas as empresas...');
+      // CORREÇÃO: Removido o parâmetro id da URL para fazer a listagem geral
       const response = await fetch('https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/empresas', {
         method: 'GET',
         headers: {
           'x-api-key': apiKey,
           'id_usuario': idUsuario,
           'Content-Type': 'application/json',
+          'User-Agent': 'SimuladorPDV/1.0'
         },
       });
 
@@ -71,8 +74,12 @@ const ConfigEmpresaEditarScreen = () => {
       if (responseData && responseData.data && Array.isArray(responseData.data)) {
         console.log('Resposta contém array de empresas na propriedade data com', responseData.data.length, 'empresas');
         setEmpresas(responseData.data);
+      } else if (Array.isArray(responseData)) {
+        // Caso a resposta seja um array direto
+        console.log('Resposta é um array direto com', responseData.length, 'empresas');
+        setEmpresas(responseData);
       } else {
-        console.log('Resposta não contém dados de empresas válidos na propriedade data');
+        console.log('Resposta não contém dados de empresas válidos');
         setEmpresas([]);
       }
     } catch (err) {
