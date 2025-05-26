@@ -166,7 +166,7 @@ const ConfigEmpresaScreen = () => {
       console.log('Payload para envio:', payload);
 
       // Fazer requisição POST
-      const response = await fetch('https://umbrelosn8n.plsm.com.br/webhook-test/simuladorPDV/empresas', {
+      const response = await fetch('https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/empresas', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
