@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -238,8 +237,7 @@ const ConfigUsuarioEditIndividualScreen = () => {
                     <SelectValue placeholder="Selecione uma empresa" />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* TODO: Carregar opções de empresas em uma etapa futura */}
-                    <SelectItem value="" disabled>
+                    <SelectItem value="no-company" disabled>
                       Nenhuma empresa disponível
                     </SelectItem>
                   </SelectContent>
