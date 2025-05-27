@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -103,9 +102,15 @@ const ConfigUsuarioEditScreen = () => {
   };
 
   const handleEdit = (usuario: string) => {
-    // TODO: Implementar navegação para edição do usuário
-    console.log("Editar usuário:", usuario);
-    toast.info("Funcionalidade de edição será implementada em breve.");
+    // Find the user data to get the ID
+    const userData = usuarios.find(u => u.usuario === usuario);
+    if (userData && userData.usuario) {
+      // For now, we'll use the usuario field as ID since the API response doesn't include an id field
+      // This will need to be updated when the API provides the actual user ID
+      navigate(`/config_usuario_edit_individual/${encodeURIComponent(userData.usuario)}`);
+    } else {
+      toast.error("Não foi possível identificar o usuário para edição.");
+    }
   };
 
   const handleDelete = (usuario: string) => {
