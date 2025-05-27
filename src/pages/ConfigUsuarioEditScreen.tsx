@@ -21,6 +21,7 @@ interface UsuarioData {
   email: string;
   empresa: string;
   criado_em: string;
+  id: string; // Add the id field
 }
 
 const ConfigUsuarioEditScreen = () => {
@@ -104,10 +105,9 @@ const ConfigUsuarioEditScreen = () => {
   const handleEdit = (usuario: string) => {
     // Find the user data to get the ID
     const userData = usuarios.find(u => u.usuario === usuario);
-    if (userData && userData.usuario) {
-      // For now, we'll use the usuario field as ID since the API response doesn't include an id field
-      // This will need to be updated when the API provides the actual user ID
-      navigate(`/config_usuario_edit_individual/${encodeURIComponent(userData.usuario)}`);
+    if (userData && userData.id) {
+      // Use the actual ID (UUID) from the API response
+      navigate(`/config_usuario_edit_individual/${encodeURIComponent(userData.id)}`);
     } else {
       toast.error("Não foi possível identificar o usuário para edição.");
     }
