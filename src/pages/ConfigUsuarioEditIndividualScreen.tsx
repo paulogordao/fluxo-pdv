@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,15 +16,24 @@ interface UsuarioData {
   nome: string;
   email: string;
   empresa: string;
+  empresa_id?: string;
   criado_em: string;
   id: string;
+}
+
+interface EmpresaData {
+  id: string;
+  nome: string;
+  cnpj: string;
 }
 
 const ConfigUsuarioEditIndividualScreen = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [userData, setUserData] = useState<UsuarioData | null>(null);
+  const [empresas, setEmpresas] = useState<EmpresaData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingEmpresas, setIsLoadingEmpresas] = useState(true);
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [permissionMessage, setPermissionMessage] = useState("");
 
@@ -38,6 +48,7 @@ const ConfigUsuarioEditIndividualScreen = () => {
   useEffect(() => {
     if (id) {
       fetchUserData(id);
+      fetchEmpresas();
     }
   }, [id]);
 
@@ -82,7 +93,7 @@ const ConfigUsuarioEditIndividualScreen = () => {
         usuario: data.usuario || "",
         nome: data.nome || "",
         email: data.email || "",
-        empresa: data.empresa || ""
+        empresa: data.empresa_id || ""
       });
       
     } catch (error) {
@@ -90,6 +101,50 @@ const ConfigUsuarioEditIndividualScreen = () => {
       toast.error("Erro ao carregar dados do usuário. Tente novamente.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchEmpresas = async () => {
+    try {
+      setIsLoadingEmpresas(true);
+      
+      const userEmail = sessionStorage.getItem("user.login");
+      const userUUID = sessionStorage.getItem("user.uuid");
+      const apiKey = '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975';
+      
+      if (!userEmail || !userUUID) {
+        console.error("Sessão expirada para buscar empresas");
+        return;
+      }
+
+      console.log("Buscando empresas...");
+      
+      const response = await fetch(`https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/empresas`, {
+        method: "GET",
+        headers: {
+          "x-api-key": apiKey,
+          "id_usuario": userUUID,
+          "User-Agent": "SimuladorPDV/1.0"
+        }
+      });
+
+      console.log("Status da resposta empresas:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log("Erro da API empresas:", errorText);
+        throw new Error(`Erro na requisição: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log("Dados das empresas recebidos:", data);
+      setEmpresas(data);
+      
+    } catch (error) {
+      console.error("Erro ao buscar empresas:", error);
+      toast.error("Erro ao carregar empresas. Tente novamente.");
+    } finally {
+      setIsLoadingEmpresas(false);
     }
   };
 
@@ -232,14 +287,30 @@ const ConfigUsuarioEditIndividualScreen = () => {
                 <Label htmlFor="empresa" className="text-sm font-medium text-gray-700">
                   Empresa
                 </Label>
-                <Select value={formData.empresa} onValueChange={(value) => handleInputChange('empresa', value)}>
+                <Select 
+                  value={formData.empresa} 
+                  onValueChange={(value) => handleInputChange('empresa', value)}
+                  disabled={isLoadingEmpresas}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione uma empresa" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="no-company" disabled>
-                      Nenhuma empresa disponível
-                    </SelectItem>
+                    {isLoadingEmpresas ? (
+                      <SelectItem value="loading" disabled>
+                        Carregando empresas...
+                      </SelectItem>
+                    ) : empresas.length === 0 ? (
+                      <SelectItem value="no-company" disabled>
+                        Nenhuma empresa disponível
+                      </SelectItem>
+                    ) : (
+                      empresas.map((empresa) => (
+                        <SelectItem key={empresa.id} value={empresa.id}>
+                          {empresa.nome} - {empresa.cnpj}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
