@@ -138,7 +138,9 @@ const ConfigUsuarioEditIndividualScreen = () => {
 
       const data = await response.json();
       console.log("Dados das empresas recebidos:", data);
-      setEmpresas(data);
+      
+      // Extract the data array from the API response
+      setEmpresas(data.data || []);
       
     } catch (error) {
       console.error("Erro ao buscar empresas:", error);
