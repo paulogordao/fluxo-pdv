@@ -1,5 +1,4 @@
-
-import { Building2, Plus, Edit, Settings } from "lucide-react";
+import { Building2, Plus, Edit, Settings, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -29,6 +28,23 @@ const menuItems = [
       {
         title: "Editar",
         url: "/config_empresa_list",
+        icon: Edit,
+        disabled: false,
+      },
+    ],
+  },
+  {
+    title: "Usuário",
+    icon: User,
+    items: [
+      {
+        title: "Novo",
+        url: "/config_usuario_novo",
+        icon: Plus,
+      },
+      {
+        title: "Editar",
+        url: "/config_usuario_edit",
         icon: Edit,
         disabled: false,
       },
