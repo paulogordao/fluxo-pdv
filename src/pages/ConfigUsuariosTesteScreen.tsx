@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowLeft, FlaskConical } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { useToast } from "@/hooks/use-toast";
 
 interface UsuarioTeste {
+  id: string;
   identificacao_usuario: string;
   pedir_telefone: boolean;
   possui_dotz: boolean;
@@ -22,6 +23,7 @@ interface UsuarioTeste {
 const ConfigUsuariosTesteScreen = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // For now, using a hardcoded user ID - in a real app this would come from auth context
   const currentUserId = "f647bfee-faa2-4293-a5f2-d192a9e9f3f1";
@@ -53,10 +55,62 @@ const ConfigUsuariosTesteScreen = () => {
     return Array.isArray(data) ? data : [];
   };
 
+  const updateUsuarioTeste = async (usuario: UsuarioTeste): Promise<void> => {
+    const response = await fetch("https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/usuarios_teste", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": "0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975",
+        "id_usuario": currentUserId,
+      },
+      body: JSON.stringify(usuario),
+    });
+
+    if (!response.ok) {
+      throw new Error("Erro ao atualizar usuário de teste");
+    }
+
+    const data = await response.json();
+    if (data.status !== "ok") {
+      throw new Error("Erro ao atualizar usuário de teste");
+    }
+  };
+
   const { data: usuariosTeste = [], isLoading, error } = useQuery({
     queryKey: ["usuarios-teste"],
     queryFn: fetchUsuariosTeste,
   });
+
+  const updateMutation = useMutation({
+    mutationFn: updateUsuarioTeste,
+    onSuccess: () => {
+      toast({
+        title: "Sucesso",
+        description: "Usuário teste atualizado com sucesso",
+      });
+      queryClient.invalidateQueries({ queryKey: ["usuarios-teste"] });
+    },
+    onError: (error) => {
+      console.error("Erro ao atualizar usuário:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o usuário de teste",
+        variant: "destructive",
+      });
+      // Refetch data to revert any optimistic updates
+      queryClient.invalidateQueries({ queryKey: ["usuarios-teste"] });
+    },
+  });
+
+  const handleSwitchChange = (usuario: UsuarioTeste, field: keyof Omit<UsuarioTeste, 'id' | 'identificacao_usuario'>, newValue: boolean) => {
+    const updatedUsuario = {
+      ...usuario,
+      [field]: newValue,
+    };
+
+    console.log("Atualizando usuário:", updatedUsuario);
+    updateMutation.mutate(updatedUsuario);
+  };
 
   // Handle error with useEffect to show toast
   React.useEffect(() => {
@@ -132,7 +186,7 @@ const ConfigUsuariosTesteScreen = () => {
                   </TableHeader>
                   <TableBody>
                     {usuariosTeste.map((usuario, index) => (
-                      <TableRow key={index}>
+                      <TableRow key={usuario.id || index}>
                         <TableCell className="font-medium">
                           {usuario.identificacao_usuario}
                         </TableCell>
@@ -140,7 +194,8 @@ const ConfigUsuariosTesteScreen = () => {
                           <div className="flex justify-center">
                             <Switch 
                               checked={usuario.pedir_telefone} 
-                              disabled 
+                              onCheckedChange={(checked) => handleSwitchChange(usuario, 'pedir_telefone', checked)}
+                              disabled={updateMutation.isPending}
                               className="data-[state=checked]:bg-dotz-laranja"
                             />
                           </div>
@@ -149,7 +204,8 @@ const ConfigUsuariosTesteScreen = () => {
                           <div className="flex justify-center">
                             <Switch 
                               checked={usuario.possui_dotz} 
-                              disabled 
+                              onCheckedChange={(checked) => handleSwitchChange(usuario, 'possui_dotz', checked)}
+                              disabled={updateMutation.isPending}
                               className="data-[state=checked]:bg-dotz-laranja"
                             />
                           </div>
@@ -158,7 +214,8 @@ const ConfigUsuariosTesteScreen = () => {
                           <div className="flex justify-center">
                             <Switch 
                               checked={usuario.outros_meios_pagamento} 
-                              disabled 
+                              onCheckedChange={(checked) => handleSwitchChange(usuario, 'outros_meios_pagamento', checked)}
+                              disabled={updateMutation.isPending}
                               className="data-[state=checked]:bg-dotz-laranja"
                             />
                           </div>
@@ -167,7 +224,8 @@ const ConfigUsuariosTesteScreen = () => {
                           <div className="flex justify-center">
                             <Switch 
                               checked={usuario.dotz_sem_app} 
-                              disabled 
+                              onCheckedChange={(checked) => handleSwitchChange(usuario, 'dotz_sem_app', checked)}
+                              disabled={updateMutation.isPending}
                               className="data-[state=checked]:bg-dotz-laranja"
                             />
                           </div>
@@ -176,7 +234,8 @@ const ConfigUsuariosTesteScreen = () => {
                           <div className="flex justify-center">
                             <Switch 
                               checked={usuario.permitir_pagamento_token} 
-                              disabled 
+                              onCheckedChange={(checked) => handleSwitchChange(usuario, 'permitir_pagamento_token', checked)}
+                              disabled={updateMutation.isPending}
                               className="data-[state=checked]:bg-dotz-laranja"
                             />
                           </div>
