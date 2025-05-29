@@ -43,8 +43,14 @@ const ConfigUsuariosTesteScreen = () => {
     const data = await response.json();
     console.log("Resposta da API:", data);
     
-    // Assuming the API returns data in format { data: [...] } or directly [...]
-    return Array.isArray(data) ? data : data.data || [];
+    // A API retorna um objeto único, não um array
+    // Vamos transformar em array para renderizar na tabela
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      return [data];
+    }
+    
+    // Se for um array, retorna como está
+    return Array.isArray(data) ? data : [];
   };
 
   const { data: usuariosTeste = [], isLoading, error } = useQuery({
@@ -63,6 +69,11 @@ const ConfigUsuariosTesteScreen = () => {
       });
     }
   }, [error, toast]);
+
+  // Debug log to check data
+  React.useEffect(() => {
+    console.log("Dados dos usuários de teste:", usuariosTeste);
+  }, [usuariosTeste]);
 
   return (
     <ConfigLayoutWithSidebar>
