@@ -49,15 +49,19 @@ const ConfigUsuariosTesteScreen = () => {
   const { data: usuariosTeste = [], isLoading, error } = useQuery({
     queryKey: ["usuarios-teste"],
     queryFn: fetchUsuariosTeste,
-    onError: (error: any) => {
+  });
+
+  // Handle error with useEffect to show toast
+  React.useEffect(() => {
+    if (error) {
       console.error("Erro ao carregar usuários de teste:", error);
       toast({
         title: "Erro",
         description: "Não foi possível carregar os usuários de teste",
         variant: "destructive",
       });
-    },
-  });
+    }
+  }, [error, toast]);
 
   return (
     <ConfigLayoutWithSidebar>
