@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -157,10 +156,68 @@ const ConfigUsuarioEditIndividualScreen = () => {
     }));
   };
 
-  const handleSave = () => {
-    // TODO: Implementar salvamento
-    console.log("Dados para salvar:", formData);
-    toast.info("Funcionalidade de salvamento será implementada em breve.");
+  const handleSave = async () => {
+    try {
+      const userUUID = sessionStorage.getItem("user.uuid");
+      const apiKey = '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975';
+      
+      if (!userUUID) {
+        setPermissionMessage("Sessão expirada. Faça login novamente.");
+        setShowPermissionModal(true);
+        return;
+      }
+
+      if (!userData?.id) {
+        toast.error("ID do usuário não encontrado.");
+        return;
+      }
+
+      console.log("Dados para salvar:", formData);
+      
+      const requestBody = {
+        usuario: formData.usuario,
+        nome: formData.nome,
+        email: formData.email,
+        id: userData.id,
+        empresa_id: formData.empresa
+      };
+
+      console.log("Enviando PUT request:", requestBody);
+
+      const response = await fetch('https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/usuarios', {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "id_usuario": userUUID,
+          "User-Agent": "SimuladorPDV/1.0"
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      console.log("Status da resposta PUT:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log("Erro da API PUT:", errorText);
+        throw new Error(`Erro na requisição: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log("Resposta da API PUT:", data);
+      
+      if (data.status === "ok") {
+        toast.success("Usuário atualizado com sucesso!");
+        // Optionally navigate back to the list after successful update
+        // navigate("/config_usuario_edit");
+      } else {
+        toast.error("Erro ao atualizar usuário. Tente novamente.");
+      }
+      
+    } catch (error) {
+      console.error("Erro ao salvar usuário:", error);
+      toast.error("Erro ao salvar usuário. Tente novamente.");
+    }
   };
 
   const handleCancel = () => {
