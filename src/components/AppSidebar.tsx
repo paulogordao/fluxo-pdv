@@ -1,4 +1,5 @@
-import { Building2, Plus, Edit, Settings, User } from "lucide-react";
+
+import { Building2, Plus, Edit, Settings, User, FlaskConical } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -47,6 +48,17 @@ const menuItems = [
         url: "/config_usuario_edit",
         icon: Edit,
         disabled: false,
+      },
+    ],
+  },
+  {
+    title: "Configurações do fluxo",
+    icon: FlaskConical,
+    items: [
+      {
+        title: "Usuários de teste",
+        url: "/config_usuarios_teste",
+        icon: User,
       },
     ],
   },
