@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +17,8 @@ interface UsuarioTeste {
   outros_meios_pagamento: boolean;
   dotz_sem_app: boolean;
   permitir_pagamento_token: boolean;
+  created_at?: string;
+  id_empresa?: string;
 }
 
 const ConfigUsuariosTesteScreen = () => {
@@ -42,17 +43,29 @@ const ConfigUsuariosTesteScreen = () => {
       throw new Error("Erro ao carregar usuários de teste");
     }
 
-    const data = await response.json();
-    console.log("Resposta da API:", data);
+    const responseData = await response.json();
+    console.log("Resposta completa da API:", responseData);
     
-    // A API retorna um objeto único, não um array
-    // Vamos transformar em array para renderizar na tabela
-    if (data && typeof data === 'object' && !Array.isArray(data)) {
-      return [data];
+    // A API agora retorna um objeto com o campo 'data' contendo o array de usuários
+    if (responseData && responseData.data && Array.isArray(responseData.data)) {
+      console.log("Dados dos usuários encontrados:", responseData.data);
+      return responseData.data;
     }
     
-    // Se for um array, retorna como está
-    return Array.isArray(data) ? data : [];
+    // Fallback: se não há campo 'data', mas há um array direto
+    if (Array.isArray(responseData)) {
+      console.log("Dados diretos (array):", responseData);
+      return responseData;
+    }
+    
+    // Fallback: se é um objeto único, transformar em array
+    if (responseData && typeof responseData === 'object' && !Array.isArray(responseData) && responseData.identificacao_usuario) {
+      console.log("Objeto único transformado em array:", [responseData]);
+      return [responseData];
+    }
+    
+    console.log("Nenhum dado válido encontrado, retornando array vazio");
+    return [];
   };
 
   const updateUsuarioTeste = async (usuario: UsuarioTeste): Promise<void> => {
