@@ -2,9 +2,10 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, FlaskConical } from "lucide-react";
+import { ArrowLeft, FlaskConical, Plus } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +26,7 @@ const ConfigUsuariosTesteScreen = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [cpfInput, setCpfInput] = React.useState("");
 
   // For now, using a hardcoded user ID - in a real app this would come from auth context
   const currentUserId = "f647bfee-faa2-4293-a5f2-d192a9e9f3f1";
@@ -66,6 +68,29 @@ const ConfigUsuariosTesteScreen = () => {
     
     console.log("Nenhum dado válido encontrado, retornando array vazio");
     return [];
+  };
+
+  const createUsuarioTeste = async (cpf: string): Promise<void> => {
+    const response = await fetch("https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/usuarios_teste", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": "0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975",
+        "id_usuario": currentUserId,
+      },
+      body: JSON.stringify({
+        cpf_usuario: cpf,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Erro ao cadastrar usuário de teste");
+    }
+
+    const data = await response.json();
+    if (data.status !== "ok") {
+      throw new Error("Erro ao cadastrar usuário de teste");
+    }
   };
 
   const updateUsuarioTeste = async (usuario: UsuarioTeste): Promise<void> => {
@@ -115,6 +140,26 @@ const ConfigUsuariosTesteScreen = () => {
     },
   });
 
+  const createMutation = useMutation({
+    mutationFn: createUsuarioTeste,
+    onSuccess: () => {
+      toast({
+        title: "Sucesso",
+        description: "Usuário cadastrado com sucesso",
+      });
+      setCpfInput("");
+      queryClient.invalidateQueries({ queryKey: ["usuarios-teste"] });
+    },
+    onError: (error) => {
+      console.error("Erro ao cadastrar usuário:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível cadastrar o usuário de teste",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSwitchChange = (usuario: UsuarioTeste, field: keyof Omit<UsuarioTeste, 'id' | 'identificacao_usuario'>, newValue: boolean) => {
     const updatedUsuario = {
       ...usuario,
@@ -123,6 +168,19 @@ const ConfigUsuariosTesteScreen = () => {
 
     console.log("Atualizando usuário:", updatedUsuario);
     updateMutation.mutate(updatedUsuario);
+  };
+
+  const handleCreateUser = () => {
+    if (!cpfInput.trim()) {
+      toast({
+        title: "Erro",
+        description: "Por favor, digite um CPF válido",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createMutation.mutate(cpfInput.trim());
   };
 
   // Handle error with useEffect to show toast
@@ -172,6 +230,27 @@ const ConfigUsuariosTesteScreen = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {/* Formulário de cadastro */}
+            <div className="flex items-center space-x-4 mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="flex-1">
+                <Input
+                  placeholder="Digite o CPF do usuário"
+                  value={cpfInput}
+                  onChange={(e) => setCpfInput(e.target.value)}
+                  disabled={createMutation.isPending}
+                />
+              </div>
+              <Button
+                onClick={handleCreateUser}
+                disabled={createMutation.isPending || !cpfInput.trim()}
+                variant="dotz"
+                className="flex items-center space-x-2"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Cadastrar</span>
+              </Button>
+            </div>
+
             {isLoading ? (
               <div className="flex justify-center items-center py-8">
                 <p className="text-gray-600">Carregando usuários de teste...</p>
