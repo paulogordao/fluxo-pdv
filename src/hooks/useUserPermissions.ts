@@ -23,22 +23,33 @@ const getUserId = (): string => {
   if (userData) {
     try {
       const user = JSON.parse(userData);
-      return user.id || user.usuario_id || '1'; // fallback to '1' if no ID found
+      // Try to get the correct user ID from different possible fields
+      return user.id_usuario || user.id || user.usuario_id || '';
     } catch (error) {
       console.error('Error parsing user data:', error);
-      return '1';
+      return '';
     }
   }
-  return '1'; // default fallback
+  
+  // If no userData, check if there's a direct userId stored
+  const directUserId = localStorage.getItem('userId');
+  if (directUserId) {
+    return directUserId;
+  }
+  
+  console.warn('No user ID found in localStorage');
+  return '';
 };
 
 export const useUserPermissions = () => {
   const userId = getUserId();
   
+  console.log('Current userId for permissions:', userId);
+  
   const { data: permissionsData, isLoading, error } = useQuery({
     queryKey: ['userPermissions', userId],
     queryFn: () => fetchUserPermissions(userId),
-    enabled: !!userId,
+    enabled: !!userId, // Only run if we have a valid user ID
     staleTime: 5 * 60 * 1000, // 5 minutes cache
     retry: 2,
   });
@@ -52,5 +63,6 @@ export const useUserPermissions = () => {
     hasPermission,
     isLoading,
     error,
+    userId, // Expose userId for debugging
   };
 };
