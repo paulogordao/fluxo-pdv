@@ -24,18 +24,12 @@ const fetchUserPermissions = async (userId: string): Promise<UserPermissions> =>
   return response.json();
 };
 
-const getUserId = (): string => {
+const getUserId = (): string | null => {
   console.log('Getting user ID from localStorage...');
   
   // Debug: List all localStorage keys
   const allKeys = Object.keys(localStorage);
   console.log('All localStorage keys:', allKeys);
-  
-  // Debug: Show all localStorage content
-  allKeys.forEach(key => {
-    const value = localStorage.getItem(key);
-    console.log(`localStorage[${key}]:`, value);
-  });
   
   // First, check for direct userId storage
   const directUserId = localStorage.getItem('userId');
@@ -98,8 +92,7 @@ const getUserId = (): string => {
   }
   
   // Check if we have the network request response data from recent login
-  // Based on the network logs, the login response contains id_usuario
-  // Let's try to find it in any stored data
+  // Look for id_usuario in any stored data
   for (const key of allKeys) {
     try {
       const data = localStorage.getItem(key);
@@ -124,9 +117,7 @@ const getUserId = (): string => {
   }
   
   console.warn('No user ID found in localStorage');
-  // For testing purposes, let's return the ID from the network logs
-  // This should be replaced with proper session management
-  return 'f647bfee-faa2-4293-a5f2-d192a9e9f3f1';
+  return null;
 };
 
 export const useUserPermissions = () => {
@@ -137,6 +128,9 @@ export const useUserPermissions = () => {
   const { data: permissionsData, isLoading, error } = useQuery({
     queryKey: ['userPermissions', userId],
     queryFn: () => {
+      if (!userId) {
+        throw new Error('No user ID available');
+      }
       console.log('Fetching permissions for userId:', userId);
       return fetchUserPermissions(userId);
     },
