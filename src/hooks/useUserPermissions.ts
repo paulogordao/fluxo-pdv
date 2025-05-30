@@ -19,22 +19,45 @@ const fetchUserPermissions = async (userId: string): Promise<UserPermissions> =>
 };
 
 const getUserId = (): string => {
+  console.log('Getting user ID from localStorage...');
+  
+  // First, check for direct userId storage
+  const directUserId = localStorage.getItem('userId');
+  if (directUserId) {
+    console.log('Found direct userId:', directUserId);
+    return directUserId;
+  }
+  
+  // Check for userData object
   const userData = localStorage.getItem('userData');
   if (userData) {
     try {
       const user = JSON.parse(userData);
+      console.log('Found userData:', user);
       // Try to get the correct user ID from different possible fields
-      return user.id_usuario || user.id || user.usuario_id || '';
+      const userId = user.id_usuario || user.id || user.usuario_id;
+      if (userId) {
+        console.log('Extracted userId from userData:', userId);
+        return userId;
+      }
     } catch (error) {
       console.error('Error parsing user data:', error);
-      return '';
     }
   }
   
-  // If no userData, check if there's a direct userId stored
-  const directUserId = localStorage.getItem('userId');
-  if (directUserId) {
-    return directUserId;
+  // Check for loginResponse data (from recent login)
+  const loginResponse = localStorage.getItem('loginResponse');
+  if (loginResponse) {
+    try {
+      const response = JSON.parse(loginResponse);
+      console.log('Found loginResponse:', response);
+      if (response.id_usuario) {
+        console.log('Extracted userId from loginResponse:', response.id_usuario);
+        return response.id_usuario;
+      }
+    } catch (error) {
+      console.error('Error parsing login response:', error);
+    }
   }
   
   console.warn('No user ID found in localStorage');
@@ -48,14 +71,23 @@ export const useUserPermissions = () => {
   
   const { data: permissionsData, isLoading, error } = useQuery({
     queryKey: ['userPermissions', userId],
-    queryFn: () => fetchUserPermissions(userId),
+    queryFn: () => {
+      console.log('Fetching permissions for userId:', userId);
+      return fetchUserPermissions(userId);
+    },
     enabled: !!userId, // Only run if we have a valid user ID
     staleTime: 5 * 60 * 1000, // 5 minutes cache
     retry: 2,
   });
 
+  console.log('Permissions data:', permissionsData);
+  console.log('Permissions loading:', isLoading);
+  console.log('Permissions error:', error);
+
   const hasPermission = (permission: string): boolean => {
-    return permissionsData?.permissao?.includes(permission) || false;
+    const result = permissionsData?.permissao?.includes(permission) || false;
+    console.log(`Checking permission ${permission}:`, result);
+    return result;
   };
 
   return {
