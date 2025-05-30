@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -142,13 +143,21 @@ const LoginScreen = () => {
       const data = await response.json();
 
       if (data.mensagem === "senha correta" && data.code === 200) {
-        // Save user session data including UUID
+        // Save user session data
         sessionStorage.setItem("user.login", email);
         sessionStorage.setItem("user.senha", password);
         
-        // Save user UUID from API response - this is critical for permission checks
+        // Save user ID in multiple places to ensure the permissions hook can find it
         if (data.id_usuario) {
+          console.log('Saving user ID for permissions:', data.id_usuario);
+          // Save in sessionStorage (existing)
           sessionStorage.setItem("user.uuid", data.id_usuario);
+          // Save in localStorage with direct key that useUserPermissions looks for
+          localStorage.setItem("userId", data.id_usuario);
+          // Also save the full login response for backup
+          localStorage.setItem("loginResponse", JSON.stringify(data));
+          // Save user data object
+          localStorage.setItem("userData", JSON.stringify({ id_usuario: data.id_usuario }));
         }
         
         // Display success toast
