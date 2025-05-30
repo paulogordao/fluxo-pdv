@@ -21,7 +21,6 @@ import OtpDataNascimentoScreen from "./pages/OtpDataNascimentoScreen";
 import ConfirmacaoPagamentoAppScreen from "./pages/ConfirmacaoPagamentoAppScreen";
 import ConfirmacaoPagamentoScreen from "./pages/ConfirmacaoPagamentoScreen";
 import ConfirmacaoPagamentoTokenScreen from "./pages/ConfirmacaoPagamentoTokenScreen";
-import ConfiguracoesScreen from "./pages/ConfiguracoesScreen";
 import ConfigHomeScreen from "./pages/ConfigHomeScreen";
 import CadastroEmpresaScreen from "./pages/CadastroEmpresaScreen";
 import ConfigEmpresaScreen from "./pages/ConfigEmpresaScreen";
@@ -57,7 +56,7 @@ const App = () => (
               <Route path="/confirmacao_pagamento_app" element={<ConfirmacaoPagamentoAppScreen />} />
               <Route path="/confirmacao_pagamento" element={<ConfirmacaoPagamentoScreen />} />
               <Route path="/confirmacao_pagamento_token" element={<ConfirmacaoPagamentoTokenScreen />} />
-              <Route path="/configuracoes" element={<ConfiguracoesScreen />} />
+              <Route path="/configuracoes" element={<ConfigHomeScreen />} />
               <Route path="/configuracoes/empresa" element={<CadastroEmpresaScreen />} />
               <Route path="/config_empresa" element={<ConfigEmpresaScreen />} />
               <Route path="/config_empresa_list" element={<ConfigEmpresaEditarScreen />} />
