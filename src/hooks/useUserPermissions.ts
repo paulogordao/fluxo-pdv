@@ -60,6 +60,27 @@ const getUserId = (): string => {
     }
   }
   
+  // Try to get from any login-related data stored
+  const keys = Object.keys(localStorage);
+  for (const key of keys) {
+    if (key.includes('login') || key.includes('user') || key.includes('auth')) {
+      try {
+        const data = localStorage.getItem(key);
+        if (data) {
+          const parsed = JSON.parse(data);
+          console.log(`Checking ${key}:`, parsed);
+          if (parsed.id_usuario) {
+            console.log(`Found userId in ${key}:`, parsed.id_usuario);
+            return parsed.id_usuario;
+          }
+        }
+      } catch (error) {
+        // Skip non-JSON items
+        console.log(`Skipping non-JSON item: ${key}`);
+      }
+    }
+  }
+  
   console.warn('No user ID found in localStorage');
   return '';
 };
