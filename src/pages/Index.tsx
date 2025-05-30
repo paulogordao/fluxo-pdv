@@ -15,7 +15,7 @@ const Index = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate("/config_empresa")}
+          onClick={() => navigate("/configuracoes")}
           className="text-gray-600 hover:text-dotz-laranja h-16 w-16 rounded-xl"
           title="Configurações"
         >
