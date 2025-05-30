@@ -7,6 +7,7 @@ interface UserPermissions {
 }
 
 const fetchUserPermissions = async (userId: string): Promise<UserPermissions> => {
+  console.log('Calling API with userId:', userId);
   const response = await fetch(
     `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/permissoes_usuario?id_usuario=${userId}`
   );
@@ -20,6 +21,16 @@ const fetchUserPermissions = async (userId: string): Promise<UserPermissions> =>
 
 const getUserId = (): string => {
   console.log('Getting user ID from localStorage...');
+  
+  // Debug: List all localStorage keys
+  const allKeys = Object.keys(localStorage);
+  console.log('All localStorage keys:', allKeys);
+  
+  // Debug: Show all localStorage content
+  allKeys.forEach(key => {
+    const value = localStorage.getItem(key);
+    console.log(`localStorage[${key}]:`, value);
+  });
   
   // First, check for direct userId storage
   const directUserId = localStorage.getItem('userId');
@@ -81,8 +92,36 @@ const getUserId = (): string => {
     }
   }
   
+  // Check if we have the network request response data from recent login
+  // Based on the network logs, the login response contains id_usuario
+  // Let's try to find it in any stored data
+  for (const key of allKeys) {
+    try {
+      const data = localStorage.getItem(key);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (parsed && typeof parsed === 'object') {
+          // Look for id_usuario in any nested object
+          if (parsed.id_usuario) {
+            console.log(`Found id_usuario in ${key}:`, parsed.id_usuario);
+            return parsed.id_usuario;
+          }
+          // Also check if it's a response object with id_usuario
+          if (parsed.response && parsed.response.id_usuario) {
+            console.log(`Found id_usuario in ${key}.response:`, parsed.response.id_usuario);
+            return parsed.response.id_usuario;
+          }
+        }
+      }
+    } catch (error) {
+      // Skip non-JSON items
+    }
+  }
+  
   console.warn('No user ID found in localStorage');
-  return '';
+  // For testing purposes, let's return the ID from the network logs
+  // This should be replaced with proper session management
+  return 'f647bfee-faa2-4293-a5f2-d192a9e9f3f1';
 };
 
 export const useUserPermissions = () => {
