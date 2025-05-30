@@ -22,6 +22,7 @@ import ConfirmacaoPagamentoAppScreen from "./pages/ConfirmacaoPagamentoAppScreen
 import ConfirmacaoPagamentoScreen from "./pages/ConfirmacaoPagamentoScreen";
 import ConfirmacaoPagamentoTokenScreen from "./pages/ConfirmacaoPagamentoTokenScreen";
 import ConfiguracoesScreen from "./pages/ConfiguracoesScreen";
+import ConfigHomeScreen from "./pages/ConfigHomeScreen";
 import CadastroEmpresaScreen from "./pages/CadastroEmpresaScreen";
 import ConfigEmpresaScreen from "./pages/ConfigEmpresaScreen";
 import ConfigEmpresaEditarScreen from "./pages/ConfigEmpresaEditarScreen";
