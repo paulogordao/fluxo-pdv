@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/sonner";
 
 const LoginScreen = () => {
@@ -15,10 +15,94 @@ const LoginScreen = () => {
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  // States for access request modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+  const [accessRequestData, setAccessRequestData] = useState({
+    nome_empresa: "",
+    cnpj: "",
+    email: "",
+    nome: ""
+  });
+  const [requestSuccess, setRequestSuccess] = useState(false);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  };
+
+  const validateCNPJ = (cnpj: string) => {
+    // Basic CNPJ validation - just check if it has 14 digits
+    const cleanCNPJ = cnpj.replace(/\D/g, '');
+    return cleanCNPJ.length === 14;
+  };
+
+  const handleAccessRequest = async () => {
+    // Validate required fields
+    if (!accessRequestData.nome_empresa || !accessRequestData.cnpj || !accessRequestData.email || !accessRequestData.nome) {
+      toast.error("Todos os campos são obrigatórios");
+      return;
+    }
+
+    // Validate email format
+    if (!validateEmail(accessRequestData.email)) {
+      toast.error("Digite um email válido");
+      return;
+    }
+
+    // Validate CNPJ format
+    if (!validateCNPJ(accessRequestData.cnpj)) {
+      toast.error("Digite um CNPJ válido (14 dígitos)");
+      return;
+    }
+
+    setIsSubmittingRequest(true);
+
+    try {
+      const response = await fetch("https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/usuarios/solicitar_acesso", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": "0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975"
+        },
+        body: JSON.stringify(accessRequestData)
+      });
+
+      const data = await response.json();
+
+      if (data.status === "ok") {
+        setRequestSuccess(true);
+        // Clear form data
+        setAccessRequestData({
+          nome_empresa: "",
+          cnpj: "",
+          email: "",
+          nome: ""
+        });
+      } else {
+        toast.error("Erro ao enviar solicitação. Tente novamente.");
+      }
+    } catch (error) {
+      console.error("Erro ao enviar solicitação de acesso:", error);
+      toast.error("Erro de conexão. Tente novamente.");
+    } finally {
+      setIsSubmittingRequest(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setRequestSuccess(false);
+    if (!requestSuccess) {
+      // Only clear form if not successful (to avoid clearing success message)
+      setAccessRequestData({
+        nome_empresa: "",
+        cnpj: "",
+        email: "",
+        nome: ""
+      });
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -136,6 +220,125 @@ const LoginScreen = () => {
               {isLoading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
+
+          {/* Access Request Button */}
+          <div className="mt-4">
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="full" 
+                  className="w-full"
+                  onClick={() => setIsModalOpen(true)}
+                >
+                  Solicitar acesso
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Solicitar acesso ao sistema</DialogTitle>
+                </DialogHeader>
+                
+                {requestSuccess ? (
+                  <div className="space-y-4">
+                    <div className="text-center p-6 bg-green-50 rounded-lg">
+                      <div className="text-green-600 text-lg font-semibold mb-2">
+                        ✅ Dados recebidos com sucesso!
+                      </div>
+                      <p className="text-gray-600">
+                        Após aprovação, orientações sobre os próximos passos serão enviadas para o e-mail informado.
+                      </p>
+                    </div>
+                    <Button 
+                      onClick={handleCloseModal} 
+                      className="w-full"
+                      variant="dotz"
+                    >
+                      Fechar
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="nome_empresa">Nome da empresa *</Label>
+                      <Input
+                        id="nome_empresa"
+                        value={accessRequestData.nome_empresa}
+                        onChange={(e) => setAccessRequestData(prev => ({
+                          ...prev,
+                          nome_empresa: e.target.value
+                        }))}
+                        placeholder="Digite o nome da empresa"
+                        disabled={isSubmittingRequest}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="cnpj">CNPJ *</Label>
+                      <Input
+                        id="cnpj"
+                        value={accessRequestData.cnpj}
+                        onChange={(e) => setAccessRequestData(prev => ({
+                          ...prev,
+                          cnpj: e.target.value
+                        }))}
+                        placeholder="Digite o CNPJ (14 dígitos)"
+                        disabled={isSubmittingRequest}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="request_email">E-mail de contato *</Label>
+                      <Input
+                        id="request_email"
+                        type="email"
+                        value={accessRequestData.email}
+                        onChange={(e) => setAccessRequestData(prev => ({
+                          ...prev,
+                          email: e.target.value
+                        }))}
+                        placeholder="Digite o e-mail de contato"
+                        disabled={isSubmittingRequest}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="nome">Nome do solicitante *</Label>
+                      <Input
+                        id="nome"
+                        value={accessRequestData.nome}
+                        onChange={(e) => setAccessRequestData(prev => ({
+                          ...prev,
+                          nome: e.target.value
+                        }))}
+                        placeholder="Digite seu nome"
+                        disabled={isSubmittingRequest}
+                      />
+                    </div>
+                    
+                    <div className="flex space-x-2 pt-4">
+                      <Button 
+                        variant="cancel" 
+                        onClick={handleCloseModal}
+                        disabled={isSubmittingRequest}
+                        className="flex-1"
+                      >
+                        Cancelar
+                      </Button>
+                      <Button 
+                        onClick={handleAccessRequest}
+                        disabled={isSubmittingRequest}
+                        variant="dotz"
+                        className="flex-1"
+                      >
+                        {isSubmittingRequest ? "Enviando..." : "Salvar"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
+          </div>
         </CardContent>
       </Card>
       
