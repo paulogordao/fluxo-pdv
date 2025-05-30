@@ -2,8 +2,13 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
+interface PermissionItem {
+  permissao: string;
+  perfil: string;
+}
+
 interface UserPermissions {
-  permissao: string[];
+  data: PermissionItem[];
 }
 
 const fetchUserPermissions = async (userId: string): Promise<UserPermissions> => {
@@ -145,13 +150,13 @@ export const useUserPermissions = () => {
   console.log('Permissions error:', error);
 
   const hasPermission = (permission: string): boolean => {
-    const result = permissionsData?.permissao?.includes(permission) || false;
+    const result = permissionsData?.data?.some(item => item.permissao === permission) || false;
     console.log(`Checking permission ${permission}:`, result);
     return result;
   };
 
   return {
-    permissions: permissionsData?.permissao || [],
+    permissions: permissionsData?.data?.map(item => item.permissao) || [],
     hasPermission,
     isLoading,
     error,
