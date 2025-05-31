@@ -28,6 +28,7 @@ import ConfigEmpresaEditarScreen from "./pages/ConfigEmpresaEditarScreen";
 import ConfigEmpresaEditScreen from "./pages/ConfigEmpresaEditScreen";
 import ConfigUsuarioEditScreen from "./pages/ConfigUsuarioEditScreen";
 import ConfigUsuarioEditIndividualScreen from "./pages/ConfigUsuarioEditIndividualScreen";
+import ConfigUsuarioNovoScreen from "./pages/ConfigUsuarioNovoScreen";
 import ConfigUsuariosTesteScreen from "./pages/ConfigUsuariosTesteScreen";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/config_empresa_edit/:id" element={<ConfigEmpresaEditScreen />} />
               <Route path="/config_usuario_edit" element={<ConfigUsuarioEditScreen />} />
               <Route path="/config_usuario_edit_individual/:id" element={<ConfigUsuarioEditIndividualScreen />} />
+              <Route path="/config_usuario_novo" element={<ConfigUsuarioNovoScreen />} />
               <Route path="/config_usuarios_teste" element={<ConfigUsuariosTesteScreen />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
