@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,17 +5,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, ArrowLeft } from "lucide-react";
+import { UserPlus, ArrowLeft, Loader2 } from "lucide-react";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 interface Empresa {
   id: string;
   nome: string;
 }
 
+interface CreateUserData {
+  usuario: string;
+  nome: string;
+  email: string;
+  empresa_id: string;
+  perfil: string;
+}
+
 const ConfigUsuarioNovoScreen = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -46,6 +55,62 @@ const ConfigUsuarioNovoScreen = () => {
   };
 
   const userId = getUserId();
+
+  // Create user mutation
+  const createUserMutation = useMutation({
+    mutationFn: async (userData: CreateUserData) => {
+      if (!userId) throw new Error('No user ID available');
+      
+      const response = await fetch(
+        'https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/usuarios',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'id_usuario': userId,
+            'x-api-key': '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975'
+          },
+          body: JSON.stringify(userData)
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to create user');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.status === 'ok' && data.code === 200) {
+        toast({
+          title: "✅ Cadastro efetuado com sucesso!",
+          description: data.mensagem,
+        });
+        
+        // Clear form
+        setFormData({
+          usuario: "",
+          nome: "",
+          email: "",
+          perfil: "",
+          empresa: ""
+        });
+        
+        // Redirect to user list after success
+        setTimeout(() => {
+          navigate("/config_usuario_edit");
+        }, 2000);
+      }
+    },
+    onError: (error) => {
+      console.error('Error creating user:', error);
+      toast({
+        title: "Erro ao cadastrar usuário",
+        description: "Verifique os dados e tente novamente.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Fetch user permissions
   const { data: permissionsData } = useQuery({
@@ -126,8 +191,26 @@ const ConfigUsuarioNovoScreen = () => {
   };
 
   const handleSave = () => {
-    // Por enquanto, o botão não executa nenhuma ação
-    console.log("Formulário seria salvo com os dados:", formData);
+    // Validate required fields
+    if (!formData.usuario || !formData.nome || !formData.email) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos obrigatórios marcados com *",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Prepare data for API
+    const userData: CreateUserData = {
+      usuario: formData.usuario,
+      nome: formData.nome,
+      email: formData.email,
+      empresa_id: formData.empresa,
+      perfil: formData.perfil
+    };
+
+    createUserMutation.mutate(userData);
   };
 
   const handleCancel = () => {
@@ -152,6 +235,7 @@ const ConfigUsuarioNovoScreen = () => {
               size="icon"
               onClick={handleCancel}
               className="text-gray-600 hover:text-dotz-laranja"
+              disabled={createUserMutation.isPending}
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -174,6 +258,7 @@ const ConfigUsuarioNovoScreen = () => {
                 onChange={(e) => handleInputChange('usuario', e.target.value)}
                 placeholder="Digite o nome de usuário"
                 className={`w-full ${isFieldEmpty('usuario') ? 'border-red-300' : ''}`}
+                disabled={createUserMutation.isPending}
               />
             </div>
 
@@ -187,6 +272,7 @@ const ConfigUsuarioNovoScreen = () => {
                 onChange={(e) => handleInputChange('nome', e.target.value)}
                 placeholder="Digite o nome completo"
                 className={`w-full ${isFieldEmpty('nome') ? 'border-red-300' : ''}`}
+                disabled={createUserMutation.isPending}
               />
             </div>
 
@@ -201,6 +287,7 @@ const ConfigUsuarioNovoScreen = () => {
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 placeholder="Digite o e-mail"
                 className={`w-full ${isFieldEmpty('email') ? 'border-red-300' : ''}`}
+                disabled={createUserMutation.isPending}
               />
             </div>
 
@@ -211,6 +298,7 @@ const ConfigUsuarioNovoScreen = () => {
               <Select 
                 value={formData.perfil} 
                 onValueChange={(value) => handleInputChange('perfil', value)}
+                disabled={createUserMutation.isPending}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione um perfil" />
@@ -238,6 +326,7 @@ const ConfigUsuarioNovoScreen = () => {
               <Select 
                 value={formData.empresa} 
                 onValueChange={(value) => handleInputChange('empresa', value)}
+                disabled={createUserMutation.isPending}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione uma empresa" />
@@ -272,6 +361,7 @@ const ConfigUsuarioNovoScreen = () => {
               onClick={handleCancel}
               variant="outline"
               className="px-6"
+              disabled={createUserMutation.isPending}
             >
               Cancelar
             </Button>
@@ -279,8 +369,16 @@ const ConfigUsuarioNovoScreen = () => {
               onClick={handleSave}
               variant="dotz"
               className="px-6"
+              disabled={createUserMutation.isPending}
             >
-              Salvar
+              {createUserMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                'Salvar'
+              )}
             </Button>
           </div>
         </CardContent>
