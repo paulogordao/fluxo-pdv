@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserPlus, ArrowLeft } from "lucide-react";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
+import { useQuery } from "@tanstack/react-query";
+
+interface Empresa {
+  id: string;
+  nome: string;
+}
 
 const ConfigUsuarioNovoScreen = () => {
   const navigate = useNavigate();
@@ -20,6 +26,97 @@ const ConfigUsuarioNovoScreen = () => {
     perfil: "",
     empresa: ""
   });
+
+  // Get user ID from localStorage
+  const getUserId = (): string | null => {
+    const userId = localStorage.getItem('userId');
+    if (userId) return userId;
+    
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        return user.id_usuario || user.id || user.usuario_id;
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+    
+    return null;
+  };
+
+  const userId = getUserId();
+
+  // Fetch user permissions
+  const { data: permissionsData } = useQuery({
+    queryKey: ['userPermissions', userId],
+    queryFn: async () => {
+      if (!userId) throw new Error('No user ID available');
+      
+      const response = await fetch(
+        `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/permissoes_usuario?id_usuario=${userId}`,
+        {
+          headers: {
+            'x-api-key': '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch permissions');
+      }
+      
+      return response.json();
+    },
+    enabled: !!userId,
+  });
+
+  // Fetch empresas
+  const { data: empresasData, isLoading: empresasLoading, error: empresasError } = useQuery({
+    queryKey: ['empresas'],
+    queryFn: async () => {
+      if (!userId) throw new Error('No user ID available');
+      
+      const response = await fetch(
+        'https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/empresas',
+        {
+          headers: {
+            'id_usuario': userId,
+            'x-api-key': '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch empresas');
+      }
+      
+      return response.json();
+    },
+    enabled: !!userId,
+  });
+
+  // Generate perfil options based on permissions
+  const getPerfilOptions = () => {
+    if (!permissionsData?.data) return [];
+    
+    const hasCreateRootPermission = permissionsData.data.some(
+      (item: any) => item.permissao === 'criar_usuario_root'
+    );
+    
+    if (hasCreateRootPermission) {
+      return [
+        { value: 'ROOT', label: 'ROOT' },
+        { value: 'ADMIN', label: 'ADMIN' },
+        { value: 'USER', label: 'USER' }
+      ];
+    } else {
+      return [
+        { value: 'ADMIN', label: 'ADMIN' },
+        { value: 'USER', label: 'USER' }
+      ];
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -41,6 +138,9 @@ const ConfigUsuarioNovoScreen = () => {
   const isFieldEmpty = (field: string) => {
     return !formData[field as keyof typeof formData];
   };
+
+  const perfilOptions = getPerfilOptions();
+  const empresas: Empresa[] = empresasData?.data || [];
 
   return (
     <ConfigLayoutWithSidebar>
@@ -116,10 +216,17 @@ const ConfigUsuarioNovoScreen = () => {
                   <SelectValue placeholder="Selecione um perfil" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* Por enquanto, sem opções carregadas */}
-                  <SelectItem value="placeholder" disabled>
-                    Nenhum perfil disponível
-                  </SelectItem>
+                  {perfilOptions.length > 0 ? (
+                    perfilOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="placeholder" disabled>
+                      Erro ao carregar opções
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -136,10 +243,25 @@ const ConfigUsuarioNovoScreen = () => {
                   <SelectValue placeholder="Selecione uma empresa" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* Por enquanto, sem opções carregadas */}
-                  <SelectItem value="placeholder" disabled>
-                    Nenhuma empresa disponível
-                  </SelectItem>
+                  {empresasLoading ? (
+                    <SelectItem value="loading" disabled>
+                      Carregando...
+                    </SelectItem>
+                  ) : empresasError ? (
+                    <SelectItem value="error" disabled>
+                      Erro ao carregar opções
+                    </SelectItem>
+                  ) : empresas.length > 0 ? (
+                    empresas.map((empresa) => (
+                      <SelectItem key={empresa.id} value={empresa.id}>
+                        {empresa.nome}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="empty" disabled>
+                      Nenhuma empresa disponível
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
