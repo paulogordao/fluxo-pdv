@@ -9,6 +9,7 @@ import { PaymentOptionProvider } from "@/context/PaymentOptionContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import LoginScreen from "./pages/LoginScreen";
+import PrimeiroAcessoScreen from "./pages/PrimeiroAcessoScreen";
 import WelcomeScreen from "./pages/WelcomeScreen";
 import StartScreen from "./pages/StartScreen";
 import ScanScreen from "./pages/ScanScreen";
@@ -44,6 +45,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/login" element={<LoginScreen />} />
+              <Route path="/primeiro_acesso" element={<PrimeiroAcessoScreen />} />
               <Route path="/index" element={<Index />} />
               <Route path="/welcome" element={<WelcomeScreen />} />
               <Route path="/start" element={<StartScreen />} />

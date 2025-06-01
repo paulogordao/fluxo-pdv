@@ -160,6 +160,15 @@ const LoginScreen = () => {
           localStorage.setItem("userData", JSON.stringify({ id_usuario: data.id_usuario }));
         }
         
+        // Check if this is first access
+        if (data.primeiro_acesso === true) {
+          // Store user ID for password reset page
+          sessionStorage.setItem("primeiro_acesso_user_id", data.id_usuario);
+          // Navigate to first access password setup
+          navigate("/primeiro_acesso");
+          return;
+        }
+        
         // Display success toast
         toast.success("Login realizado com sucesso");
         
