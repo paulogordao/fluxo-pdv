@@ -26,8 +26,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-      {/* User Profile Button - positioned in top right with larger size */}
-      <div className="absolute top-6 right-6">
+      {/* User Profile Button - positioned in top left with larger size */}
+      <div className="absolute top-6 left-6">
         <UserProfileButton 
           userName={userInfo.userName}
           companyName={userInfo.companyName}
