@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, ArrowLeft, Loader2 } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { UserPlus, ArrowLeft, Loader2, Check, Trash2 } from "lucide-react";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +22,16 @@ interface CreateUserData {
   email: string;
   empresa_id: string;
   perfil: string;
+}
+
+interface AccessRequest {
+  id: string;
+  created_at: string;
+  email: string;
+  nome: string;
+  nome_empresa: string;
+  cnpj_empresa: string;
+  visivel: boolean;
 }
 
 const ConfigUsuarioNovoScreen = () => {
@@ -161,6 +172,31 @@ const ConfigUsuarioNovoScreen = () => {
     enabled: !!userId,
   });
 
+  // Fetch access requests
+  const { data: accessRequestsData, isLoading: requestsLoading, error: requestsError } = useQuery({
+    queryKey: ['accessRequests', userId],
+    queryFn: async () => {
+      if (!userId) throw new Error('No user ID available');
+      
+      const response = await fetch(
+        'https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/usuarios/solicitar_acesso',
+        {
+          headers: {
+            'id_usuario': userId,
+            'x-api-key': '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch access requests');
+      }
+      
+      return response.json();
+    },
+    enabled: !!userId,
+  });
+
   // Generate perfil options based on permissions
   const getPerfilOptions = () => {
     if (!permissionsData?.data) return [];
@@ -217,6 +253,30 @@ const ConfigUsuarioNovoScreen = () => {
     navigate("/config_usuario_edit");
   };
 
+  const handleApproveRequest = (request: AccessRequest) => {
+    setFormData(prev => ({
+      ...prev,
+      nome: request.nome,
+      email: request.email
+    }));
+    
+    toast({
+      title: "Dados preenchidos",
+      description: "Nome e email foram preenchidos automaticamente",
+    });
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   // Validar se campos obrigatórios estão preenchidos
   const isFieldEmpty = (field: string) => {
     return !formData[field as keyof typeof formData];
@@ -224,165 +284,238 @@ const ConfigUsuarioNovoScreen = () => {
 
   const perfilOptions = getPerfilOptions();
   const empresas: Empresa[] = empresasData?.data || [];
+  const accessRequests: AccessRequest[] = accessRequestsData?.data || [];
 
   return (
     <ConfigLayoutWithSidebar>
-      <Card className="w-full max-w-4xl shadow-lg">
-        <CardHeader className="text-center">
-          <div className="flex items-center justify-between mb-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleCancel}
-              className="text-gray-600 hover:text-dotz-laranja"
-              disabled={createUserMutation.isPending}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <CardTitle className="flex items-center justify-center space-x-3 text-2xl text-dotz-laranja flex-1">
-              <UserPlus className="h-8 w-8" />
-              <span>Cadastro de Novo Usuário</span>
+      <div className="space-y-6">
+        <Card className="w-full max-w-4xl shadow-lg">
+          <CardHeader className="text-center">
+            <div className="flex items-center justify-between mb-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleCancel}
+                className="text-gray-600 hover:text-dotz-laranja"
+                disabled={createUserMutation.isPending}
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <CardTitle className="flex items-center justify-center space-x-3 text-2xl text-dotz-laranja flex-1">
+                <UserPlus className="h-8 w-8" />
+                <span>Cadastro de Novo Usuário</span>
+              </CardTitle>
+              <div className="w-10"></div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="usuario" className="text-sm font-medium text-gray-700">
+                  Usuário <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="usuario"
+                  value={formData.usuario}
+                  onChange={(e) => handleInputChange('usuario', e.target.value)}
+                  placeholder="Digite o nome de usuário"
+                  className={`w-full ${isFieldEmpty('usuario') ? 'border-red-300' : ''}`}
+                  disabled={createUserMutation.isPending}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="nome" className="text-sm font-medium text-gray-700">
+                  Nome <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="nome"
+                  value={formData.nome}
+                  onChange={(e) => handleInputChange('nome', e.target.value)}
+                  placeholder="Digite o nome completo"
+                  className={`w-full ${isFieldEmpty('nome') ? 'border-red-300' : ''}`}
+                  disabled={createUserMutation.isPending}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                  E-mail <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  placeholder="Digite o e-mail"
+                  className={`w-full ${isFieldEmpty('email') ? 'border-red-300' : ''}`}
+                  disabled={createUserMutation.isPending}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="perfil" className="text-sm font-medium text-gray-700">
+                  Perfil
+                </Label>
+                <Select 
+                  value={formData.perfil} 
+                  onValueChange={(value) => handleInputChange('perfil', value)}
+                  disabled={createUserMutation.isPending}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione um perfil" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {perfilOptions.length > 0 ? (
+                      perfilOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="placeholder" disabled>
+                        Erro ao carregar opções
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="empresa" className="text-sm font-medium text-gray-700">
+                  Empresa
+                </Label>
+                <Select 
+                  value={formData.empresa} 
+                  onValueChange={(value) => handleInputChange('empresa', value)}
+                  disabled={createUserMutation.isPending}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione uma empresa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {empresasLoading ? (
+                      <SelectItem value="loading" disabled>
+                        Carregando...
+                      </SelectItem>
+                    ) : empresasError ? (
+                      <SelectItem value="error" disabled>
+                        Erro ao carregar opções
+                      </SelectItem>
+                    ) : empresas.length > 0 ? (
+                      empresas.map((empresa) => (
+                        <SelectItem key={empresa.id} value={empresa.id}>
+                          {empresa.nome}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="empty" disabled>
+                        Nenhuma empresa disponível
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-4 pt-6 border-t">
+              <Button
+                onClick={handleCancel}
+                variant="outline"
+                className="px-6"
+                disabled={createUserMutation.isPending}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleSave}
+                variant="dotz"
+                className="px-6"
+                disabled={createUserMutation.isPending}
+              >
+                {createUserMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  'Salvar'
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Access Requests Table */}
+        <Card className="w-full max-w-4xl shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-xl text-dotz-laranja">
+              Solicitações de Acesso Pendentes
             </CardTitle>
-            <div className="w-10"></div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="usuario" className="text-sm font-medium text-gray-700">
-                Usuário <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="usuario"
-                value={formData.usuario}
-                onChange={(e) => handleInputChange('usuario', e.target.value)}
-                placeholder="Digite o nome de usuário"
-                className={`w-full ${isFieldEmpty('usuario') ? 'border-red-300' : ''}`}
-                disabled={createUserMutation.isPending}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="nome" className="text-sm font-medium text-gray-700">
-                Nome <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="nome"
-                value={formData.nome}
-                onChange={(e) => handleInputChange('nome', e.target.value)}
-                placeholder="Digite o nome completo"
-                className={`w-full ${isFieldEmpty('nome') ? 'border-red-300' : ''}`}
-                disabled={createUserMutation.isPending}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                E-mail <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                placeholder="Digite o e-mail"
-                className={`w-full ${isFieldEmpty('email') ? 'border-red-300' : ''}`}
-                disabled={createUserMutation.isPending}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="perfil" className="text-sm font-medium text-gray-700">
-                Perfil
-              </Label>
-              <Select 
-                value={formData.perfil} 
-                onValueChange={(value) => handleInputChange('perfil', value)}
-                disabled={createUserMutation.isPending}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione um perfil" />
-                </SelectTrigger>
-                <SelectContent>
-                  {perfilOptions.length > 0 ? (
-                    perfilOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="placeholder" disabled>
-                      Erro ao carregar opções
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="empresa" className="text-sm font-medium text-gray-700">
-                Empresa
-              </Label>
-              <Select 
-                value={formData.empresa} 
-                onValueChange={(value) => handleInputChange('empresa', value)}
-                disabled={createUserMutation.isPending}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione uma empresa" />
-                </SelectTrigger>
-                <SelectContent>
-                  {empresasLoading ? (
-                    <SelectItem value="loading" disabled>
-                      Carregando...
-                    </SelectItem>
-                  ) : empresasError ? (
-                    <SelectItem value="error" disabled>
-                      Erro ao carregar opções
-                    </SelectItem>
-                  ) : empresas.length > 0 ? (
-                    empresas.map((empresa) => (
-                      <SelectItem key={empresa.id} value={empresa.id}>
-                        {empresa.nome}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="empty" disabled>
-                      Nenhuma empresa disponível
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex justify-end space-x-4 pt-6 border-t">
-            <Button
-              onClick={handleCancel}
-              variant="outline"
-              className="px-6"
-              disabled={createUserMutation.isPending}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSave}
-              variant="dotz"
-              className="px-6"
-              disabled={createUserMutation.isPending}
-            >
-              {createUserMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                'Salvar'
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent>
+            {requestsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                <span>Carregando solicitações...</span>
+              </div>
+            ) : requestsError ? (
+              <div className="text-center py-8 text-red-600">
+                Erro ao carregar solicitações de acesso
+              </div>
+            ) : accessRequests.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Nome da empresa</TableHead>
+                    <TableHead>CNPJ</TableHead>
+                    <TableHead>Data de criação</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {accessRequests.map((request) => (
+                    <TableRow key={request.id}>
+                      <TableCell className="font-medium">{request.nome}</TableCell>
+                      <TableCell>{request.email}</TableCell>
+                      <TableCell>{request.nome_empresa}</TableCell>
+                      <TableCell>{request.cnpj_empresa}</TableCell>
+                      <TableCell>{formatDate(request.created_at)}</TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            size="sm"
+                            variant="dotz"
+                            onClick={() => handleApproveRequest(request)}
+                            className="text-xs"
+                          >
+                            <Check className="h-3 w-3 mr-1" />
+                            Aprovar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs"
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Apagar
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                Nenhuma solicitação de acesso pendente
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </ConfigLayoutWithSidebar>
   );
 };
