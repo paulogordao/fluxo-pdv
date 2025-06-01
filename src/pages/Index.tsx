@@ -3,24 +3,35 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PdvProvider } from "@/context/PdvContext";
 import { useNavigate } from "react-router-dom";
-import { Settings } from "lucide-react";
 import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
+import UserProfileButton from "@/components/UserProfileButton";
+import { useEffect, useState } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [userInfo, setUserInfo] = useState({ userName: "Usuário", companyName: "Empresa" });
+
+  useEffect(() => {
+    // Get user info from sessionStorage (set during login)
+    const storedUserName = sessionStorage.getItem("user_name");
+    const storedCompanyName = sessionStorage.getItem("company_name");
+    
+    if (storedUserName || storedCompanyName) {
+      setUserInfo({
+        userName: storedUserName || "Usuário",
+        companyName: storedCompanyName || "Empresa"
+      });
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-      {/* Settings Icon - positioned in top left with larger size */}
-      <div className="absolute top-6 left-6">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate("/configuracoes")}
-          className="text-gray-600 hover:text-dotz-laranja h-16 w-16 rounded-xl"
-          title="Configurações"
-        >
-          <Settings className="h-10 w-10" />
-        </Button>
+      {/* User Profile Button - positioned in top right with larger size */}
+      <div className="absolute top-6 right-6">
+        <UserProfileButton 
+          userName={userInfo.userName}
+          companyName={userInfo.companyName}
+        />
       </div>
 
       <Card className="w-full max-w-3xl">
