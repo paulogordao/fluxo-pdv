@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { buildApiUrl, API_CONFIG } from "@/config/api";
+import { consultaFluxoService } from "@/services/consultaFluxoService";
 
 export const useTokenPaymentEligibility = () => {
   const [showTokenPaymentButton, setShowTokenPaymentButton] = useState(false);
@@ -19,19 +19,9 @@ export const useTokenPaymentEligibility = () => {
           return;
         }
         
-        const url = buildApiUrl('/consultaFluxo', { cpf, SLUG: 'RLIWAIT' });
-        console.log("Verificando elegibilidade para pagamento com token:", url);
+        console.log("Verificando elegibilidade para pagamento com token usando consultaFluxoService");
         
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: API_CONFIG.defaultHeaders
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Error in token eligibility request: ${response.status}`);
-        }
-        
-        const data = await response.json();
+        const data = await consultaFluxoService.consultarFluxo(cpf, 'RLIWAIT');
         const canUseToken = data.permitir_pagamento_token === true;
         setShowTokenPaymentButton(canUseToken);
         

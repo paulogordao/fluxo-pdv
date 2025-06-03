@@ -27,6 +27,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { buildApiUrl } from "@/config/api";
+import { useTokenPaymentEligibility } from "@/hooks/useTokenPaymentEligibility";
 
 const ConfirmacaoPagamentoAppScreen = () => {
   const navigate = useNavigate();
@@ -37,9 +38,8 @@ const ConfirmacaoPagamentoAppScreen = () => {
   }>({});
   const [isLoading, setIsLoading] = useState(true);
   
-  // Token payment button visibility state
-  const [showTokenPaymentButton, setShowTokenPaymentButton] = useState(false);
-  const [tokenButtonLoading, setTokenButtonLoading] = useState(true);
+  // Use the custom hook for token payment eligibility
+  const { showTokenPaymentButton, tokenButtonLoading } = useTokenPaymentEligibility();
   
   // Token payment modal state
   const [tokenModalOpen, setTokenModalOpen] = useState(false);
