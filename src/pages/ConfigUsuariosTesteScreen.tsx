@@ -10,19 +10,7 @@ import { ArrowLeft, FlaskConical, Plus } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { useToast } from "@/hooks/use-toast";
-import { API_CONFIG } from "@/config/api";
-
-interface UsuarioTeste {
-  id: string;
-  identificacao_usuario: string;
-  pedir_telefone: boolean;
-  possui_dotz: boolean;
-  outros_meios_pagamento: boolean;
-  dotz_sem_app: boolean;
-  permitir_pagamento_token: boolean;
-  created_at?: string;
-  id_empresa?: string;
-}
+import { testUserService, UsuarioTeste } from "@/services/testUserService";
 
 const ConfigUsuariosTesteScreen = () => {
   const navigate = useNavigate();
@@ -33,102 +21,13 @@ const ConfigUsuariosTesteScreen = () => {
   // For now, using a hardcoded user ID - in a real app this would come from auth context
   const currentUserId = "f647bfee-faa2-4293-a5f2-d192a9e9f3f1";
 
-  const fetchUsuariosTeste = async (): Promise<UsuarioTeste[]> => {
-    const url = `${API_CONFIG.baseUrl}/usuarios_teste`;
-    console.log('Fetching usuarios teste from URL:', url);
-    
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        ...API_CONFIG.defaultHeaders,
-        "id_usuario": currentUserId,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Erro ao carregar usuários de teste");
-    }
-
-    const responseData = await response.json();
-    console.log("Resposta completa da API:", responseData);
-    
-    // A API agora retorna um objeto com o campo 'data' contendo o array de usuários
-    if (responseData && responseData.data && Array.isArray(responseData.data)) {
-      console.log("Dados dos usuários encontrados:", responseData.data);
-      return responseData.data;
-    }
-    
-    // Fallback: se não há campo 'data', mas há um array direto
-    if (Array.isArray(responseData)) {
-      console.log("Dados diretos (array):", responseData);
-      return responseData;
-    }
-    
-    // Fallback: se é um objeto único, transformar em array
-    if (responseData && typeof responseData === 'object' && !Array.isArray(responseData) && responseData.identificacao_usuario) {
-      console.log("Objeto único transformado em array:", [responseData]);
-      return [responseData];
-    }
-    
-    console.log("Nenhum dado válido encontrado, retornando array vazio");
-    return [];
-  };
-
-  const createUsuarioTeste = async (cpf: string): Promise<void> => {
-    const url = `${API_CONFIG.baseUrl}/usuarios_teste`;
-    console.log('Creating usuario teste at URL:', url);
-    
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        ...API_CONFIG.defaultHeaders,
-        "id_usuario": currentUserId,
-      },
-      body: JSON.stringify({
-        cpf_usuario: cpf,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error("Erro ao cadastrar usuário de teste");
-    }
-
-    const data = await response.json();
-    if (data.status !== "ok") {
-      throw new Error("Erro ao cadastrar usuário de teste");
-    }
-  };
-
-  const updateUsuarioTeste = async (usuario: UsuarioTeste): Promise<void> => {
-    const url = `${API_CONFIG.baseUrl}/usuarios_teste`;
-    console.log('Updating usuario teste at URL:', url);
-    
-    const response = await fetch(url, {
-      method: "PUT",
-      headers: {
-        ...API_CONFIG.defaultHeaders,
-        "id_usuario": currentUserId,
-      },
-      body: JSON.stringify(usuario),
-    });
-
-    if (!response.ok) {
-      throw new Error("Erro ao atualizar usuário de teste");
-    }
-
-    const data = await response.json();
-    if (data.status !== "ok") {
-      throw new Error("Erro ao atualizar usuário de teste");
-    }
-  };
-
   const { data: usuariosTeste = [], isLoading, error } = useQuery({
     queryKey: ["usuarios-teste"],
-    queryFn: fetchUsuariosTeste,
+    queryFn: () => testUserService.getUsuariosTeste(currentUserId),
   });
 
   const updateMutation = useMutation({
-    mutationFn: updateUsuarioTeste,
+    mutationFn: (usuario: UsuarioTeste) => testUserService.updateUsuarioTeste(usuario, currentUserId),
     onSuccess: () => {
       toast({
         title: "Sucesso",
@@ -149,7 +48,7 @@ const ConfigUsuariosTesteScreen = () => {
   });
 
   const createMutation = useMutation({
-    mutationFn: createUsuarioTeste,
+    mutationFn: (cpf: string) => testUserService.createUsuarioTeste(cpf, currentUserId),
     onSuccess: () => {
       toast({
         title: "Sucesso",

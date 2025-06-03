@@ -1,32 +1,6 @@
 
-import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { API_CONFIG } from "@/config/api";
-
-interface PermissionItem {
-  permissao: string;
-  perfil: string;
-}
-
-interface UserPermissions {
-  data: PermissionItem[];
-}
-
-const fetchUserPermissions = async (userId: string): Promise<UserPermissions> => {
-  console.log('Calling API with userId:', userId);
-  const url = `${API_CONFIG.baseUrl}/permissoes_usuario?id_usuario=${userId}`;
-  console.log('Full URL:', url);
-  
-  const response = await fetch(url, {
-    headers: API_CONFIG.defaultHeaders
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to fetch user permissions');
-  }
-  
-  return response.json();
-};
+import { permissionService } from '@/services/permissionService';
 
 const getUserId = (): string | null => {
   console.log('Getting user ID from localStorage...');
@@ -136,7 +110,7 @@ export const useUserPermissions = () => {
         throw new Error('No user ID available');
       }
       console.log('Fetching permissions for userId:', userId);
-      return fetchUserPermissions(userId);
+      return permissionService.getUserPermissions(userId);
     },
     enabled: !!userId, // Only run if we have a valid user ID
     staleTime: 5 * 60 * 1000, // 5 minutes cache

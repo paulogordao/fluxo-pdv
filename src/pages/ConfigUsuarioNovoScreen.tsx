@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,29 +11,9 @@ import { UserPlus, ArrowLeft, Loader2, Check, Trash2 } from "lucide-react";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-
-interface Empresa {
-  id: string;
-  nome: string;
-}
-
-interface CreateUserData {
-  usuario: string;
-  nome: string;
-  email: string;
-  empresa_id: string;
-  perfil: string;
-}
-
-interface AccessRequest {
-  id: string;
-  created_at: string;
-  email: string;
-  nome: string;
-  nome_empresa: string;
-  cnpj_empresa: string;
-  visivel: boolean;
-}
+import { userService, CreateUserData, AccessRequest } from "@/services/userService";
+import { permissionService } from "@/services/permissionService";
+import { empresaService, Empresa } from "@/services/empresaService";
 
 const ConfigUsuarioNovoScreen = () => {
   const navigate = useNavigate();
@@ -69,27 +50,9 @@ const ConfigUsuarioNovoScreen = () => {
 
   // Create user mutation
   const createUserMutation = useMutation({
-    mutationFn: async (userData: CreateUserData) => {
+    mutationFn: (userData: CreateUserData) => {
       if (!userId) throw new Error('No user ID available');
-      
-      const response = await fetch(
-        'https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/usuarios',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'id_usuario': userId,
-            'x-api-key': '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975'
-          },
-          body: JSON.stringify(userData)
-        }
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to create user');
-      }
-      
-      return response.json();
+      return userService.createUser(userData, userId);
     },
     onSuccess: (data) => {
       if (data.status === 'ok' && data.code === 200) {
@@ -126,23 +89,9 @@ const ConfigUsuarioNovoScreen = () => {
   // Fetch user permissions
   const { data: permissionsData } = useQuery({
     queryKey: ['userPermissions', userId],
-    queryFn: async () => {
+    queryFn: () => {
       if (!userId) throw new Error('No user ID available');
-      
-      const response = await fetch(
-        `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/permissoes_usuario?id_usuario=${userId}`,
-        {
-          headers: {
-            'x-api-key': '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975'
-          }
-        }
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch permissions');
-      }
-      
-      return response.json();
+      return permissionService.getUserPermissions(userId);
     },
     enabled: !!userId,
   });
@@ -150,24 +99,9 @@ const ConfigUsuarioNovoScreen = () => {
   // Fetch empresas
   const { data: empresasData, isLoading: empresasLoading, error: empresasError } = useQuery({
     queryKey: ['empresas'],
-    queryFn: async () => {
+    queryFn: () => {
       if (!userId) throw new Error('No user ID available');
-      
-      const response = await fetch(
-        'https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/empresas',
-        {
-          headers: {
-            'id_usuario': userId,
-            'x-api-key': '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975'
-          }
-        }
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch empresas');
-      }
-      
-      return response.json();
+      return empresaService.getEmpresas(userId);
     },
     enabled: !!userId,
   });
@@ -175,24 +109,9 @@ const ConfigUsuarioNovoScreen = () => {
   // Fetch access requests
   const { data: accessRequestsData, isLoading: requestsLoading, error: requestsError } = useQuery({
     queryKey: ['accessRequests', userId],
-    queryFn: async () => {
+    queryFn: () => {
       if (!userId) throw new Error('No user ID available');
-      
-      const response = await fetch(
-        'https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/usuarios/solicitar_acesso',
-        {
-          headers: {
-            'id_usuario': userId,
-            'x-api-key': '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975'
-          }
-        }
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch access requests');
-      }
-      
-      return response.json();
+      return userService.getAccessRequests(userId);
     },
     enabled: !!userId,
   });
