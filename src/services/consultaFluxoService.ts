@@ -2,6 +2,7 @@
 import { API_CONFIG, buildApiUrl } from "@/config/api";
 
 export interface ConsultaFluxoResponse {
+  identificacao_usuario?: number;
   pedir_telefone?: boolean;
   possui_dotz?: boolean;
   outros_meios_pagamento?: boolean;
@@ -19,7 +20,10 @@ export const consultaFluxoService = {
     const url = buildApiUrl('/consultaFluxo', { cpf, SLUG: slug });
     console.log(`Consultando fluxo: ${url}`);
     
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: API_CONFIG.defaultHeaders
+    });
     
     if (!response.ok) {
       throw new Error(`Erro na requisição: ${response.status}`);
@@ -34,7 +38,10 @@ export const consultaFluxoService = {
     const url = buildApiUrl('/consultaFluxoDetalhe', { SLUG: slug });
     console.log(`Consultando detalhes do fluxo: ${url}`);
     
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: API_CONFIG.defaultHeaders
+    });
     
     if (!response.ok) {
       throw new Error(`Erro na requisição: ${response.status}`);
