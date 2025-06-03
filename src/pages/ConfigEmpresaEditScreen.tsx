@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -13,6 +12,7 @@ import { toast } from "@/components/ui/sonner";
 import { Building2, ArrowLeft } from "lucide-react";
 import PermissionModal from "@/components/PermissionModal";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
+import { empresaService, type Empresa } from "@/services/empresaService";
 
 const empresaEditSchema = z.object({
   nome: z.string().min(1, "Nome da empresa é obrigatório"),
@@ -25,17 +25,6 @@ const empresaEditSchema = z.object({
 
 type EmpresaEditFormData = z.infer<typeof empresaEditSchema>;
 
-interface EmpresaData {
-  id: string;
-  created_at: string;
-  nome: string;
-  cnpj: string;
-  email: string | null;
-  telefone: string | null;
-  endereco: string;
-  descricao: string | null;
-}
-
 const ConfigEmpresaEditScreen = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -43,7 +32,7 @@ const ConfigEmpresaEditScreen = () => {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [permissionMessage, setPermissionMessage] = useState("");
-  const [empresaData, setEmpresaData] = useState<EmpresaData | null>(null);
+  const [empresaData, setEmpresaData] = useState<Empresa | null>(null);
 
   const {
     register,
@@ -69,11 +58,9 @@ const ConfigEmpresaEditScreen = () => {
     try {
       setIsLoadingData(true);
       
-      const userEmail = sessionStorage.getItem("user.login");
       const userUUID = sessionStorage.getItem("user.uuid");
-      const apiKey = '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975';
       
-      if (!userEmail || !userUUID) {
+      if (!userUUID) {
         setPermissionMessage("Sessão expirada. Faça login novamente.");
         setShowPermissionModal(true);
         return;
@@ -81,24 +68,7 @@ const ConfigEmpresaEditScreen = () => {
 
       console.log("Buscando dados da empresa:", empresaId);
       
-      const response = await fetch(`https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/empresas?id=${empresaId}`, {
-        method: "GET",
-        headers: {
-          "x-api-key": apiKey,
-          "id_usuario": userUUID,
-          "User-Agent": "SimuladorPDV/1.0"
-        }
-      });
-
-      console.log("Status da resposta:", response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log("Erro da API:", errorText);
-        throw new Error(`Erro na requisição: ${response.status} - ${errorText}`);
-      }
-
-      const data: EmpresaData = await response.json();
+      const data = await empresaService.getEmpresaById(empresaId, userUUID);
       console.log("Dados da empresa recebidos:", data);
       
       setEmpresaData(data);
@@ -144,7 +114,6 @@ const ConfigEmpresaEditScreen = () => {
       setIsLoading(true);
       
       const userUUID = sessionStorage.getItem("user.uuid");
-      const apiKey = '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975';
       
       if (!userUUID) {
         setPermissionMessage("Sessão expirada. Faça login novamente.");
@@ -154,38 +123,10 @@ const ConfigEmpresaEditScreen = () => {
 
       console.log("Atualizando empresa:", id, "com dados:", data);
 
-      const requestBody = {
-        nome: data.nome,
-        cnpj: data.cnpj,
-        email: data.email || null,
-        telefone: data.telefone || null,
-        endereco: data.endereco || null,
-        descricao: data.descricao || null,
-      };
-
-      const response = await fetch(`https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/empresas?id=${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "id_usuario": userUUID,
-          "User-Agent": "SimuladorPDV/1.0"
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      console.log("Status da resposta de atualização:", response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log("Erro na atualização:", errorText);
-        throw new Error(`Erro na atualização: ${response.status} - ${errorText}`);
-      }
-
-      const responseData = await response.json();
+      const responseData = await empresaService.updateEmpresa(id, data, userUUID);
       console.log("Resposta da atualização:", responseData);
 
-      if (responseData.code === "200" || response.status === 200) {
+      if (responseData.code === "200" || responseData.code === 200) {
         toast.success("Empresa atualizada com sucesso!");
         // Aguardar um pouco antes de redirecionar para que o usuário veja a mensagem
         setTimeout(() => {

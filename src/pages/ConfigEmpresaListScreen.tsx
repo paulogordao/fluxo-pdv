@@ -6,17 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowLeft, Edit, Trash2 } from "lucide-react";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
-
-interface Empresa {
-  id: string;
-  created_at: string;
-  nome: string;
-  cnpj: string;
-  email: string | null;
-  telefone: string | null;
-  endereco: string;
-  descricao: string | null;
-}
+import { empresaService, type Empresa } from "@/services/empresaService";
 
 const ConfigEmpresaListScreen = () => {
   const navigate = useNavigate();
@@ -29,30 +19,16 @@ const ConfigEmpresaListScreen = () => {
       try {
         console.log('Iniciando busca de empresas...');
         
-        const apiKey = localStorage.getItem('apiKey');
-        const userId = localStorage.getItem('userId');
+        const userId = sessionStorage.getItem('user.uuid');
         
-        if (!apiKey || !userId) {
+        if (!userId) {
           setError('Dados de autenticação não encontrados');
           setLoading(false);
           return;
         }
 
         console.log('Fazendo requisição para buscar empresas...');
-        const response = await fetch('https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/empresas', {
-          method: 'GET',
-          headers: {
-            'x-api-key': apiKey,
-            'id_usuario': userId,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`Erro na requisição: ${response.status}`);
-        }
-
-        const data = await response.json();
+        const data = await empresaService.getEmpresas(userId);
         console.log('Dados das empresas recebidos:', data);
         
         setEmpresas(data);

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -13,6 +12,7 @@ import { toast } from "@/components/ui/sonner";
 import { Building2 } from "lucide-react";
 import PermissionModal from "@/components/PermissionModal";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
+import { empresaService, type CreateEmpresaData } from "@/services/empresaService";
 
 const empresaSchema = z.object({
   nome: z.string().min(1, "Nome da empresa é obrigatório"),
@@ -141,50 +141,27 @@ const ConfigEmpresaScreen = () => {
     setIsLoading(true);
     
     try {
-      // Recuperar dados do sessionStorage
-      const apiKey = '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975';
       const idUsuario = sessionStorage.getItem('user.uuid');
 
       console.log('Dados para envio:', data);
-      console.log('API Key:', apiKey ? 'Configurada' : 'Não encontrada');
       console.log('ID Usuário:', idUsuario);
 
       if (!idUsuario) {
         throw new Error('Usuário não autenticado. Faça login novamente.');
       }
 
-      // Preparar payload
-      const payload = {
+      const empresaData: CreateEmpresaData = {
         nome: data.nome,
         cnpj: data.cnpj,
-        email: data.email || null,
-        telefone: data.telefone || null,
-        endereco: data.endereco || null,
-        descricao: data.descricao || null,
+        email: data.email,
+        telefone: data.telefone,
+        endereco: data.endereco,
+        descricao: data.descricao,
       };
 
-      console.log('Payload para envio:', payload);
+      console.log('Payload para envio:', empresaData);
 
-      // Fazer requisição POST
-      const response = await fetch('https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/empresas', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'id_usuario': idUsuario,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      console.log('Status da resposta:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log('Erro da API:', errorText);
-        throw new Error(`Erro na requisição: ${response.status} - ${errorText}`);
-      }
-
-      const responseData = await response.json();
+      const responseData = await empresaService.createEmpresa(empresaData, idUsuario);
       console.log('Resposta da API:', responseData);
       
       // Verificar se a criação foi bem-sucedida

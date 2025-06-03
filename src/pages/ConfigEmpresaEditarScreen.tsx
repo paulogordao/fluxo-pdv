@@ -12,17 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
-
-interface Empresa {
-  id: string;
-  created_at: string;
-  nome: string;
-  cnpj: string;
-  email: string | null;
-  telefone: string | null;
-  endereco: string;
-  descricao: string | null;
-}
+import { empresaService, type Empresa } from "@/services/empresaService";
 
 const ConfigEmpresaEditarScreen = () => {
   const navigate = useNavigate();
@@ -35,11 +25,8 @@ const ConfigEmpresaEditarScreen = () => {
       setLoading(true);
       setError(null);
 
-      // Recuperar dados do sessionStorage com as chaves corretas do login
-      const apiKey = '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975';
       const idUsuario = sessionStorage.getItem('user.uuid');
 
-      console.log('API Key:', apiKey ? 'Configurada' : 'Não encontrada');
       console.log('ID Usuário encontrado:', idUsuario ? 'Sim' : 'Não');
       console.log('ID Usuário valor:', idUsuario);
 
@@ -48,40 +35,11 @@ const ConfigEmpresaEditarScreen = () => {
       }
 
       console.log('Fazendo requisição para listar todas as empresas...');
-      // CORREÇÃO: Removido o parâmetro id da URL para fazer a listagem geral
-      const response = await fetch('https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/empresas', {
-        method: 'GET',
-        headers: {
-          'x-api-key': apiKey,
-          'id_usuario': idUsuario,
-          'Content-Type': 'application/json',
-          'User-Agent': 'SimuladorPDV/1.0'
-        },
-      });
-
-      console.log('Status da resposta:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log('Erro da API:', errorText);
-        throw new Error(`Erro na requisição: ${response.status} - ${errorText}`);
-      }
-
-      const responseData = await response.json();
-      console.log('Dados das empresas recebidos:', responseData);
       
-      // Verificar se a resposta contém a propriedade 'data' com array de empresas
-      if (responseData && responseData.data && Array.isArray(responseData.data)) {
-        console.log('Resposta contém array de empresas na propriedade data com', responseData.data.length, 'empresas');
-        setEmpresas(responseData.data);
-      } else if (Array.isArray(responseData)) {
-        // Caso a resposta seja um array direto
-        console.log('Resposta é um array direto com', responseData.length, 'empresas');
-        setEmpresas(responseData);
-      } else {
-        console.log('Resposta não contém dados de empresas válidos');
-        setEmpresas([]);
-      }
+      const empresas = await empresaService.getEmpresas(idUsuario);
+      console.log('Dados das empresas recebidos:', empresas);
+      
+      setEmpresas(empresas);
     } catch (err) {
       console.error('Erro ao buscar empresas:', err);
       setError('Erro ao carregar a lista de empresas. Verifique sua autenticação.');
