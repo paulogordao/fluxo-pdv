@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import { ArrowLeft, FlaskConical, Plus } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { useToast } from "@/hooks/use-toast";
-import { API_CONFIG, buildApiUrl } from "@/config/api";
+import { API_CONFIG } from "@/config/api";
 
 interface UsuarioTeste {
   id: string;
@@ -33,7 +34,9 @@ const ConfigUsuariosTesteScreen = () => {
   const currentUserId = "f647bfee-faa2-4293-a5f2-d192a9e9f3f1";
 
   const fetchUsuariosTeste = async (): Promise<UsuarioTeste[]> => {
-    const url = buildApiUrl('/usuarios_teste');
+    const url = `${API_CONFIG.baseUrl}/usuarios_teste`;
+    console.log('Fetching usuarios teste from URL:', url);
+    
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -72,7 +75,9 @@ const ConfigUsuariosTesteScreen = () => {
   };
 
   const createUsuarioTeste = async (cpf: string): Promise<void> => {
-    const url = buildApiUrl('/usuarios_teste');
+    const url = `${API_CONFIG.baseUrl}/usuarios_teste`;
+    console.log('Creating usuario teste at URL:', url);
+    
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -95,7 +100,9 @@ const ConfigUsuariosTesteScreen = () => {
   };
 
   const updateUsuarioTeste = async (usuario: UsuarioTeste): Promise<void> => {
-    const url = buildApiUrl('/usuarios_teste');
+    const url = `${API_CONFIG.baseUrl}/usuarios_teste`;
+    console.log('Updating usuario teste at URL:', url);
+    
     const response = await fetch(url, {
       method: "PUT",
       headers: {
