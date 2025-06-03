@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
@@ -75,49 +74,6 @@ const ConfirmacaoPagamentoAppScreen = () => {
     };
     
     fetchApiData();
-  }, []);
-
-  // Effect to check if token payment should be enabled
-  useEffect(() => {
-    const checkTokenPaymentEligibility = async () => {
-      try {
-        setTokenButtonLoading(true);
-        
-        // Get stored CPF from localStorage
-        const cpf = localStorage.getItem('cpfDigitado');
-        
-        // Fallback if CPF is not available
-        if (!cpf) {
-          console.error('CPF não encontrado para verificação de pagamento por token.');
-          setShowTokenPaymentButton(false);
-          return;
-        }
-        
-        const url = buildApiUrl('/consultaFluxo', { cpf, SLUG: 'RLIWAIT' });
-        console.log("Verificando elegibilidade para pagamento com token:", url);
-        
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Error in token eligibility request: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        const canUseToken = data.permitir_pagamento_token === true;
-        setShowTokenPaymentButton(canUseToken);
-        
-        // Log the result for debugging
-        console.log(`permitir_pagamento_token = ${canUseToken ? 'true ➝ Botão exibido' : 'false ➝ Botão oculto'}`);
-        
-      } catch (error) {
-        console.error("Error checking token payment eligibility:", error);
-        // Fail-safe: hide button if there's an error
-        setShowTokenPaymentButton(false);
-      } finally {
-        setTokenButtonLoading(false);
-      }
-    };
-    
-    checkTokenPaymentEligibility();
   }, []);
 
   const handlePaymentConfirmation = () => {
