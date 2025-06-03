@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -202,7 +201,7 @@ const ConfigUsuarioNovoScreen = () => {
   };
 
   const perfilOptions = getPerfilOptions();
-  const empresas: Empresa[] = empresasData?.data || [];
+  const empresas: Empresa[] = empresasData || [];
   const accessRequests: AccessRequest[] = accessRequestsData?.data || [];
 
   return (

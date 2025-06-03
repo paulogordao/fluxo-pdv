@@ -1,4 +1,3 @@
-
 import { API_CONFIG } from "@/config/api";
 
 export interface Empresa {
@@ -22,8 +21,8 @@ export interface CreateEmpresaData {
 }
 
 export interface UpdateEmpresaData {
-  nome: string;
-  cnpj: string;
+  nome?: string;
+  cnpj?: string;
   email?: string | null;
   telefone?: string | null;
   endereco?: string | null;
