@@ -7,7 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
 import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
 import { usePaymentOption } from "@/context/PaymentOptionContext";
-import { buildApiUrl } from "@/config/api";
+import { consultaFluxoService } from "@/services/consultaFluxoService";
 import { 
   CreditCard,
   CreditCard as DebitCard,
@@ -61,19 +61,13 @@ const ConfirmacaoPagamentoScreen = () => {
     }
   }, [selectedPaymentOption, comingFromTokenScreen, comingFromOtpScreen]);
 
-  // Fetch API data for technical documentation
+  // Fetch API data for technical documentation using the service
   useEffect(() => {
     const fetchApiData = async () => {
       try {
-        const url = buildApiUrl('/consultaFluxoDetalhe', { SLUG: documentationSlug });
         console.log(`Carregando documentação técnica para ${documentationSlug}`);
         
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Error in request: ${response.status}`);
-        }
-        
-        const data = await response.json();
+        const data = await consultaFluxoService.consultarFluxoDetalhe(documentationSlug);
         setApiData(data);
         console.log("API data:", data);
       } catch (error) {

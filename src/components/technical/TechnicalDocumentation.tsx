@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { consultaFluxoService } from "@/services/consultaFluxoService";
+
 interface TechnicalDocumentationProps {
   slug?: string;
   requestData?: string | null;
@@ -12,12 +14,14 @@ interface TechnicalDocumentationProps {
   loadOnMount?: boolean;
   sourceScreen?: string;
 }
+
 interface ApiResponse {
   nome_request_servico: string;
   nome_response_servico: string;
   request_servico: string;
   response_servico_anterior: string;
 }
+
 const TechnicalDocumentation = ({
   slug,
   requestData: initialRequestData,
@@ -63,21 +67,19 @@ const TechnicalDocumentation = ({
       setIsLoading(false);
       return;
     }
+    
     const fetchDocumentation = async () => {
       if (!slug) {
         setError("Slug não fornecido");
         setIsLoading(false);
         return;
       }
+      
       setIsLoading(true);
       try {
-        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=${slug}`;
-        console.log("Fetching technical documentation for:", url);
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Erro ao buscar documentação: ${response.status}`);
-        }
-        const data = await response.json();
+        console.log("Fetching technical documentation for:", slug);
+        const data = await consultaFluxoService.consultarFluxoDetalhe(slug);
+        
         setApiData({
           nome_request_servico: data.nome_request_servico || "Desconhecido",
           nome_response_servico: data.nome_response_servico || "Desconhecido",
@@ -92,6 +94,7 @@ const TechnicalDocumentation = ({
         setIsLoading(false);
       }
     };
+    
     fetchDocumentation();
   }, [slug, initialRequestData, initialResponseData, loadOnMount]);
   if (isLoading) {
@@ -154,4 +157,5 @@ const TechnicalDocumentation = ({
       </Collapsible>
     </div>;
 };
+
 export default TechnicalDocumentation;
