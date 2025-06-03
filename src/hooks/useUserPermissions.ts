@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { API_CONFIG, buildApiUrl } from "@/config/api";
+import { API_CONFIG } from "@/config/api";
 
 interface PermissionItem {
   permissao: string;
@@ -13,7 +14,8 @@ interface UserPermissions {
 
 const fetchUserPermissions = async (userId: string): Promise<UserPermissions> => {
   console.log('Calling API with userId:', userId);
-  const url = buildApiUrl('/permissoes_usuario', { id_usuario: userId });
+  const url = `${API_CONFIG.baseUrl}/permissoes_usuario?id_usuario=${userId}`;
+  console.log('Full URL:', url);
   
   const response = await fetch(url, {
     headers: API_CONFIG.defaultHeaders
