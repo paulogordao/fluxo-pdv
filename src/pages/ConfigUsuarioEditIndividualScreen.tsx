@@ -9,6 +9,8 @@ import { toast } from "@/components/ui/sonner";
 import { User, ArrowLeft } from "lucide-react";
 import PermissionModal from "@/components/PermissionModal";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
+import { userService, UsuarioData } from "@/services/userService";
+import { empresaService, EmpresaData } from "@/services/empresaService";
 
 interface UsuarioData {
   usuario: string;
@@ -57,7 +59,6 @@ const ConfigUsuarioEditIndividualScreen = () => {
       
       const userEmail = sessionStorage.getItem("user.login");
       const userUUID = sessionStorage.getItem("user.uuid");
-      const apiKey = '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975';
       
       if (!userEmail || !userUUID) {
         setPermissionMessage("Sessão expirada. Faça login novamente.");
@@ -67,24 +68,7 @@ const ConfigUsuarioEditIndividualScreen = () => {
 
       console.log("Buscando dados do usuário:", userId);
       
-      const response = await fetch(`https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/usuarios?id_usuario_consulta=${userId}`, {
-        method: "GET",
-        headers: {
-          "x-api-key": apiKey,
-          "id_usuario": userUUID,
-          "User-Agent": "SimuladorPDV/1.0"
-        }
-      });
-
-      console.log("Status da resposta:", response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log("Erro da API:", errorText);
-        throw new Error(`Erro na requisição: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
+      const data = await userService.getUserById(userId, userUUID);
       console.log("Dados do usuário recebidos:", data);
       
       setUserData(data);
@@ -109,7 +93,6 @@ const ConfigUsuarioEditIndividualScreen = () => {
       
       const userEmail = sessionStorage.getItem("user.login");
       const userUUID = sessionStorage.getItem("user.uuid");
-      const apiKey = '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975';
       
       if (!userEmail || !userUUID) {
         console.error("Sessão expirada para buscar empresas");
@@ -118,27 +101,9 @@ const ConfigUsuarioEditIndividualScreen = () => {
 
       console.log("Buscando empresas...");
       
-      const response = await fetch(`https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/empresas`, {
-        method: "GET",
-        headers: {
-          "x-api-key": apiKey,
-          "id_usuario": userUUID,
-          "User-Agent": "SimuladorPDV/1.0"
-        }
-      });
-
-      console.log("Status da resposta empresas:", response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log("Erro da API empresas:", errorText);
-        throw new Error(`Erro na requisição: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
+      const data = await empresaService.getEmpresas(userUUID);
       console.log("Dados das empresas recebidos:", data);
       
-      // Extract the data array from the API response
       setEmpresas(data.data || []);
       
     } catch (error) {
@@ -159,7 +124,6 @@ const ConfigUsuarioEditIndividualScreen = () => {
   const handleSave = async () => {
     try {
       const userUUID = sessionStorage.getItem("user.uuid");
-      const apiKey = '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975';
       
       if (!userUUID) {
         setPermissionMessage("Sessão expirada. Faça login novamente.");
@@ -184,32 +148,11 @@ const ConfigUsuarioEditIndividualScreen = () => {
 
       console.log("Enviando PUT request:", requestBody);
 
-      const response = await fetch('https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/usuarios', {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "id_usuario": userUUID,
-          "User-Agent": "SimuladorPDV/1.0"
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      console.log("Status da resposta PUT:", response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log("Erro da API PUT:", errorText);
-        throw new Error(`Erro na requisição: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
+      const data = await userService.updateUser(requestBody, userUUID);
       console.log("Resposta da API PUT:", data);
       
       if (data.status === "ok") {
         toast.success("Usuário atualizado com sucesso!");
-        // Optionally navigate back to the list after successful update
-        // navigate("/config_usuario_edit");
       } else {
         toast.error("Erro ao atualizar usuário. Tente novamente.");
       }

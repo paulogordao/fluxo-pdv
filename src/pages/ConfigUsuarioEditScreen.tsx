@@ -14,15 +14,7 @@ import {
 } from "@/components/ui/table";
 import PermissionModal from "@/components/PermissionModal";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
-
-interface UsuarioData {
-  usuario: string;
-  nome: string;
-  email: string;
-  empresa: string;
-  criado_em: string;
-  id: string; // Add the id field
-}
+import { userService, UsuarioData } from "@/services/userService";
 
 const ConfigUsuarioEditScreen = () => {
   const navigate = useNavigate();
@@ -41,7 +33,6 @@ const ConfigUsuarioEditScreen = () => {
       
       const userEmail = sessionStorage.getItem("user.login");
       const userUUID = sessionStorage.getItem("user.uuid");
-      const apiKey = '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975';
       
       if (!userEmail || !userUUID) {
         setPermissionMessage("Sessão expirada. Faça login novamente.");
@@ -51,24 +42,7 @@ const ConfigUsuarioEditScreen = () => {
 
       console.log("Buscando usuários...");
       
-      const response = await fetch("https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/usuarios", {
-        method: "GET",
-        headers: {
-          "x-api-key": apiKey,
-          "id_usuario": userUUID,
-          "User-Agent": "SimuladorPDV/1.0"
-        }
-      });
-
-      console.log("Status da resposta:", response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log("Erro da API:", errorText);
-        throw new Error(`Erro na requisição: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
+      const data = await userService.getUsers(userUUID);
       console.log("Dados recebidos:", data);
       
       if (data.data && Array.isArray(data.data)) {
@@ -103,10 +77,8 @@ const ConfigUsuarioEditScreen = () => {
   };
 
   const handleEdit = (usuario: string) => {
-    // Find the user data to get the ID
     const userData = usuarios.find(u => u.usuario === usuario);
     if (userData && userData.id) {
-      // Use the actual ID (UUID) from the API response
       navigate(`/config_usuario_edit_individual/${encodeURIComponent(userData.id)}`);
     } else {
       toast.error("Não foi possível identificar o usuário para edição.");
@@ -114,7 +86,6 @@ const ConfigUsuarioEditScreen = () => {
   };
 
   const handleDelete = (usuario: string) => {
-    // TODO: Implementar exclusão do usuário
     console.log("Excluir usuário:", usuario);
     toast.info("Funcionalidade de exclusão será implementada em breve.");
   };
