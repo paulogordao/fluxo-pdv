@@ -17,25 +17,39 @@ export interface ConsultaFluxoDetalheResponse {
 
 export const consultaFluxoService = {
   async consultarFluxo(cpf: string, slug: string): Promise<ConsultaFluxoResponse> {
+    console.log(`[consultarFluxo] Iniciando consulta com CPF: ${cpf}, SLUG: ${slug}`);
+    
     const url = buildApiUrl('consultaFluxo', { cpf, SLUG: slug });
-    console.log(`Consultando fluxo: ${url}`);
-    console.log('Headers sendo enviados:', API_CONFIG.defaultHeaders);
+    console.log(`[consultarFluxo] URL final: ${url}`);
+    console.log('[consultarFluxo] Headers sendo enviados:', API_CONFIG.defaultHeaders);
     
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: API_CONFIG.defaultHeaders
-    });
-    
-    console.log('Response status:', response.status);
-    console.log('Response headers:', response.headers);
-    
-    if (!response.ok) {
-      throw new Error(`Erro na requisição: ${response.status}`);
+    try {
+      console.log('[consultarFluxo] Fazendo fetch...');
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: API_CONFIG.defaultHeaders
+      });
+      
+      console.log('[consultarFluxo] Response recebido:');
+      console.log('- Status:', response.status);
+      console.log('- Status text:', response.statusText);
+      console.log('- OK:', response.ok);
+      console.log('- Headers:', Object.fromEntries(response.headers.entries()));
+      
+      if (!response.ok) {
+        console.error(`[consultarFluxo] Erro na requisição: ${response.status} - ${response.statusText}`);
+        throw new Error(`Erro na requisição: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("[consultarFluxo] Dados recebidos:", data);
+      return data;
+    } catch (error) {
+      console.error('[consultarFluxo] Erro capturado:', error);
+      console.error('[consultarFluxo] Tipo do erro:', typeof error);
+      console.error('[consultarFluxo] Message do erro:', error instanceof Error ? error.message : 'Erro desconhecido');
+      throw error;
     }
-    
-    const data = await response.json();
-    console.log("Resposta da API consultaFluxo:", data);
-    return data;
   },
 
   async consultarFluxoDetalhe(slug: string): Promise<ConsultaFluxoDetalheResponse> {

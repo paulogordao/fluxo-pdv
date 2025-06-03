@@ -10,8 +10,22 @@ export const API_CONFIG = {
 
 // Helper function to build API URLs
 export const buildApiUrl = (endpoint: string, params?: Record<string, string>) => {
+  console.log(`[buildApiUrl] Endpoint recebido: "${endpoint}"`);
+  console.log(`[buildApiUrl] Params recebidos:`, params);
+  console.log(`[buildApiUrl] Base URL: "${API_CONFIG.baseUrl}"`);
+  
   // Remove leading slash from endpoint if present to avoid double slashes
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+  console.log(`[buildApiUrl] Clean endpoint: "${cleanEndpoint}"`);
+  
+  // Para o endpoint consultaFluxo, vamos construir a URL diretamente
+  if (cleanEndpoint === 'consultaFluxo') {
+    const url = `${API_CONFIG.baseUrl}?${new URLSearchParams(params || {}).toString()}`;
+    console.log(`[buildApiUrl] URL final construída: "${url}"`);
+    return url;
+  }
+  
+  // Para outros endpoints, manter a lógica original
   const url = new URL(cleanEndpoint, API_CONFIG.baseUrl);
   
   if (params) {
@@ -20,6 +34,6 @@ export const buildApiUrl = (endpoint: string, params?: Record<string, string>) =
     });
   }
   
-  console.log(`Built URL: ${url.toString()}`);
+  console.log(`[buildApiUrl] URL final construída: "${url.toString()}"`);
   return url.toString();
 };
