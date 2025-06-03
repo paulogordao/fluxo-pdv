@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { API_CONFIG, buildApiUrl } from "@/config/api";
 
 interface PermissionItem {
   permissao: string;
@@ -13,9 +13,11 @@ interface UserPermissions {
 
 const fetchUserPermissions = async (userId: string): Promise<UserPermissions> => {
   console.log('Calling API with userId:', userId);
-  const response = await fetch(
-    `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/permissoes_usuario?id_usuario=${userId}`
-  );
+  const url = buildApiUrl('/permissoes_usuario', { id_usuario: userId });
+  
+  const response = await fetch(url, {
+    headers: API_CONFIG.defaultHeaders
+  });
   
   if (!response.ok) {
     throw new Error('Failed to fetch user permissions');

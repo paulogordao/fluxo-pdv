@@ -7,6 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
 import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
 import { usePaymentOption } from "@/context/PaymentOptionContext";
+import { buildApiUrl } from "@/config/api";
 import { 
   CreditCard,
   CreditCard as DebitCard,
@@ -64,7 +65,7 @@ const ConfirmacaoPagamentoScreen = () => {
   useEffect(() => {
     const fetchApiData = async () => {
       try {
-        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=${documentationSlug}`;
+        const url = buildApiUrl('/consultaFluxoDetalhe', { SLUG: documentationSlug });
         console.log(`Carregando documentação técnica para ${documentationSlug}`);
         
         const response = await fetch(url);

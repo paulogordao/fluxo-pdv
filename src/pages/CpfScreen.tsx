@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -12,6 +11,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { buildApiUrl } from "@/config/api";
 
 const CpfScreen = () => {
   const [cpf, setCpf] = useState("");
@@ -39,7 +39,7 @@ const CpfScreen = () => {
       // Store the CPF in localStorage for future use
       localStorage.setItem('cpfDigitado', cpf);
       
-      const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=${cpf}&SLUG=RLIINFO`;
+      const url = buildApiUrl('/consultaFluxo', { cpf, SLUG: 'RLIINFO' });
       console.log(`Chamando API: ${url}`);
       
       const response = await fetch(url);

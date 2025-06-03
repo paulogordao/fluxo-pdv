@@ -26,6 +26,7 @@ import {
   AlertDialogTitle,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { buildApiUrl } from "@/config/api";
 
 const ConfirmacaoPagamentoAppScreen = () => {
   const navigate = useNavigate();
@@ -54,7 +55,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
   useEffect(() => {
     const fetchApiData = async () => {
       try {
-        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=RLIDEALRLIWAIT`;
+        const url = buildApiUrl('/consultaFluxoDetalhe', { SLUG: 'RLIDEALRLIWAIT' });
         console.log("Fetching API details:", url);
         
         const response = await fetch(url);
@@ -92,7 +93,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
           return;
         }
         
-        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=${cpf}&SLUG=RLIWAIT`;
+        const url = buildApiUrl('/consultaFluxo', { cpf, SLUG: 'RLIWAIT' });
         console.log("Verificando elegibilidade para pagamento com token:", url);
         
         const response = await fetch(url);

@@ -9,6 +9,7 @@ import { ArrowLeft, FlaskConical, Plus } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { useToast } from "@/hooks/use-toast";
+import { API_CONFIG, buildApiUrl } from "@/config/api";
 
 interface UsuarioTeste {
   id: string;
@@ -32,11 +33,11 @@ const ConfigUsuariosTesteScreen = () => {
   const currentUserId = "f647bfee-faa2-4293-a5f2-d192a9e9f3f1";
 
   const fetchUsuariosTeste = async (): Promise<UsuarioTeste[]> => {
-    const response = await fetch("https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/usuarios_teste", {
+    const url = buildApiUrl('/usuarios_teste');
+    const response = await fetch(url, {
       method: "GET",
       headers: {
-        "Content-Type": "application/json",
-        "x-api-key": "0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975",
+        ...API_CONFIG.defaultHeaders,
         "id_usuario": currentUserId,
       },
     });
@@ -71,11 +72,11 @@ const ConfigUsuariosTesteScreen = () => {
   };
 
   const createUsuarioTeste = async (cpf: string): Promise<void> => {
-    const response = await fetch("https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/usuarios_teste", {
+    const url = buildApiUrl('/usuarios_teste');
+    const response = await fetch(url, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "x-api-key": "0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975",
+        ...API_CONFIG.defaultHeaders,
         "id_usuario": currentUserId,
       },
       body: JSON.stringify({
@@ -94,11 +95,11 @@ const ConfigUsuariosTesteScreen = () => {
   };
 
   const updateUsuarioTeste = async (usuario: UsuarioTeste): Promise<void> => {
-    const response = await fetch("https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/usuarios_teste", {
+    const url = buildApiUrl('/usuarios_teste');
+    const response = await fetch(url, {
       method: "PUT",
       headers: {
-        "Content-Type": "application/json",
-        "x-api-key": "0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975",
+        ...API_CONFIG.defaultHeaders,
         "id_usuario": currentUserId,
       },
       body: JSON.stringify(usuario),

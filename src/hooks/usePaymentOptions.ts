@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "@/components/ui/sonner";
 import { useNavigate } from "react-router-dom";
+import { API_CONFIG, buildApiUrl } from "@/config/api";
 
 interface PaymentOptionsResponse {
   possui_dotz?: boolean;
@@ -32,7 +33,7 @@ export const usePaymentOptions = () => {
         }
         
         // Using the correct SLUG value: RLIFUND instead of RLFUND
-        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=${cpf}&SLUG=RLIFUND`;
+        const url = buildApiUrl('/consultaFluxo', { cpf, SLUG: 'RLIFUND' });
         console.log("Fetching payment options data:", url);
         
         const response = await fetch(url);
