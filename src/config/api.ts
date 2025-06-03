@@ -1,4 +1,5 @@
 
+
 export const API_CONFIG = {
   baseUrl: 'https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV',
   apiKey: '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975',
@@ -18,14 +19,7 @@ export const buildApiUrl = (endpoint: string, params?: Record<string, string>) =
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   console.log(`[buildApiUrl] Clean endpoint: "${cleanEndpoint}"`);
   
-  // Para o endpoint consultaFluxo, vamos construir a URL diretamente
-  if (cleanEndpoint === 'consultaFluxo') {
-    const url = `${API_CONFIG.baseUrl}?${new URLSearchParams(params || {}).toString()}`;
-    console.log(`[buildApiUrl] URL final construída: "${url}"`);
-    return url;
-  }
-  
-  // Para outros endpoints, manter a lógica original
+  // Construir a URL completa com o endpoint como parte do path
   const url = new URL(cleanEndpoint, API_CONFIG.baseUrl);
   
   if (params) {
@@ -37,3 +31,4 @@ export const buildApiUrl = (endpoint: string, params?: Record<string, string>) =
   console.log(`[buildApiUrl] URL final construída: "${url.toString()}"`);
   return url.toString();
 };
+
