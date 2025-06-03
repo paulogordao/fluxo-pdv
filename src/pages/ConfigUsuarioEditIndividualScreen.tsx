@@ -10,7 +10,7 @@ import { User, ArrowLeft } from "lucide-react";
 import PermissionModal from "@/components/PermissionModal";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { userService, UsuarioData } from "@/services/userService";
-import { empresaService, EmpresaData } from "@/services/empresaService";
+import { empresaService, Empresa } from "@/services/empresaService";
 
 interface UsuarioData {
   usuario: string;
@@ -22,7 +22,7 @@ interface UsuarioData {
   id: string;
 }
 
-interface EmpresaData {
+interface Empresa {
   id: string;
   nome: string;
   cnpj: string;
@@ -32,7 +32,7 @@ const ConfigUsuarioEditIndividualScreen = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [userData, setUserData] = useState<UsuarioData | null>(null);
-  const [empresas, setEmpresas] = useState<EmpresaData[]>([]);
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingEmpresas, setIsLoadingEmpresas] = useState(true);
   const [showPermissionModal, setShowPermissionModal] = useState(false);
@@ -104,7 +104,7 @@ const ConfigUsuarioEditIndividualScreen = () => {
       const data = await empresaService.getEmpresas(userUUID);
       console.log("Dados das empresas recebidos:", data);
       
-      setEmpresas(data.data || []);
+      setEmpresas(data);
       
     } catch (error) {
       console.error("Erro ao buscar empresas:", error);
