@@ -1,0 +1,47 @@
+
+import { API_CONFIG, buildApiUrl } from "@/config/api";
+
+export interface ConsultaFluxoResponse {
+  pedir_telefone?: boolean;
+  possui_dotz?: boolean;
+  outros_meios_pagamento?: boolean;
+  dotz_sem_app?: boolean;
+  SLUG?: string;
+}
+
+export interface ConsultaFluxoDetalheResponse {
+  request_servico?: any;
+  response_servico_anterior?: any;
+}
+
+export const consultaFluxoService = {
+  async consultarFluxo(cpf: string, slug: string): Promise<ConsultaFluxoResponse> {
+    const url = buildApiUrl('/consultaFluxo', { cpf, SLUG: slug });
+    console.log(`Consultando fluxo: ${url}`);
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`Erro na requisição: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log("Resposta da API consultaFluxo:", data);
+    return data;
+  },
+
+  async consultarFluxoDetalhe(slug: string): Promise<ConsultaFluxoDetalheResponse> {
+    const url = buildApiUrl('/consultaFluxoDetalhe', { SLUG: slug });
+    console.log(`Consultando detalhes do fluxo: ${url}`);
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`Erro na requisição: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log("Resposta da API consultaFluxoDetalhe:", data);
+    return data;
+  }
+};

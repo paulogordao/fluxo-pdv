@@ -8,6 +8,7 @@ import { ShoppingCart } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
+import { consultaFluxoService } from "@/services/consultaFluxoService";
 
 const ScanScreen = () => {
   const [barcode, setBarcode] = useState("");
@@ -52,14 +53,7 @@ const ScanScreen = () => {
           return;
         }
         
-        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=${cpf}&SLUG=RLIFUND`;
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error(`Error in request: ${response.status}`);
-        }
-        
-        const data = await response.json();
+        const data = await consultaFluxoService.consultarFluxo(cpf, 'RLIFUND');
         if (data && data.SLUG) {
           setApiSlug(data.SLUG);
           console.log("API Slug fetched:", data.SLUG);
@@ -80,18 +74,10 @@ const ScanScreen = () => {
       try {
         setIsLoading(true);
         // Use the dynamic slug determined from the source page
-        const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=${detailSlug}`;
         console.log(`Fetching flow details with slug: ${detailSlug}`);
         
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error(`Error in request: ${response.status}`);
-        }
-        
-        const data = await response.json();
+        const data = await consultaFluxoService.consultarFluxoDetalhe(detailSlug);
         setApiData(data);
-        console.log("API data:", data);
       } catch (error) {
         console.error("Error fetching API data:", error);
       } finally {
@@ -115,15 +101,8 @@ const ScanScreen = () => {
         return;
       }
       
-      const url = `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxo?cpf=${cpf}&SLUG=RLIFUND`;
-      console.log("Checking for Dotz benefits:", url);
-      
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Error checking benefits: ${response.status}`);
-      }
-      
-      const data = await response.json();
+      console.log("Checking for Dotz benefits...");
+      const data = await consultaFluxoService.consultarFluxo(cpf, 'RLIFUND');
       console.log("Payment benefits check response:", data);
       
       if (data.possui_dotz === true) {

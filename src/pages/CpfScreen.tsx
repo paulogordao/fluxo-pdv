@@ -11,7 +11,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { buildApiUrl } from "@/config/api";
+import { consultaFluxoService } from "@/services/consultaFluxoService";
 
 const CpfScreen = () => {
   const [cpf, setCpf] = useState("");
@@ -39,17 +39,7 @@ const CpfScreen = () => {
       // Store the CPF in localStorage for future use
       localStorage.setItem('cpfDigitado', cpf);
       
-      const url = buildApiUrl('/consultaFluxo', { cpf, SLUG: 'RLIINFO' });
-      console.log(`Chamando API: ${url}`);
-      
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`Erro na requisição: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("API response:", data);
+      const data = await consultaFluxoService.consultarFluxo(cpf, 'RLIINFO');
       
       if (data.pedir_telefone) {
         navigate("/telefone");

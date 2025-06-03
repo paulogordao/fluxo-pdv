@@ -5,12 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { consultaFluxoService } from "@/services/consultaFluxoService";
 
 const TelefoneScreen = () => {
   const [telefone, setTelefone] = useState("");
@@ -34,16 +29,8 @@ const TelefoneScreen = () => {
           return;
         }
         
-        const url = "https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/consultaFluxoDetalhe?SLUG=RLIINFORLICELL";
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error(`Erro na requisição: ${response.status}`);
-        }
-        
-        const data = await response.json();
+        const data = await consultaFluxoService.consultarFluxoDetalhe('RLIINFORLICELL');
         setApiData(data);
-        console.log("API response:", data);
       } catch (error) {
         console.error("Erro ao consultar detalhes do fluxo:", error);
       } finally {
@@ -88,15 +75,6 @@ const TelefoneScreen = () => {
       }
     }
     return value;
-  };
-
-  const formatText = (text: string | null | undefined) => {
-    if (!text) return "";
-    
-    // Replace escaped newlines and tabs with actual line breaks and spaces
-    return text
-      .replace(/\\n/g, '\n')
-      .replace(/\\t/g, '  ');
   };
 
   const NumPad = () => {

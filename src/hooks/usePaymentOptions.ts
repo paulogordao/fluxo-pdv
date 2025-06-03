@@ -2,19 +2,12 @@
 import { useState, useEffect } from "react";
 import { toast } from "@/components/ui/sonner";
 import { useNavigate } from "react-router-dom";
-import { API_CONFIG, buildApiUrl } from "@/config/api";
-
-interface PaymentOptionsResponse {
-  possui_dotz?: boolean;
-  outros_meios_pagamento?: boolean;
-  dotz_sem_app?: boolean;
-  SLUG?: string;
-}
+import { consultaFluxoService, ConsultaFluxoResponse } from "@/services/consultaFluxoService";
 
 export const usePaymentOptions = () => {
   const navigate = useNavigate();
   // Payment options state
-  const [paymentOptions, setPaymentOptions] = useState<PaymentOptionsResponse>({});
+  const [paymentOptions, setPaymentOptions] = useState<ConsultaFluxoResponse>({});
   const [paymentOptionsLoading, setPaymentOptionsLoading] = useState(true);
 
   // Fetch payment options with stored CPF
@@ -33,15 +26,8 @@ export const usePaymentOptions = () => {
         }
         
         // Using the correct SLUG value: RLIFUND instead of RLFUND
-        const url = buildApiUrl('/consultaFluxo', { cpf, SLUG: 'RLIFUND' });
-        console.log("Fetching payment options data:", url);
-        
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Error in request: ${response.status}`);
-        }
-        
-        const data = await response.json();
+        console.log("Fetching payment options data...");
+        const data = await consultaFluxoService.consultarFluxo(cpf, 'RLIFUND');
         console.log("Payment options data:", data);
         setPaymentOptions(data);
       } catch (error) {

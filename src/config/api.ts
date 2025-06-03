@@ -10,11 +10,16 @@ export const API_CONFIG = {
 
 // Helper function to build API URLs
 export const buildApiUrl = (endpoint: string, params?: Record<string, string>) => {
-  const url = new URL(endpoint, API_CONFIG.baseUrl);
+  // Remove leading slash from endpoint if present to avoid double slashes
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+  const url = new URL(cleanEndpoint, API_CONFIG.baseUrl);
+  
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       url.searchParams.append(key, value);
     });
   }
+  
+  console.log(`Built URL: ${url.toString()}`);
   return url.toString();
 };
