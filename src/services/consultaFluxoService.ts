@@ -12,6 +12,8 @@ export interface ConsultaFluxoResponse {
 }
 
 export interface ConsultaFluxoDetalheResponse {
+  nome_request_servico?: string;
+  nome_response_servico?: string;
   request_servico?: any;
   response_servico_anterior?: any;
 }
