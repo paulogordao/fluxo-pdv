@@ -6,6 +6,7 @@ import { empresaService } from '@/services/empresaService';
 interface UserSessionData {
   userName: string;
   companyName: string;
+  userId: string | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -14,6 +15,7 @@ export const useUserSession = () => {
   const [sessionData, setSessionData] = useState<UserSessionData>({
     userName: "Usuário",
     companyName: "Empresa",
+    userId: null,
     isLoading: true,
     error: null
   });
@@ -29,6 +31,7 @@ export const useUserSession = () => {
           console.warn("No user ID found in localStorage");
           setSessionData(prev => ({ 
             ...prev, 
+            userId: null,
             isLoading: false, 
             error: "Sessão não encontrada" 
           }));
@@ -49,6 +52,7 @@ export const useUserSession = () => {
           setSessionData({
             userName,
             companyName: userData.empresa || "Empresa",
+            userId,
             isLoading: false,
             error: null
           });
@@ -68,6 +72,7 @@ export const useUserSession = () => {
         setSessionData({
           userName,
           companyName,
+          userId,
           isLoading: false,
           error: null
         });
@@ -78,17 +83,20 @@ export const useUserSession = () => {
         // Fallback: tentar usar dados do sessionStorage se houver erro na API
         const fallbackUserName = sessionStorage.getItem("user_name");
         const fallbackCompanyName = sessionStorage.getItem("company_name");
+        const userId = localStorage.getItem("userId");
         
         if (fallbackUserName || fallbackCompanyName) {
           setSessionData({
             userName: fallbackUserName || "Usuário",
-            companyName: fallbackCompanyName || "Empresa", 
+            companyName: fallbackCompanyName || "Empresa",
+            userId,
             isLoading: false,
             error: null
           });
         } else {
           setSessionData(prev => ({
             ...prev,
+            userId,
             isLoading: false,
             error: error instanceof Error ? error.message : "Erro ao carregar dados"
           }));
