@@ -1,5 +1,5 @@
 
-import { Building2, Plus, Edit, Settings, User, FlaskConical } from "lucide-react";
+import { Building2, Plus, Edit, Settings, User, FlaskConical, Home } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -125,6 +125,30 @@ export function AppSidebar() {
       <SidebarContent className="p-2">
         <SidebarGroup>
           <SidebarMenu>
+            {/* Item de navegação para voltar ao início - sem permissão necessária */}
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive("/index")}
+                className={`
+                  w-full text-left text-sm px-3 py-2 rounded-md transition-colors mb-4
+                  ${isActive("/index") 
+                    ? 'bg-dotz-laranja text-white font-medium' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-dotz-laranja cursor-pointer'
+                  }
+                `}
+              >
+                <button
+                  onClick={() => handleNavigation("/index")}
+                  className="flex items-center space-x-2 w-full"
+                >
+                  <Home className="h-4 w-4" />
+                  <span>Voltar ao Início</span>
+                </button>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
+            {/* Itens do menu baseados em permissões */}
             {menuItems.map((group) => {
               // Filter items based on permissions
               const visibleItems = group.items.filter(item => 
