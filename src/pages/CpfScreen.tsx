@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -132,8 +133,8 @@ const CpfScreen = () => {
       {/* Test Users Sidebar */}
       <TestUsersSidebar onCpfSelect={handleCpfSelect} />
 
-      {/* User Profile Button - positioned in top left with larger size */}
-      <div className="absolute top-6 left-6 z-10">
+      {/* User Profile Button - positioned in top left with more top margin */}
+      <div className="absolute top-24 left-6 z-10">
         <UserProfileButton 
           userName={sessionLoading ? "Carregando..." : userName}
           companyName={sessionLoading ? "Carregando..." : companyName}
