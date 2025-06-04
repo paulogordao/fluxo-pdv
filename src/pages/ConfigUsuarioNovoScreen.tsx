@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -223,15 +224,19 @@ const ConfigUsuarioNovoScreen = () => {
           </div>
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <UserPlus className="h-5 w-5 text-red-600" />
-            <h2 className="text-xl font-semibold text-red-600">Criar Usuário no Sistema</h2>
-          </div>
-          <p className="text-gray-600">
-            Preencha os campos abaixo para criar um novo usuário e atribuir suas permissões. Os dados cadastrados darão acesso ao simulador e às funcionalidades conforme perfil selecionado.
-          </p>
-        </div>
+        <Card className="border-dotz-laranja/20 bg-dotz-laranja/5">
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <UserPlus className="h-5 w-5 text-red-600" />
+                <h2 className="text-xl font-semibold text-red-600">Criar Usuário no Sistema</h2>
+              </div>
+              <p className="text-gray-600">
+                Preencha os campos abaixo para criar um novo usuário e atribuir suas permissões. Os dados cadastrados darão acesso ao simulador e às funcionalidades conforme perfil selecionado.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="w-full shadow-lg">
           <CardContent className="space-y-6 pt-6">

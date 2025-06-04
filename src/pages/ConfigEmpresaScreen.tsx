@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -190,15 +191,19 @@ const ConfigEmpresaScreen = () => {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Building2 className="h-5 w-5 text-red-600" />
-              <h2 className="text-xl font-semibold text-red-600">Informações da Empresa</h2>
-            </div>
-            <p className="text-gray-600">
-              Preencha as informações da empresa que será usada no sistema. Esses dados serão utilizados para identificar a origem das interações com o simulador.
-            </p>
-          </div>
+          <Card className="border-dotz-laranja/20 bg-dotz-laranja/5">
+            <CardContent className="pt-6">
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Building2 className="h-5 w-5 text-red-600" />
+                  <h2 className="text-xl font-semibold text-red-600">Informações da Empresa</h2>
+                </div>
+                <p className="text-gray-600">
+                  Preencha as informações da empresa que será usada no sistema. Esses dados serão utilizados para identificar a origem das interações com o simulador.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
           <Card className="w-full shadow-lg">
             <CardContent className="pt-6">

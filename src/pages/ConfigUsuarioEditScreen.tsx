@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -127,15 +128,19 @@ const ConfigUsuarioEditScreen = () => {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <User className="h-5 w-5 text-red-600" />
-              <h2 className="text-xl font-semibold text-red-600">Gerenciar Usuários</h2>
-            </div>
-            <p className="text-gray-600">
-              Utilize esta seção para visualizar e modificar os dados dos usuários existentes. Lembre-se de revisar o perfil e a empresa vinculada antes de fazer alterações.
-            </p>
-          </div>
+          <Card className="border-dotz-laranja/20 bg-dotz-laranja/5">
+            <CardContent className="pt-6">
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <User className="h-5 w-5 text-red-600" />
+                  <h2 className="text-xl font-semibold text-red-600">Gerenciar Usuários</h2>
+                </div>
+                <p className="text-gray-600">
+                  Utilize esta seção para visualizar e modificar os dados dos usuários existentes. Lembre-se de revisar o perfil e a empresa vinculada antes de fazer alterações.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
           <Card className="w-full shadow-lg">
             <CardContent className="pt-6">
