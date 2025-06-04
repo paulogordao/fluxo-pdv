@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import PdvLayout from "@/components/PdvLayout";
+import UserProfileButton from "@/components/UserProfileButton";
+import { useUserSession } from "@/hooks/useUserSession";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,6 +20,7 @@ const CpfScreen = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { userName, companyName, isLoading: sessionLoading } = useUserSession();
 
   const handleKeyPress = (value: string) => {
     if (value === "CLEAR") {
@@ -119,45 +122,54 @@ const CpfScreen = () => {
   };
 
   return (
-    <PdvLayout className="flex flex-col items-center justify-center">
-      <Card className="w-full max-w-md p-6 flex flex-col items-center">
-        <div className="w-full mb-8">
-          <h2 className="text-2xl font-bold text-center mb-6">Informe seu CPF</h2>
-          <Input
-            className="text-center text-xl h-14 mb-6"
-            value={formatCPF(cpf)}
-            readOnly
-            placeholder="Digite seu CPF"
-          />
-          <NumPad />
-        </div>
-      </Card>
+    <div className="min-h-screen bg-gray-100 relative">
+      {/* User Profile Button - positioned in top left with larger size */}
+      <div className="absolute top-6 left-6 z-10">
+        <UserProfileButton 
+          userName={sessionLoading ? "Carregando..." : userName}
+          companyName={sessionLoading ? "Carregando..." : companyName}
+        />
+      </div>
 
-      <div className="mt-8 w-full max-w-3xl">
-        <Collapsible
-          open={isOpen}
-          onOpenChange={setIsOpen}
-          className="w-full border border-gray-200 rounded-md shadow overflow-hidden"
-        >
-          <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
-            <span>Exibir chamada à API</span>
-            {isOpen ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="px-4 py-3 bg-white">
-              <h3 className="text-lg font-semibold mb-2">Request Body</h3>
-              <div className="bg-gray-50 p-3 rounded font-mono text-sm">
-                <div className="flex gap-2">
-                  <span className="text-green-600 font-bold">POST</span>
-                  <span className="text-dotz-laranja">/RLIINFO</span>
-                </div>
-                <p className="mt-2 text-gray-600">Este endpoint identifica o cliente utilizando o CPF informado.</p>
-                
-                <pre className="mt-4 whitespace-pre-wrap text-xs p-4 bg-gray-100 rounded border overflow-x-auto">
+      <PdvLayout className="flex flex-col items-center justify-center">
+        <Card className="w-full max-w-md p-6 flex flex-col items-center">
+          <div className="w-full mb-8">
+            <h2 className="text-2xl font-bold text-center mb-6">Informe seu CPF</h2>
+            <Input
+              className="text-center text-xl h-14 mb-6"
+              value={formatCPF(cpf)}
+              readOnly
+              placeholder="Digite seu CPF"
+            />
+            <NumPad />
+          </div>
+        </Card>
+
+        <div className="mt-8 w-full max-w-3xl">
+          <Collapsible
+            open={isOpen}
+            onOpenChange={setIsOpen}
+            className="w-full border border-gray-200 rounded-md shadow overflow-hidden"
+          >
+            <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
+              <span>Exibir chamada à API</span>
+              {isOpen ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-4 py-3 bg-white">
+                <h3 className="text-lg font-semibold mb-2">Request Body</h3>
+                <div className="bg-gray-50 p-3 rounded font-mono text-sm">
+                  <div className="flex gap-2">
+                    <span className="text-green-600 font-bold">POST</span>
+                    <span className="text-dotz-laranja">/RLIINFO</span>
+                  </div>
+                  <p className="mt-2 text-gray-600">Este endpoint identifica o cliente utilizando o CPF informado.</p>
+                  
+                  <pre className="mt-4 whitespace-pre-wrap text-xs p-4 bg-gray-100 rounded border overflow-x-auto">
 {`curl --location 'https://uat-loyalty.dotznext.com/integration-router/api/default/v1/command' \\
 --header 'id: [CNPJ]' \\
 --header 'Authorization: [BASIC]' \\
@@ -175,13 +187,14 @@ const CpfScreen = () => {
     }
   }
 }'`}
-                </pre>
+                  </pre>
+                </div>
               </div>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </div>
-    </PdvLayout>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+      </PdvLayout>
+    </div>
   );
 };
 
