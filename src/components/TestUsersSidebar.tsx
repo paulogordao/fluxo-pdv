@@ -35,13 +35,16 @@ const TestUsersSidebar = ({ onCpfSelect }: TestUsersSidebarProps) => {
     loadTestUsers();
   }, [userId]);
 
-  const formatCPF = (cpf: string) => {
-    const cleaned = cpf.replace(/\D/g, "");
+  const formatCPF = (cpf: string | number) => {
+    // Convert to string first to handle both string and number inputs
+    const cpfString = String(cpf);
+    const cleaned = cpfString.replace(/\D/g, "");
     return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   };
 
-  const handleCpfClick = (cpf: string) => {
-    const cleanedCpf = cpf.replace(/\D/g, "");
+  const handleCpfClick = (cpf: string | number) => {
+    // Convert to string and clean it
+    const cleanedCpf = String(cpf).replace(/\D/g, "");
     onCpfSelect(cleanedCpf);
   };
 
