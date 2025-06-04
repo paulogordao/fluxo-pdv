@@ -1,36 +1,22 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PdvProvider } from "@/context/PdvContext";
 import { useNavigate } from "react-router-dom";
 import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
 import UserProfileButton from "@/components/UserProfileButton";
-import { useEffect, useState } from "react";
+import { useUserSession } from "@/hooks/useUserSession";
 
 const Index = () => {
   const navigate = useNavigate();
-  const [userInfo, setUserInfo] = useState({ userName: "Usuário", companyName: "Empresa" });
-
-  useEffect(() => {
-    // Get user info from sessionStorage (set during login)
-    const storedUserName = sessionStorage.getItem("user_name");
-    const storedCompanyName = sessionStorage.getItem("company_name");
-    
-    if (storedUserName || storedCompanyName) {
-      setUserInfo({
-        userName: storedUserName || "Usuário",
-        companyName: storedCompanyName || "Empresa"
-      });
-    }
-  }, []);
+  const { userName, companyName, isLoading } = useUserSession();
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
       {/* User Profile Button - positioned in top left with larger size */}
       <div className="absolute top-6 left-6">
         <UserProfileButton 
-          userName={userInfo.userName}
-          companyName={userInfo.companyName}
+          userName={isLoading ? "Carregando..." : userName}
+          companyName={isLoading ? "Carregando..." : companyName}
         />
       </div>
 
