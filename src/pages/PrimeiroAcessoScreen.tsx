@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "@/components/ui/sonner";
+import { authService } from "@/services/authService";
 
 const PrimeiroAcessoScreen = () => {
   const navigate = useNavigate();
@@ -67,19 +68,7 @@ const PrimeiroAcessoScreen = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch("https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/usuarios/redefinir_senha", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "id_usuario": userId,
-          "x-api-key": "0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975"
-        },
-        body: JSON.stringify({
-          nova_senha: novaSenha
-        })
-      });
-
-      const data = await response.json();
+      const data = await authService.resetPassword(userId, novaSenha);
 
       if (data.status === "ok" && data.code === 200) {
         // Clear first access user ID from session
@@ -100,7 +89,7 @@ const PrimeiroAcessoScreen = () => {
       }
     } catch (error) {
       console.error("Erro ao redefinir senha:", error);
-      toast.error("Erro de conexão. Tente novamente.");
+      toast.error(error instanceof Error ? error.message : "Erro de conexão. Tente novamente.");
     } finally {
       setIsLoading(false);
     }

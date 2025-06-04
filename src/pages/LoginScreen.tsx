@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/sonner";
+import { authService } from "@/services/authService";
 
 const LoginScreen = () => {
   const navigate = useNavigate();
@@ -61,16 +62,7 @@ const LoginScreen = () => {
     setIsSubmittingRequest(true);
 
     try {
-      const response = await fetch("https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/usuarios/solicitar_acesso", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": "0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975"
-        },
-        body: JSON.stringify(accessRequestData)
-      });
-
-      const data = await response.json();
+      const data = await authService.requestAccess(accessRequestData);
 
       if (data.status === "ok") {
         setRequestSuccess(true);
@@ -86,7 +78,7 @@ const LoginScreen = () => {
       }
     } catch (error) {
       console.error("Erro ao enviar solicitação de acesso:", error);
-      toast.error("Erro de conexão. Tente novamente.");
+      toast.error(error instanceof Error ? error.message : "Erro de conexão. Tente novamente.");
     } finally {
       setIsSubmittingRequest(false);
     }
@@ -128,19 +120,7 @@ const LoginScreen = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/validaUsuario", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": "0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975"
-        },
-        body: JSON.stringify({
-          email: email,
-          senha: password
-        })
-      });
-
-      const data = await response.json();
+      const data = await authService.validateUser(email, password);
 
       if (data.mensagem === "senha correta" && data.code === 200) {
         // Save user session data
@@ -180,7 +160,7 @@ const LoginScreen = () => {
       }
     } catch (error) {
       console.error("Erro na autenticação:", error);
-      setErrorMessage("Erro de conexão. Tente novamente.");
+      setErrorMessage(error instanceof Error ? error.message : "Erro de conexão. Tente novamente.");
       setShowError(true);
     } finally {
       setIsLoading(false);

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -13,6 +14,7 @@ import { Building2 } from "lucide-react";
 import PermissionModal from "@/components/PermissionModal";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { empresaService, type CreateEmpresaData } from "@/services/empresaService";
+import { useUserPermissions } from "@/hooks/useUserPermissions";
 
 const empresaSchema = z.object({
   nome: z.string().min(1, "Nome da empresa é obrigatório"),
@@ -30,7 +32,8 @@ const ConfigEmpresaScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [permissionMessage, setPermissionMessage] = useState("");
-  const [isCheckingPermission, setIsCheckingPermission] = useState(true);
+
+  const { hasPermission, isLoading: isCheckingPermission, error } = useUserPermissions();
 
   const {
     register,
@@ -45,61 +48,28 @@ const ConfigEmpresaScreen = () => {
 
   // Check user permissions on component mount
   useEffect(() => {
-    checkUserPermissions();
-  }, []);
-
-  const checkUserPermissions = async () => {
-    try {
+    if (!isCheckingPermission && !error) {
       const userEmail = sessionStorage.getItem("user.login");
       const userUUID = sessionStorage.getItem("user.uuid");
       
       if (!userEmail || !userUUID) {
         setPermissionMessage("Sessão expirada. Faça login novamente.");
         setShowPermissionModal(true);
-        setIsCheckingPermission(false);
         return;
       }
 
-      console.log("Verificando permissões para usuário:", userUUID);
-      
-      const response = await fetch(`https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/permissoes_usuario?id_usuario=${userUUID}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": "0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975"
-        }
-      });
-
-      const data = await response.json();
-      console.log("Resposta da API de permissões:", data);
-      console.log("Dados da permissão:", data.data);
-      
-      // Check if user has the required permission
-      let hasPermission = false;
-      
-      // Handle the API response structure with data.data
-      if (data && data.data && Array.isArray(data.data)) {
-        hasPermission = data.data.some(permissionObj => 
-          permissionObj && permissionObj.permissao === "menu_empresa_novo"
-        );
-        console.log("Verificação para menu_empresa_novo - possui permissão:", hasPermission);
-      }
-      
-      console.log("Resultado final da verificação:", hasPermission);
-      
-      if (!hasPermission) {
+      if (!hasPermission("menu_empresa_novo")) {
         setPermissionMessage("Você não possui permissão para acessar esta funcionalidade.");
         setShowPermissionModal(true);
+        return;
       }
-      
-      setIsCheckingPermission(false);
-    } catch (error) {
-      console.error("Erro ao verificar permissões:", error);
+    }
+
+    if (error) {
       setPermissionMessage("Erro ao verificar permissões. Tente novamente.");
       setShowPermissionModal(true);
-      setIsCheckingPermission(false);
     }
-  };
+  }, [hasPermission, isCheckingPermission, error]);
 
   const formatCNPJ = (value: string) => {
     const cleanValue = value.replace(/\D/g, "");
