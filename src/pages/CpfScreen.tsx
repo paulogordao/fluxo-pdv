@@ -133,8 +133,8 @@ const CpfScreen = () => {
       {/* Test Users Sidebar */}
       <TestUsersSidebar onCpfSelect={handleCpfSelect} />
 
-      {/* User Profile Button - fixed position at top left with high z-index */}
-      <div className="fixed top-6 left-6 z-50">
+      {/* User Profile Button - fixed position with adjusted top margin to clear sidebar title */}
+      <div className="fixed top-12 left-6 z-50">
         <UserProfileButton 
           userName={sessionLoading ? "Carregando..." : userName}
           companyName={sessionLoading ? "Carregando..." : companyName}
