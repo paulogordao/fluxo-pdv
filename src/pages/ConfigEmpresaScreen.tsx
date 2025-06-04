@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -10,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/sonner";
-import { Building2 } from "lucide-react";
+import { Building2, ArrowLeft } from "lucide-react";
 import PermissionModal from "@/components/PermissionModal";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { empresaService, type CreateEmpresaData } from "@/services/empresaService";
@@ -175,111 +174,132 @@ const ConfigEmpresaScreen = () => {
   return (
     <>
       <ConfigLayoutWithSidebar>
-        <Card className="w-full max-w-2xl shadow-lg">
-          <CardHeader className="text-center">
-            <CardTitle className="flex items-center justify-center space-x-3 text-2xl text-dotz-laranja">
-              <Building2 className="h-8 w-8" />
-              <span>Cadastro de Empresa</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="nome">Nome da Empresa *</Label>
-                  <Input
-                    id="nome"
-                    {...register("nome")}
-                    placeholder="Digite o nome da empresa"
-                    className={errors.nome ? "border-red-500" : ""}
-                  />
-                  {errors.nome && (
-                    <p className="text-sm text-red-500">{errors.nome.message}</p>
-                  )}
+        <div className="space-y-6 w-full max-w-4xl">
+          {/* Header Section */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/configuracoes")}
+                className="text-gray-600 hover:text-dotz-laranja"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <h1 className="text-3xl font-bold text-dotz-laranja">Cadastro de Empresa</h1>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Building2 className="h-5 w-5 text-red-600" />
+              <h2 className="text-xl font-semibold text-red-600">Informações da Empresa</h2>
+            </div>
+            <p className="text-gray-600">
+              Preencha as informações da empresa que será usada no sistema. Esses dados serão utilizados para identificar a origem das interações com o simulador.
+            </p>
+          </div>
+
+          <Card className="w-full shadow-lg">
+            <CardContent className="pt-6">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="nome">Nome da Empresa *</Label>
+                    <Input
+                      id="nome"
+                      {...register("nome")}
+                      placeholder="Digite o nome da empresa"
+                      className={errors.nome ? "border-red-500" : ""}
+                    />
+                    {errors.nome && (
+                      <p className="text-sm text-red-500">{errors.nome.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="cnpj">CNPJ *</Label>
+                    <Input
+                      id="cnpj"
+                      {...register("cnpj")}
+                      placeholder="XX.XXX.XXX/XXXX-XX"
+                      onChange={handleCNPJChange}
+                      value={watch("cnpj") || ""}
+                      className={errors.cnpj ? "border-red-500" : ""}
+                    />
+                    {errors.cnpj && (
+                      <p className="text-sm text-red-500">{errors.cnpj.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">E-mail da Empresa</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      {...register("email")}
+                      placeholder="empresa@exemplo.com"
+                      className={errors.email ? "border-red-500" : ""}
+                    />
+                    {errors.email && (
+                      <p className="text-sm text-red-500">{errors.email.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="telefone">Telefone</Label>
+                    <Input
+                      id="telefone"
+                      {...register("telefone")}
+                      placeholder="(XX) XXXXX-XXXX"
+                      onChange={handleTelefoneChange}
+                      value={watch("telefone") || ""}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="cnpj">CNPJ *</Label>
+                  <Label htmlFor="endereco">Endereço</Label>
                   <Input
-                    id="cnpj"
-                    {...register("cnpj")}
-                    placeholder="XX.XXX.XXX/XXXX-XX"
-                    onChange={handleCNPJChange}
-                    value={watch("cnpj") || ""}
-                    className={errors.cnpj ? "border-red-500" : ""}
+                    id="endereco"
+                    {...register("endereco")}
+                    placeholder="Rua, número, bairro, cidade, estado"
                   />
-                  {errors.cnpj && (
-                    <p className="text-sm text-red-500">{errors.cnpj.message}</p>
-                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">E-mail da Empresa</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    {...register("email")}
-                    placeholder="empresa@exemplo.com"
-                    className={errors.email ? "border-red-500" : ""}
-                  />
-                  {errors.email && (
-                    <p className="text-sm text-red-500">{errors.email.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="telefone">Telefone</Label>
-                  <Input
-                    id="telefone"
-                    {...register("telefone")}
-                    placeholder="(XX) XXXXX-XXXX"
-                    onChange={handleTelefoneChange}
-                    value={watch("telefone") || ""}
+                  <Label htmlFor="descricao">Descrição</Label>
+                  <Textarea
+                    id="descricao"
+                    {...register("descricao")}
+                    placeholder="Informações adicionais sobre a empresa"
+                    rows={4}
                   />
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="endereco">Endereço</Label>
-                <Input
-                  id="endereco"
-                  {...register("endereco")}
-                  placeholder="Rua, número, bairro, cidade, estado"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="descricao">Descrição</Label>
-                <Textarea
-                  id="descricao"
-                  {...register("descricao")}
-                  placeholder="Informações adicionais sobre a empresa"
-                  rows={4}
-                />
-              </div>
-
-              <div className="flex space-x-4 pt-4">
-                <Button
-                  type="submit"
-                  variant="dotz"
-                  disabled={isLoading}
-                  className="flex-1"
-                >
-                  {isLoading ? "Salvando..." : "Salvar"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="cancel"
-                  onClick={handleCancel}
-                  disabled={isLoading}
-                  className="flex-1"
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                <div className="flex space-x-4 pt-4">
+                  <Button
+                    type="submit"
+                    variant="dotz"
+                    disabled={isLoading}
+                    className="flex-1"
+                  >
+                    {isLoading ? "Salvando..." : "Salvar"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="cancel"
+                    onClick={handleCancel}
+                    disabled={isLoading}
+                    className="flex-1"
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </ConfigLayoutWithSidebar>
 
       <PermissionModal

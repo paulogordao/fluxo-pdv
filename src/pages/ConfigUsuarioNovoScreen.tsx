@@ -206,27 +206,35 @@ const ConfigUsuarioNovoScreen = () => {
 
   return (
     <ConfigLayoutWithSidebar>
-      <div className="space-y-6">
-        <Card className="w-full max-w-4xl shadow-lg">
-          <CardHeader className="text-center">
-            <div className="flex items-center justify-between mb-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleCancel}
-                className="text-gray-600 hover:text-dotz-laranja"
-                disabled={createUserMutation.isPending}
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <CardTitle className="flex items-center justify-center space-x-3 text-2xl text-dotz-laranja flex-1">
-                <UserPlus className="h-8 w-8" />
-                <span>Cadastro de Novo Usuário</span>
-              </CardTitle>
-              <div className="w-10"></div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
+      <div className="space-y-6 w-full max-w-6xl">
+        {/* Header Section */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCancel}
+              className="text-gray-600 hover:text-dotz-laranja"
+              disabled={createUserMutation.isPending}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-3xl font-bold text-dotz-laranja">Cadastro de Novo Usuário</h1>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <UserPlus className="h-5 w-5 text-red-600" />
+            <h2 className="text-xl font-semibold text-red-600">Criar Usuário no Sistema</h2>
+          </div>
+          <p className="text-gray-600">
+            Preencha os campos abaixo para criar um novo usuário e atribuir suas permissões. Os dados cadastrados darão acesso ao simulador e às funcionalidades conforme perfil selecionado.
+          </p>
+        </div>
+
+        <Card className="w-full shadow-lg">
+          <CardContent className="space-y-6 pt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="usuario" className="text-sm font-medium text-gray-700">
@@ -365,7 +373,7 @@ const ConfigUsuarioNovoScreen = () => {
         </Card>
 
         {/* Access Requests Table */}
-        <Card className="w-full max-w-4xl shadow-lg">
+        <Card className="w-full shadow-lg">
           <CardHeader>
             <CardTitle className="text-xl text-dotz-laranja">
               Solicitações de Acesso Pendentes

@@ -111,9 +111,10 @@ const ConfigUsuarioEditScreen = () => {
   return (
     <>
       <ConfigLayoutWithSidebar>
-        <Card className="w-full max-w-6xl shadow-lg">
-          <CardHeader className="text-center">
-            <div className="flex items-center justify-between mb-4">
+        <div className="space-y-6 w-full max-w-6xl">
+          {/* Header Section */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
                 size="icon"
@@ -122,79 +123,88 @@ const ConfigUsuarioEditScreen = () => {
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <CardTitle className="flex items-center justify-center space-x-3 text-2xl text-dotz-laranja flex-1">
-                <User className="h-8 w-8" />
-                <span>Lista de Usuários</span>
-              </CardTitle>
-              <div className="w-10"></div>
+              <h1 className="text-3xl font-bold text-dotz-laranja">Lista de Usuários</h1>
             </div>
-          </CardHeader>
-          <CardContent>
-            {usuarios.length === 0 ? (
-              <div className="text-center py-8">
-                <User className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg">Nenhum usuário encontrado</p>
-                <p className="text-gray-400 text-sm mt-2">
-                  Não há usuários cadastrados no sistema no momento.
-                </p>
-              </div>
-            ) : (
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Usuário</TableHead>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Empresa</TableHead>
-                      <TableHead>Criado em</TableHead>
-                      <TableHead className="text-center">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {usuarios.map((usuario, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">
-                          {usuario.usuario}
-                        </TableCell>
-                        <TableCell>{usuario.nome}</TableCell>
-                        <TableCell>{usuario.email}</TableCell>
-                        <TableCell>
-                          {usuario.empresa || (
-                            <span className="text-gray-400 italic">
-                              Sem empresa vinculada
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell>{formatDate(usuario.criado_em)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-center space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(usuario.usuario)}
-                              className="text-dotz-laranja border-dotz-laranja hover:bg-dotz-laranja hover:text-white"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDelete(usuario.usuario)}
-                              className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <User className="h-5 w-5 text-red-600" />
+              <h2 className="text-xl font-semibold text-red-600">Gerenciar Usuários</h2>
+            </div>
+            <p className="text-gray-600">
+              Utilize esta seção para visualizar e modificar os dados dos usuários existentes. Lembre-se de revisar o perfil e a empresa vinculada antes de fazer alterações.
+            </p>
+          </div>
+
+          <Card className="w-full shadow-lg">
+            <CardContent className="pt-6">
+              {usuarios.length === 0 ? (
+                <div className="text-center py-8">
+                  <User className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 text-lg">Nenhum usuário encontrado</p>
+                  <p className="text-gray-400 text-sm mt-2">
+                    Não há usuários cadastrados no sistema no momento.
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Usuário</TableHead>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Empresa</TableHead>
+                        <TableHead>Criado em</TableHead>
+                        <TableHead className="text-center">Ações</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    </TableHeader>
+                    <TableBody>
+                      {usuarios.map((usuario, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">
+                            {usuario.usuario}
+                          </TableCell>
+                          <TableCell>{usuario.nome}</TableCell>
+                          <TableCell>{usuario.email}</TableCell>
+                          <TableCell>
+                            {usuario.empresa || (
+                              <span className="text-gray-400 italic">
+                                Sem empresa vinculada
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell>{formatDate(usuario.criado_em)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center justify-center space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEdit(usuario.usuario)}
+                                className="text-dotz-laranja border-dotz-laranja hover:bg-dotz-laranja hover:text-white"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDelete(usuario.usuario)}
+                                className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </ConfigLayoutWithSidebar>
 
       <PermissionModal
