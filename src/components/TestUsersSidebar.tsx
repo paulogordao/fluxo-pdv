@@ -66,7 +66,7 @@ const TestUsersSidebar = ({ onCpfSelect }: TestUsersSidebarProps) => {
   return (
     <div className="fixed left-0 top-0 h-full w-80 bg-white shadow-lg z-10 overflow-y-auto">
       <Card className="h-full rounded-none border-r">
-        <CardHeader className="pb-4 pt-20">
+        <CardHeader className="pb-4 pt-28">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
               <User className="h-5 w-5 text-dotz-laranja" />
