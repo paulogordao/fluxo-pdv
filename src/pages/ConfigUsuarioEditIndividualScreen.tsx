@@ -12,22 +12,6 @@ import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { userService, UsuarioData } from "@/services/userService";
 import { empresaService, Empresa } from "@/services/empresaService";
 
-interface UsuarioData {
-  usuario: string;
-  nome: string;
-  email: string;
-  empresa: string;
-  empresa_id?: string;
-  criado_em: string;
-  id: string;
-}
-
-interface Empresa {
-  id: string;
-  nome: string;
-  cnpj: string;
-}
-
 const ConfigUsuarioEditIndividualScreen = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
