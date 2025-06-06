@@ -27,6 +27,12 @@ export interface ResetPasswordResponse {
   mensagem?: string;
 }
 
+export interface ForgotPasswordResponse {
+  status: string;
+  code: number;
+  mensagem?: string;
+}
+
 export const authService = {
   async validateUser(email: string, senha: string): Promise<LoginResponse> {
     const response = await fetch(`${API_CONFIG.baseUrl}/validaUsuario`, {
@@ -68,6 +74,22 @@ export const authService = {
       },
       body: JSON.stringify({
         nova_senha: novaSenha
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro de conexão. Tente novamente.');
+    }
+
+    return response.json();
+  },
+
+  async forgotPassword(email: string): Promise<ForgotPasswordResponse> {
+    const response = await fetch(`${API_CONFIG.baseUrl}/usuarios/esqueci_senha`, {
+      method: "POST",
+      headers: API_CONFIG.defaultHeaders,
+      body: JSON.stringify({
+        email
       })
     });
 

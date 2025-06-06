@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +28,11 @@ const LoginScreen = () => {
   });
   const [requestSuccess, setRequestSuccess] = useState(false);
 
+  // States for forgot password modal
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [isSubmittingForgotPassword, setIsSubmittingForgotPassword] = useState(false);
+
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -38,6 +42,38 @@ const LoginScreen = () => {
     // Basic CNPJ validation - just check if it has 14 digits
     const cleanCNPJ = cnpj.replace(/\D/g, '');
     return cleanCNPJ.length === 14;
+  };
+
+  const handleForgotPassword = async () => {
+    // Validate email format
+    if (!forgotPasswordEmail) {
+      toast.error("Digite um email para continuar");
+      return;
+    }
+
+    if (!validateEmail(forgotPasswordEmail)) {
+      toast.error("Digite um email válido");
+      return;
+    }
+
+    setIsSubmittingForgotPassword(true);
+
+    try {
+      const data = await authService.forgotPassword(forgotPasswordEmail);
+
+      if (data.status === "ok" && data.code === 200) {
+        toast.success("Se o e-mail existir no sistema, você receberá uma senha temporária com instruções para redefinir sua senha.");
+        setForgotPasswordEmail("");
+        setIsForgotPasswordOpen(false);
+      } else {
+        toast.error("Erro ao enviar solicitação. Tente novamente.");
+      }
+    } catch (error) {
+      console.error("Erro ao enviar solicitação de recuperação:", error);
+      toast.error(error instanceof Error ? error.message : "Erro de conexão. Tente novamente.");
+    } finally {
+      setIsSubmittingForgotPassword(false);
+    }
   };
 
   const handleAccessRequest = async () => {
@@ -218,6 +254,63 @@ const LoginScreen = () => {
               {isLoading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
+
+          {/* Forgot Password Button */}
+          <div className="mt-4">
+            <Dialog open={isForgotPasswordOpen} onOpenChange={setIsForgotPasswordOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="full" 
+                  className="w-full text-gray-600 hover:text-gray-800"
+                  onClick={() => setIsForgotPasswordOpen(true)}
+                >
+                  Esqueci minha senha
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Recuperar senha</DialogTitle>
+                </DialogHeader>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="forgot_email">E-mail</Label>
+                    <Input
+                      id="forgot_email"
+                      type="email"
+                      value={forgotPasswordEmail}
+                      onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                      placeholder="Digite seu e-mail"
+                      disabled={isSubmittingForgotPassword}
+                    />
+                  </div>
+                  
+                  <div className="flex space-x-2 pt-4">
+                    <Button 
+                      variant="cancel" 
+                      onClick={() => {
+                        setIsForgotPasswordOpen(false);
+                        setForgotPasswordEmail("");
+                      }}
+                      disabled={isSubmittingForgotPassword}
+                      className="flex-1"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button 
+                      onClick={handleForgotPassword}
+                      disabled={isSubmittingForgotPassword}
+                      variant="dotz"
+                      className="flex-1"
+                    >
+                      {isSubmittingForgotPassword ? "Enviando..." : "Recuperar senha"}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
 
           {/* Access Request Button */}
           <div className="mt-4">
