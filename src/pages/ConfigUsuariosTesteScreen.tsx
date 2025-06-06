@@ -11,29 +11,41 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { useToast } from "@/hooks/use-toast";
 import { testUserService, UsuarioTeste } from "@/services/testUserService";
+import { useUserSession } from "@/hooks/useUserSession";
 
 const ConfigUsuariosTesteScreen = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [cpfInput, setCpfInput] = React.useState("");
-
-  // For now, using a hardcoded user ID - in a real app this would come from auth context
-  const currentUserId = "f647bfee-faa2-4293-a5f2-d192a9e9f3f1";
+  
+  // Use dynamic user ID from session instead of hardcoded value
+  const { userId, isLoading: isLoadingUser } = useUserSession();
 
   const { data: usuariosTeste = [], isLoading, error } = useQuery({
-    queryKey: ["usuarios-teste"],
-    queryFn: () => testUserService.getUsuariosTeste(currentUserId),
+    queryKey: ["usuarios-teste", userId],
+    queryFn: () => {
+      if (!userId) {
+        throw new Error("User ID not available");
+      }
+      return testUserService.getUsuariosTeste(userId);
+    },
+    enabled: !!userId, // Only run query if we have a user ID
   });
 
   const updateMutation = useMutation({
-    mutationFn: (usuario: UsuarioTeste) => testUserService.updateUsuarioTeste(usuario, currentUserId),
+    mutationFn: (usuario: UsuarioTeste) => {
+      if (!userId) {
+        throw new Error("User ID not available");
+      }
+      return testUserService.updateUsuarioTeste(usuario, userId);
+    },
     onSuccess: () => {
       toast({
         title: "Sucesso",
         description: "Usuário teste atualizado com sucesso",
       });
-      queryClient.invalidateQueries({ queryKey: ["usuarios-teste"] });
+      queryClient.invalidateQueries({ queryKey: ["usuarios-teste", userId] });
     },
     onError: (error) => {
       console.error("Erro ao atualizar usuário:", error);
@@ -43,19 +55,24 @@ const ConfigUsuariosTesteScreen = () => {
         variant: "destructive",
       });
       // Refetch data to revert any optimistic updates
-      queryClient.invalidateQueries({ queryKey: ["usuarios-teste"] });
+      queryClient.invalidateQueries({ queryKey: ["usuarios-teste", userId] });
     },
   });
 
   const createMutation = useMutation({
-    mutationFn: (cpf: string) => testUserService.createUsuarioTeste(cpf, currentUserId),
+    mutationFn: (cpf: string) => {
+      if (!userId) {
+        throw new Error("User ID not available");
+      }
+      return testUserService.createUsuarioTeste(cpf, userId);
+    },
     onSuccess: () => {
       toast({
         title: "Sucesso",
         description: "Usuário cadastrado com sucesso",
       });
       setCpfInput("");
-      queryClient.invalidateQueries({ queryKey: ["usuarios-teste"] });
+      queryClient.invalidateQueries({ queryKey: ["usuarios-teste", userId] });
     },
     onError: (error) => {
       console.error("Erro ao cadastrar usuário:", error);
@@ -87,6 +104,15 @@ const ConfigUsuariosTesteScreen = () => {
       return;
     }
 
+    if (!userId) {
+      toast({
+        title: "Erro",
+        description: "Sessão de usuário não encontrada",
+        variant: "destructive",
+      });
+      return;
+    }
+
     createMutation.mutate(cpfInput.trim());
   };
 
@@ -104,8 +130,31 @@ const ConfigUsuariosTesteScreen = () => {
 
   // Debug log to check data
   React.useEffect(() => {
+    console.log("User ID:", userId);
     console.log("Dados dos usuários de teste:", usuariosTeste);
-  }, [usuariosTeste]);
+  }, [usuariosTeste, userId]);
+
+  // Show loading state while getting user session
+  if (isLoadingUser) {
+    return (
+      <ConfigLayoutWithSidebar>
+        <div className="flex justify-center items-center py-8">
+          <p className="text-gray-600">Carregando sessão do usuário...</p>
+        </div>
+      </ConfigLayoutWithSidebar>
+    );
+  }
+
+  // Show error if no user ID is available
+  if (!userId) {
+    return (
+      <ConfigLayoutWithSidebar>
+        <div className="flex justify-center items-center py-8">
+          <p className="text-red-600">Erro: Sessão de usuário não encontrada. Faça login novamente.</p>
+        </div>
+      </ConfigLayoutWithSidebar>
+    );
+  }
 
   return (
     <ConfigLayoutWithSidebar>
