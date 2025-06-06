@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -10,10 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/sonner";
-import { Building2, ArrowLeft } from "lucide-react";
+import { Building2, ArrowLeft, Search, Loader2 } from "lucide-react";
 import PermissionModal from "@/components/PermissionModal";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { empresaService, type CreateEmpresaData } from "@/services/empresaService";
+import { brasilApiService } from "@/services/brasilApiService";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 
 const empresaSchema = z.object({
@@ -30,6 +30,7 @@ type EmpresaFormData = z.infer<typeof empresaSchema>;
 const ConfigEmpresaScreen = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingCNPJ, setIsFetchingCNPJ] = useState(false);
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [permissionMessage, setPermissionMessage] = useState("");
 
@@ -91,9 +92,65 @@ const ConfigEmpresaScreen = () => {
     }
   };
 
+  const isValidCNPJ = (cnpj: string) => {
+    const cleanCNPJ = cnpj.replace(/\D/g, "");
+    return cleanCNPJ.length === 14;
+  };
+
+  const fetchCNPJData = async (cnpj: string) => {
+    if (!isValidCNPJ(cnpj)) return;
+
+    setIsFetchingCNPJ(true);
+    
+    try {
+      console.log('Buscando dados do CNPJ:', cnpj);
+      const cnpjData = await brasilApiService.consultarCNPJ(cnpj);
+      console.log('Dados recebidos da API:', cnpjData);
+
+      // Preencher os campos automaticamente
+      if (cnpjData.razao_social) {
+        setValue("nome", cnpjData.razao_social);
+      }
+
+      if (cnpjData.email) {
+        setValue("email", cnpjData.email);
+      }
+
+      if (cnpjData.ddd_telefone_1) {
+        setValue("telefone", formatTelefone(cnpjData.ddd_telefone_1));
+      }
+
+      // Concatenar endereço
+      const enderecoPartes = [
+        cnpjData.logradouro,
+        cnpjData.numero,
+        cnpjData.bairro,
+        cnpjData.municipio,
+        cnpjData.uf
+      ].filter(Boolean);
+
+      if (enderecoPartes.length > 0) {
+        setValue("endereco", enderecoPartes.join(", "));
+      }
+
+      toast.success("Dados da empresa preenchidos automaticamente!");
+      
+    } catch (error) {
+      console.error("Erro ao buscar dados do CNPJ:", error);
+      toast.error(error instanceof Error ? error.message : "Erro ao consultar CNPJ");
+    } finally {
+      setIsFetchingCNPJ(false);
+    }
+  };
+
   const handleCNPJChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCNPJ(e.target.value);
     setValue("cnpj", formatted);
+
+    // Se o CNPJ estiver completo e válido, buscar os dados
+    if (isValidCNPJ(formatted)) {
+      fetchCNPJData(formatted);
+    }
   };
 
   const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -224,17 +281,27 @@ const ConfigEmpresaScreen = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="cnpj">CNPJ *</Label>
-                    <Input
-                      id="cnpj"
-                      {...register("cnpj")}
-                      placeholder="XX.XXX.XXX/XXXX-XX"
-                      onChange={handleCNPJChange}
-                      value={watch("cnpj") || ""}
-                      className={errors.cnpj ? "border-red-500" : ""}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="cnpj"
+                        {...register("cnpj")}
+                        placeholder="XX.XXX.XXX/XXXX-XX"
+                        onChange={handleCNPJChange}
+                        value={watch("cnpj") || ""}
+                        className={errors.cnpj ? "border-red-500" : ""}
+                      />
+                      {isFetchingCNPJ && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <Loader2 className="h-4 w-4 animate-spin text-dotz-laranja" />
+                        </div>
+                      )}
+                    </div>
                     {errors.cnpj && (
                       <p className="text-sm text-red-500">{errors.cnpj.message}</p>
                     )}
+                    <p className="text-xs text-gray-500">
+                      Os dados serão preenchidos automaticamente ao digitar um CNPJ válido
+                    </p>
                   </div>
 
                   <div className="space-y-2">
