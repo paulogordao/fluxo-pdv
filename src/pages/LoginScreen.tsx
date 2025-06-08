@@ -7,7 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/sonner";
+import { Loader2 } from "lucide-react";
 import { authService } from "@/services/authService";
+import { brasilApiService } from "@/services/brasilApiService";
 
 const LoginScreen = () => {
   const navigate = useNavigate();
@@ -20,6 +22,7 @@ const LoginScreen = () => {
   // States for access request modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+  const [isFetchingCNPJ, setIsFetchingCNPJ] = useState(false);
   const [accessRequestData, setAccessRequestData] = useState({
     nome_empresa: "",
     cnpj: "",
@@ -42,6 +45,57 @@ const LoginScreen = () => {
     // Basic CNPJ validation - just check if it has 14 digits
     const cleanCNPJ = cnpj.replace(/\D/g, '');
     return cleanCNPJ.length === 14;
+  };
+
+  const formatCNPJ = (value: string) => {
+    const cleanValue = value.replace(/\D/g, "");
+    const formattedValue = cleanValue
+      .replace(/(\d{2})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1/$2")
+      .replace(/(\d{4})(\d)/, "$1-$2")
+      .slice(0, 18);
+    return formattedValue;
+  };
+
+  const fetchCNPJData = async (cnpj: string) => {
+    if (!validateCNPJ(cnpj)) return;
+
+    setIsFetchingCNPJ(true);
+    
+    try {
+      console.log('Buscando dados do CNPJ:', cnpj);
+      const cnpjData = await brasilApiService.consultarCNPJ(cnpj);
+      console.log('Dados recebidos da API:', cnpjData);
+
+      // Only fill empty fields to avoid overwriting user input
+      setAccessRequestData(prev => ({
+        ...prev,
+        nome_empresa: prev.nome_empresa || cnpjData.razao_social || "",
+        email: prev.email || cnpjData.email || "",
+      }));
+
+      toast.success("Dados da empresa preenchidos automaticamente!");
+      
+    } catch (error) {
+      console.error("Erro ao buscar dados do CNPJ:", error);
+      toast.error(error instanceof Error ? error.message : "Erro ao consultar CNPJ");
+    } finally {
+      setIsFetchingCNPJ(false);
+    }
+  };
+
+  const handleCNPJChange = (value: string) => {
+    const formatted = formatCNPJ(value);
+    setAccessRequestData(prev => ({
+      ...prev,
+      cnpj: formatted
+    }));
+
+    // If CNPJ is complete and valid, fetch data
+    if (validateCNPJ(formatted)) {
+      fetchCNPJData(formatted);
+    }
   };
 
   const handleForgotPassword = async () => {
@@ -366,16 +420,23 @@ const LoginScreen = () => {
                     
                     <div className="space-y-2">
                       <Label htmlFor="cnpj">CNPJ *</Label>
-                      <Input
-                        id="cnpj"
-                        value={accessRequestData.cnpj}
-                        onChange={(e) => setAccessRequestData(prev => ({
-                          ...prev,
-                          cnpj: e.target.value
-                        }))}
-                        placeholder="Digite o CNPJ (14 dígitos)"
-                        disabled={isSubmittingRequest}
-                      />
+                      <div className="relative">
+                        <Input
+                          id="cnpj"
+                          value={accessRequestData.cnpj}
+                          onChange={(e) => handleCNPJChange(e.target.value)}
+                          placeholder="XX.XXX.XXX/XXXX-XX"
+                          disabled={isSubmittingRequest}
+                        />
+                        {isFetchingCNPJ && (
+                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                            <Loader2 className="h-4 w-4 animate-spin text-dotz-laranja" />
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Os dados serão preenchidos automaticamente ao digitar um CNPJ válido
+                      </p>
                     </div>
                     
                     <div className="space-y-2">
