@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/sonner";
 import { Building2, ArrowLeft, Search, Loader2 } from "lucide-react";
 import PermissionModal from "@/components/PermissionModal";
@@ -23,6 +24,7 @@ const empresaSchema = z.object({
   telefone: z.string().optional(),
   endereco: z.string().optional(),
   descricao: z.string().optional(),
+  tipo_simulacao: z.string().optional(),
 });
 
 type EmpresaFormData = z.infer<typeof empresaSchema>;
@@ -178,6 +180,7 @@ const ConfigEmpresaScreen = () => {
         telefone: data.telefone,
         endereco: data.endereco,
         descricao: data.descricao,
+        tipo_simulacao: data.tipo_simulacao,
       };
 
       console.log('Payload para envio:', empresaData);
@@ -327,6 +330,23 @@ const ConfigEmpresaScreen = () => {
                       onChange={handleTelefoneChange}
                       value={watch("telefone") || ""}
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="tipo_simulacao">Tipo de Simulação</Label>
+                    <Select
+                      value={watch("tipo_simulacao") || ""}
+                      onValueChange={(value) => setValue("tipo_simulacao", value)}
+                    >
+                      <SelectTrigger className="bg-background border border-border">
+                        <SelectValue placeholder="Selecione o tipo de simulação" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border border-border shadow-lg z-50">
+                        <SelectItem value="OFFLINE">OFFLINE</SelectItem>
+                        <SelectItem value="UAT - Versão 1">UAT - Versão 1</SelectItem>
+                        <SelectItem value="UAT - Versão 2">UAT - Versão 2</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
