@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/sonner";
 import { ArrowLeft, Building2 } from "lucide-react";
 import PdvLayout from "@/components/PdvLayout";
@@ -20,6 +21,7 @@ const empresaSchema = z.object({
   email: z.string().optional().refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), "Email deve ter um formato válido"),
   endereco: z.string().optional(),
   observacoes: z.string().optional(),
+  tipo_simulacao: z.string().optional(),
 });
 
 type EmpresaFormData = z.infer<typeof empresaSchema>;
@@ -170,6 +172,23 @@ const CadastroEmpresaScreen = () => {
                   {errors.email && (
                     <p className="text-sm text-red-500">{errors.email.message}</p>
                   )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tipo_simulacao">Tipo de Simulação</Label>
+                  <Select
+                    value={watch("tipo_simulacao") || ""}
+                    onValueChange={(value) => setValue("tipo_simulacao", value)}
+                  >
+                    <SelectTrigger className="bg-background border border-border">
+                      <SelectValue placeholder="Selecione o tipo de simulação" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border border-border shadow-lg z-50">
+                      <SelectItem value="OFFLINE">OFFLINE</SelectItem>
+                      <SelectItem value="UAT - Versão 1">UAT - Versão 1</SelectItem>
+                      <SelectItem value="UAT - Versão 2">UAT - Versão 2</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
