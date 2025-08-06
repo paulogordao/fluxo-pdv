@@ -8,6 +8,7 @@ export interface Empresa {
   telefone: string | null;
   endereco: string;
   descricao: string | null;
+  tipo_simulacao?: string;
   created_at: string;
 }
 
@@ -27,6 +28,7 @@ export interface UpdateEmpresaData {
   telefone?: string | null;
   endereco?: string | null;
   descricao?: string | null;
+  tipo_simulacao?: string;
 }
 
 export const empresaService = {
@@ -106,6 +108,7 @@ export const empresaService = {
       telefone: data.telefone || null,
       endereco: data.endereco || null,
       descricao: data.descricao || null,
+      tipo_simulacao: data.tipo_simulacao || null,
     };
 
     const response = await fetch(`${API_CONFIG.baseUrl}/empresas?id=${id}`, {
