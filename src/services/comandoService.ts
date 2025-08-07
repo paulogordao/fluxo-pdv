@@ -94,18 +94,32 @@ export const comandoService = {
       console.log(`[comandoService] Response text length:`, responseText.length);
       console.log(`[comandoService] Response text type:`, typeof responseText);
 
-      let data: ComandoResponse;
+      let parsedData: any;
       try {
-        data = JSON.parse(responseText);
-        console.log(`[comandoService] Parsed JSON data:`, data);
-        console.log(`[comandoService] Parsed data type:`, typeof data);
+        parsedData = JSON.parse(responseText);
+        console.log(`[comandoService] Parsed JSON data:`, parsedData);
+        console.log(`[comandoService] Parsed data type:`, typeof parsedData);
       } catch (parseError) {
         console.error(`[comandoService] JSON parse error:`, parseError);
         console.error(`[comandoService] Failed to parse:`, responseText.substring(0, 500));
         throw new Error(`Falha ao fazer parse da resposta JSON: ${parseError.message}`);
       }
       
+      // Adaptive parsing: handle both object and array responses
+      let data: ComandoResponse;
+      if (Array.isArray(parsedData)) {
+        console.log(`[comandoService] Response is already an array`);
+        data = parsedData;
+      } else if (parsedData && typeof parsedData === 'object') {
+        console.log(`[comandoService] Response is an object, converting to array`);
+        data = [parsedData];
+      } else {
+        console.error(`[comandoService] Unexpected response format:`, parsedData);
+        throw new Error(`Formato de resposta inesperado: esperado objeto ou array`);
+      }
+      
       // Debug validation step by step
+      console.log(`[comandoService] Final data (normalized to array):`, data);
       console.log(`[comandoService] Array check:`, Array.isArray(data));
       console.log(`[comandoService] First item exists:`, !!data[0]);
       console.log(`[comandoService] Response exists:`, !!data[0]?.response);
@@ -175,18 +189,32 @@ export const comandoService = {
       console.log(`[comandoService] Response text length:`, responseText.length);
       console.log(`[comandoService] Response text type:`, typeof responseText);
 
-      let data: ComandoResponse;
+      let parsedData: any;
       try {
-        data = JSON.parse(responseText);
-        console.log(`[comandoService] Parsed JSON data:`, data);
-        console.log(`[comandoService] Parsed data type:`, typeof data);
+        parsedData = JSON.parse(responseText);
+        console.log(`[comandoService] Parsed JSON data:`, parsedData);
+        console.log(`[comandoService] Parsed data type:`, typeof parsedData);
       } catch (parseError) {
         console.error(`[comandoService] JSON parse error:`, parseError);
         console.error(`[comandoService] Failed to parse:`, responseText.substring(0, 500));
         throw new Error(`Falha ao fazer parse da resposta JSON: ${parseError.message}`);
       }
       
+      // Adaptive parsing: handle both object and array responses
+      let data: ComandoResponse;
+      if (Array.isArray(parsedData)) {
+        console.log(`[comandoService] Response is already an array`);
+        data = parsedData;
+      } else if (parsedData && typeof parsedData === 'object') {
+        console.log(`[comandoService] Response is an object, converting to array`);
+        data = [parsedData];
+      } else {
+        console.error(`[comandoService] Unexpected response format:`, parsedData);
+        throw new Error(`Formato de resposta inesperado: esperado objeto ou array`);
+      }
+      
       // Debug validation step by step
+      console.log(`[comandoService] Final data (normalized to array):`, data);
       console.log(`[comandoService] Array check:`, Array.isArray(data));
       console.log(`[comandoService] First item exists:`, !!data[0]);
       console.log(`[comandoService] Response exists:`, !!data[0]?.response);
