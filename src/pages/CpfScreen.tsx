@@ -103,6 +103,7 @@ const CpfScreen = () => {
         // Store response data for future use
         localStorage.setItem('onlineResponse', JSON.stringify(response));
         localStorage.setItem('transactionId', response[0].response.data.transaction_id);
+        localStorage.setItem('tipo_simulacao', tipo_simulacao);
         
         // Show success toast with response time
         toast.success(`CPF processado com sucesso! (${responseTime}ms)`);
