@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
+import { comandoService } from "@/services/comandoService";
 
 const CpfScreen = () => {
   const [cpf, setCpf] = useState("");
@@ -50,16 +51,46 @@ const CpfScreen = () => {
       // Store the CPF in localStorage for future use
       localStorage.setItem('cpfDigitado', cpf);
       
-      const data = await consultaFluxoService.consultarFluxo(cpf, 'RLIINFO');
-      
-      if (data.pedir_telefone) {
-        navigate("/telefone");
+      // Check if simulation type is OFFLINE or ONLINE
+      if (tipo_simulacao && tipo_simulacao !== "OFFLINE") {
+        // ONLINE mode - use new comando service
+        console.log("Modo ONLINE detectado - usando serviço de comando");
+        
+        const response = await comandoService.enviarComando('RLIINFO', cpf);
+        
+        // Store response data for future use
+        localStorage.setItem('onlineResponse', JSON.stringify(response.response));
+        localStorage.setItem('transactionId', response.response.data.transaction_id);
+        
+        // Navigate based on next_step
+        const nextStep = response.response.data.next_step[0];
+        if (nextStep) {
+          if (nextStep.description === "RLICELL") {
+            navigate("/telefone");
+          } else if (nextStep.description === "RLIFUND") {
+            navigate("/scan?from=cpf");
+          } else {
+            console.warn(`Next step não reconhecido: ${nextStep.description}`);
+            navigate("/scan?from=cpf");
+          }
+        } else {
+          console.warn("Next step não encontrado na resposta");
+          navigate("/scan?from=cpf");
+        }
       } else {
-        // Add query parameter when navigating to the scan screen
-        navigate("/scan?from=cpf");
+        // OFFLINE mode - use existing consultaFluxo service
+        console.log("Modo OFFLINE detectado - usando serviço consultaFluxo");
+        
+        const data = await consultaFluxoService.consultarFluxo(cpf, 'RLIINFO');
+        
+        if (data.pedir_telefone) {
+          navigate("/telefone");
+        } else {
+          navigate("/scan?from=cpf");
+        }
       }
     } catch (error) {
-      console.error("Erro ao consultar API:", error);
+      console.error("Erro ao processar CPF:", error);
       toast.error("Erro ao processar seu CPF. Tente novamente.");
     } finally {
       setIsLoading(false);
