@@ -89,8 +89,27 @@ export const comandoService = {
       const data: ComandoResponse = await response.json();
       console.log(`[comandoService] Response data:`, data);
       
-      if (!Array.isArray(data) || !data[0]?.response || !data[0].response.success) {
-        throw new Error('Resposta do serviço indica falha');
+      // Debug validation step by step
+      console.log(`[comandoService] Array check:`, Array.isArray(data));
+      console.log(`[comandoService] First item exists:`, !!data[0]);
+      console.log(`[comandoService] Response exists:`, !!data[0]?.response);
+      console.log(`[comandoService] Success value:`, data[0]?.response?.success);
+      console.log(`[comandoService] Success type:`, typeof data[0]?.response?.success);
+      
+      if (!Array.isArray(data)) {
+        throw new Error('Resposta não é um array');
+      }
+      
+      if (!data[0]) {
+        throw new Error('Array de resposta está vazio');
+      }
+      
+      if (!data[0].response) {
+        throw new Error('Resposta não contém campo response');
+      }
+      
+      if (data[0].response.success !== true) {
+        throw new Error(`Resposta indica falha: success=${data[0].response.success}`);
       }
       
       return data;
@@ -135,8 +154,27 @@ export const comandoService = {
       const data: ComandoResponse = await response.json();
       console.log(`[comandoService] Response data:`, data);
       
-      if (!Array.isArray(data) || !data[0]?.response || !data[0].response.success) {
-        throw new Error('Resposta do serviço indica falha');
+      // Debug validation step by step
+      console.log(`[comandoService] Array check:`, Array.isArray(data));
+      console.log(`[comandoService] First item exists:`, !!data[0]);
+      console.log(`[comandoService] Response exists:`, !!data[0]?.response);
+      console.log(`[comandoService] Success value:`, data[0]?.response?.success);
+      console.log(`[comandoService] Success type:`, typeof data[0]?.response?.success);
+      
+      if (!Array.isArray(data)) {
+        throw new Error('Resposta não é um array');
+      }
+      
+      if (!data[0]) {
+        throw new Error('Array de resposta está vazio');
+      }
+      
+      if (!data[0].response) {
+        throw new Error('Resposta não contém campo response');
+      }
+      
+      if (data[0].response.success !== true) {
+        throw new Error(`Resposta indica falha: success=${data[0].response.success}`);
       }
       
       return data;
