@@ -334,7 +334,9 @@ const TelefoneScreen = () => {
 
           <TechnicalDocumentation
             requestData={apiData.request_servico}
-            responseData={previousResponse ? JSON.stringify(previousResponse, null, 2) : apiData.response_servico_anterior}
+            responseData={previousResponse && Array.isArray(previousResponse) && previousResponse[0]?.response 
+              ? JSON.stringify(previousResponse[0].response, null, 2) 
+              : apiData.response_servico_anterior}
             isLoading={isLoading}
             slug="RLIINFORLICELL"
           />
