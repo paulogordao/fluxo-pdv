@@ -101,14 +101,14 @@ const CpfScreen = () => {
         });
         
         // Store response data for future use
-        localStorage.setItem('onlineResponse', JSON.stringify(response.response));
-        localStorage.setItem('transactionId', response.response.data.transaction_id);
+        localStorage.setItem('onlineResponse', JSON.stringify(response));
+        localStorage.setItem('transactionId', response[0].response.data.transaction_id);
         
         // Show success toast with response time
         toast.success(`CPF processado com sucesso! (${responseTime}ms)`);
         
         // Navigate based on next_step
-        const nextStep = response.response.data.next_step[0];
+        const nextStep = response[0].response.data.next_step[0];
         if (nextStep) {
           if (nextStep.description === "RLICELL") {
             navigate("/telefone");

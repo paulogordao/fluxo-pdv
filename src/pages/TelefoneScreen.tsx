@@ -48,9 +48,9 @@ const TelefoneScreen = () => {
             const onlineResponse = JSON.parse(onlineResponseStr);
             setPreviousResponse(onlineResponse);
             
-            // Extract transaction_id from the response
-            if (onlineResponse?.response?.data?.transaction_id) {
-              setTransactionId(onlineResponse.response.data.transaction_id);
+            // Extract transaction_id from the response (array format)
+            if (Array.isArray(onlineResponse) && onlineResponse[0]?.response?.data?.transaction_id) {
+              setTransactionId(onlineResponse[0].response.data.transaction_id);
             }
           } catch (parseError) {
             console.error('Erro ao fazer parse do onlineResponse:', parseError);
@@ -131,8 +131,8 @@ const TelefoneScreen = () => {
         toast.success("Telefone processado com sucesso!");
         
         // Navigate based on next_step or use default flow
-        if (response.response?.data?.next_step?.length > 0) {
-          const nextStep = response.response.data.next_step[0];
+        if (Array.isArray(response) && response[0]?.response?.data?.next_step?.length > 0) {
+          const nextStep = response[0].response.data.next_step[0];
           console.log('Next step:', nextStep);
           // Navigate based on the next step logic
           navigate("/transicao-cadastro?from=telefone");

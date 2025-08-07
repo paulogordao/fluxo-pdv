@@ -11,7 +11,7 @@ export interface ComandoRlicellRequest {
   id_transaction: string;
 }
 
-export interface ComandoResponse {
+export interface ComandoResponseItem {
   request: {
     data: {
       route: string;
@@ -53,6 +53,8 @@ export interface ComandoResponse {
   };
 }
 
+export type ComandoResponse = ComandoResponseItem[];
+
 export const comandoService = {
   async enviarComando(comando: string, cpf: string): Promise<ComandoResponse> {
     console.log(`[comandoService] Enviando comando: ${comando}, CPF: ${cpf}`);
@@ -87,7 +89,7 @@ export const comandoService = {
       const data: ComandoResponse = await response.json();
       console.log(`[comandoService] Response data:`, data);
       
-      if (!data.response || !data.response.success) {
+      if (!Array.isArray(data) || !data[0]?.response || !data[0].response.success) {
         throw new Error('Resposta do serviço indica falha');
       }
       
@@ -133,7 +135,7 @@ export const comandoService = {
       const data: ComandoResponse = await response.json();
       console.log(`[comandoService] Response data:`, data);
       
-      if (!data.response || !data.response.success) {
+      if (!Array.isArray(data) || !data[0]?.response || !data[0].response.success) {
         throw new Error('Resposta do serviço indica falha');
       }
       
