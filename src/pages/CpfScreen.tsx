@@ -380,7 +380,7 @@ const CpfScreen = () => {
                       
                       {tipo_simulacao !== "OFFLINE" ? (
                         <div className="space-y-2">
-                          <p className="text-gray-600">Chamada para ambiente de homologação com CPF informado:</p>
+                          <p className="text-gray-600">Chamada para o webhook do simulador com CPF informado:</p>
                           <pre className="whitespace-pre-wrap text-xs p-3 bg-gray-100 rounded border overflow-x-auto">
 {`curl --request POST \\
   --url 'https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/comando' \\
@@ -391,6 +391,9 @@ const CpfScreen = () => {
     "cpf": "${cpf || '[CPF_DO_USUARIO]'}"
   }'`}
                           </pre>
+                          <p className="text-xs text-gray-500 mt-2">
+                            📋 <strong>Fluxo:</strong> Frontend → Webhook → API Externa de Homologação Dotz
+                          </p>
                         </div>
                       ) : (
                         <p className="text-gray-600">Modo offline - sem chamadas externas</p>
