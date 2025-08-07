@@ -81,13 +81,29 @@ export const comandoService = {
       
       clearTimeout(timeoutId);
       console.log(`[comandoService] Response status: ${response.status}`);
+      console.log(`[comandoService] Response ok:`, response.ok);
+      console.log(`[comandoService] Response headers:`, Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const data: ComandoResponse = await response.json();
-      console.log(`[comandoService] Response data:`, data);
+      // Log raw response text before parsing
+      const responseText = await response.text();
+      console.log(`[comandoService] Raw response text:`, responseText);
+      console.log(`[comandoService] Response text length:`, responseText.length);
+      console.log(`[comandoService] Response text type:`, typeof responseText);
+
+      let data: ComandoResponse;
+      try {
+        data = JSON.parse(responseText);
+        console.log(`[comandoService] Parsed JSON data:`, data);
+        console.log(`[comandoService] Parsed data type:`, typeof data);
+      } catch (parseError) {
+        console.error(`[comandoService] JSON parse error:`, parseError);
+        console.error(`[comandoService] Failed to parse:`, responseText.substring(0, 500));
+        throw new Error(`Falha ao fazer parse da resposta JSON: ${parseError.message}`);
+      }
       
       // Debug validation step by step
       console.log(`[comandoService] Array check:`, Array.isArray(data));
@@ -146,13 +162,29 @@ export const comandoService = {
       
       clearTimeout(timeoutId);
       console.log(`[comandoService] Response status: ${response.status}`);
+      console.log(`[comandoService] Response ok:`, response.ok);
+      console.log(`[comandoService] Response headers:`, Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const data: ComandoResponse = await response.json();
-      console.log(`[comandoService] Response data:`, data);
+      // Log raw response text before parsing
+      const responseText = await response.text();
+      console.log(`[comandoService] Raw response text:`, responseText);
+      console.log(`[comandoService] Response text length:`, responseText.length);
+      console.log(`[comandoService] Response text type:`, typeof responseText);
+
+      let data: ComandoResponse;
+      try {
+        data = JSON.parse(responseText);
+        console.log(`[comandoService] Parsed JSON data:`, data);
+        console.log(`[comandoService] Parsed data type:`, typeof data);
+      } catch (parseError) {
+        console.error(`[comandoService] JSON parse error:`, parseError);
+        console.error(`[comandoService] Failed to parse:`, responseText.substring(0, 500));
+        throw new Error(`Falha ao fazer parse da resposta JSON: ${parseError.message}`);
+      }
       
       // Debug validation step by step
       console.log(`[comandoService] Array check:`, Array.isArray(data));
