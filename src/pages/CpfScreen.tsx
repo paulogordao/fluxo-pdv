@@ -9,12 +9,13 @@ import { useUserSession } from "@/hooks/useUserSession";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
 
 const CpfScreen = () => {
@@ -22,7 +23,7 @@ const CpfScreen = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { userName, companyName, isLoading: sessionLoading } = useUserSession();
+  const { userName, companyName, tipo_simulacao, isLoading: sessionLoading } = useUserSession();
 
   const handleKeyPress = (value: string) => {
     if (value === "CLEAR") {
@@ -147,6 +148,16 @@ const CpfScreen = () => {
           <Card className="w-full max-w-md p-6 flex flex-col items-center">
             <div className="w-full mb-8">
               <h2 className="text-2xl font-bold text-center mb-6">Informe seu CPF</h2>
+              
+              {/* Alert for non-OFFLINE simulation types */}
+              {tipo_simulacao && tipo_simulacao !== "OFFLINE" && (
+                <Alert className="mb-6">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    Atenção este parceiro está parametrizado para que as requisições de simulação seja feito em ambiente de homologação da Dotz
+                  </AlertDescription>
+                </Alert>
+              )}
               <Input
                 className="text-center text-xl h-14 mb-6"
                 value={formatCPF(cpf)}

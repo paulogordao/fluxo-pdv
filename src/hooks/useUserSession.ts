@@ -7,6 +7,7 @@ interface UserSessionData {
   userName: string;
   companyName: string;
   userId: string | null;
+  tipo_simulacao: string | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -16,6 +17,7 @@ export const useUserSession = () => {
     userName: "Usuário",
     companyName: "Empresa",
     userId: null,
+    tipo_simulacao: null,
     isLoading: true,
     error: null
   });
@@ -53,6 +55,7 @@ export const useUserSession = () => {
             userName,
             companyName: userData.empresa || "Empresa",
             userId,
+            tipo_simulacao: null,
             isLoading: false,
             error: null
           });
@@ -64,6 +67,7 @@ export const useUserSession = () => {
         console.log("Company data received:", empresaData);
 
         const companyName = empresaData.nome || "Empresa";
+        const tipoSimulacao = empresaData.tipo_simulacao || null;
 
         // 4. Salvar no sessionStorage para próximas sessões
         sessionStorage.setItem("user_name", userName);
@@ -73,6 +77,7 @@ export const useUserSession = () => {
           userName,
           companyName,
           userId,
+          tipo_simulacao: tipoSimulacao,
           isLoading: false,
           error: null
         });
@@ -90,6 +95,7 @@ export const useUserSession = () => {
             userName: fallbackUserName || "Usuário",
             companyName: fallbackCompanyName || "Empresa",
             userId,
+            tipo_simulacao: null,
             isLoading: false,
             error: null
           });
@@ -97,6 +103,7 @@ export const useUserSession = () => {
           setSessionData(prev => ({
             ...prev,
             userId,
+            tipo_simulacao: null,
             isLoading: false,
             error: error instanceof Error ? error.message : "Erro ao carregar dados"
           }));
