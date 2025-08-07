@@ -5,6 +5,12 @@ export interface ComandoRequest {
   cpf: string;
 }
 
+export interface ComandoRlicellRequest {
+  comando: string;
+  telefone: string;
+  id_transaction: string;
+}
+
 export interface ComandoResponse {
   request: {
     data: {
@@ -60,13 +66,18 @@ export const comandoService = {
     console.log(`[comandoService] URL: ${url}`);
     console.log(`[comandoService] Request body:`, requestBody);
     
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
+    
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: API_CONFIG.defaultHeaders,
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
       });
       
+      clearTimeout(timeoutId);
       console.log(`[comandoService] Response status: ${response.status}`);
       
       if (!response.ok) {
@@ -82,7 +93,54 @@ export const comandoService = {
       
       return data;
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error('[comandoService] Erro ao enviar comando:', error);
+      throw error;
+    }
+  },
+
+  async enviarComandoRlicell(telefone: string, transactionId: string): Promise<ComandoResponse> {
+    console.log(`[comandoService] Enviando comando RLICELL: telefone=${telefone}, transaction_id=${transactionId}`);
+    
+    const url = buildApiUrl('comando');
+    const requestBody: ComandoRlicellRequest = {
+      comando: "RLICELL",
+      telefone,
+      id_transaction: transactionId
+    };
+    
+    console.log(`[comandoService] URL: ${url}`);
+    console.log(`[comandoService] Request body:`, requestBody);
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: API_CONFIG.defaultHeaders,
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      console.log(`[comandoService] Response status: ${response.status}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data: ComandoResponse = await response.json();
+      console.log(`[comandoService] Response data:`, data);
+      
+      if (!data.response || !data.response.success) {
+        throw new Error('Resposta do serviço indica falha');
+      }
+      
+      return data;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.error('[comandoService] Erro ao enviar comando RLICELL:', error);
       throw error;
     }
   }
