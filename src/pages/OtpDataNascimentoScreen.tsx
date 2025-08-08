@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import PdvLayout from "@/components/PdvLayout";
-import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
+import TechnicalFooter from "@/components/TechnicalFooter";
 
 const OtpDataNascimentoScreen = () => {
   const [digits, setDigits] = useState<string[]>([]);
@@ -49,7 +49,7 @@ const OtpDataNascimentoScreen = () => {
   const isEnterEnabled = digits.length === 8;
 
   return (
-    <PdvLayout>
+    <PdvLayout className="pb-16">
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="bg-dotz-laranja text-white">
           <CardTitle className="text-center">
@@ -116,11 +116,14 @@ const OtpDataNascimentoScreen = () => {
               </Button>
             </div>
           </div>
-          
-          {/* Technical Documentation Component */}
-          <TechnicalDocumentation slug="RLIDEALRLIAUTH" />
         </CardContent>
       </Card>
+      
+      {/* Technical Footer Component */}
+      <TechnicalFooter
+        slug="RLIDEALRLIAUTH"
+        sourceScreen="otp_data_nascimento"
+      />
     </PdvLayout>
   );
 };

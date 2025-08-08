@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
+import TechnicalFooter from "@/components/TechnicalFooter";
 
 const ConfirmacaoPagamentoTokenScreen = () => {
   const [tokenDigits, setTokenDigits] = useState<string[]>([]);
@@ -67,7 +67,7 @@ const ConfirmacaoPagamentoTokenScreen = () => {
   const clientName = localStorage.getItem('nomeCliente') || 'Cliente';
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
+    <div className="min-h-screen bg-gray-100 p-4 pb-16">
       <div className="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Left Panel - PDV Token Input */}
         <Card className="w-full shadow-lg overflow-hidden">
@@ -260,10 +260,11 @@ const ConfirmacaoPagamentoTokenScreen = () => {
         </div>
       </div>
       
-      {/* Technical Documentation Section */}
-      <TechnicalDocumentation 
+      {/* Technical Footer Component */}
+      <TechnicalFooter
         slug="RLIDEALRLIAUTH"
         loadOnMount={true}
+        sourceScreen="confirmacao_pagamento_token"
       />
     </div>
   );

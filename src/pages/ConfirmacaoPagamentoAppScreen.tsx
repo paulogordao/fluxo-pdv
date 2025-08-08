@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { useNavigate } from "react-router-dom";
-import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
+import TechnicalFooter from "@/components/TechnicalFooter";
 import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
 import {
   Tooltip,
@@ -116,7 +116,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
+    <div className="min-h-screen bg-gray-100 p-4 pb-16">
       <div className="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Left Panel - PDV Modal */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -257,18 +257,18 @@ const ConfirmacaoPagamentoAppScreen = () => {
         </div>
       </div>
 
-      {/* Technical Documentation - Added below the main content */}
-      <div className="w-full max-w-6xl mx-auto mt-8">
-        <TechnicalDocumentation 
-          requestData={apiData.request_servico} 
-          responseData={apiData.response_servico_anterior}
-          isLoading={isLoading}
-          slug="RLIDEALRLIWAIT"
-        />
-      </div>
 
       {/* Navigation Guide Component */}
       <GuiaDeNavegacaoAPI />
+      
+      {/* Technical Footer Component */}
+      <TechnicalFooter
+        requestData={apiData.request_servico} 
+        responseData={apiData.response_servico_anterior}
+        isLoading={isLoading}
+        slug="RLIDEALRLIWAIT"
+        sourceScreen="confirmacao_pagamento_app"
+      />
       
       {/* First Alert Dialog - RLIFUND Break Step */}
       <AlertDialog open={alertDialogOpen} onOpenChange={setAlertDialogOpen}>

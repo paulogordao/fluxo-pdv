@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { useNavigate, useLocation } from "react-router-dom";
-import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
+import TechnicalFooter from "@/components/TechnicalFooter";
 import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
 import { usePaymentOption } from "@/context/PaymentOptionContext";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
@@ -86,7 +86,7 @@ const ConfirmacaoPagamentoScreen = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
+    <div className="min-h-screen bg-gray-100 p-4 pb-16">
       <div className="w-full max-w-6xl mx-auto">
         {/* PDV Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -181,13 +181,6 @@ const ConfirmacaoPagamentoScreen = () => {
           </div>
         </div>
 
-        {/* Technical Documentation - Uses the dynamically set slug based on the payment option and navigation source */}
-        <div className="mt-8">
-          <TechnicalDocumentation 
-            slug={documentationSlug}
-            loadOnMount={true}
-          />
-        </div>
 
         {/* Restart Flow Button - Added at the bottom of the page */}
         <div className="flex justify-center mt-8">
@@ -203,6 +196,13 @@ const ConfirmacaoPagamentoScreen = () => {
 
       {/* Navigation Guide Component */}
       <GuiaDeNavegacaoAPI />
+      
+      {/* Technical Footer Component */}
+      <TechnicalFooter
+        slug={documentationSlug}
+        loadOnMount={true}
+        sourceScreen="confirmacao_pagamento"
+      />
     </div>
   );
 };

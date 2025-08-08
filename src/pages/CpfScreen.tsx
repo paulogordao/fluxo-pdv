@@ -11,12 +11,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, AlertTriangle, Loader2, Clock, AlertCircle } from "lucide-react";
+import { AlertTriangle, Loader2, Clock, AlertCircle } from "lucide-react";
+import TechnicalFooter from "@/components/TechnicalFooter";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
 import { comandoService } from "@/services/comandoService";
 
@@ -278,7 +274,7 @@ const CpfScreen = () => {
 
       {/* Main content with left margin to account for sidebar */}
       <div className="ml-80">
-        <PdvLayout className="flex flex-col items-center justify-center">
+        <PdvLayout className="flex flex-col items-center justify-center pb-16">
           <Card className="w-full max-w-md p-6 flex flex-col items-center relative">
             {/* Loading Overlay */}
             {isLoading && (
@@ -333,171 +329,17 @@ const CpfScreen = () => {
             </div>
           </Card>
 
-          <div className="mt-8 w-full max-w-4xl">
-            <Collapsible
-              open={isOpen}
-              onOpenChange={setIsOpen}
-              className="w-full border border-gray-200 rounded-md shadow overflow-hidden"
-            >
-              <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
-                <span className="flex items-center gap-2">
-                  <span>Informações Técnicas da API</span>
-                  {apiDebugInfo && (
-                    <span className={`px-2 py-1 text-xs rounded ${
-                      apiDebugInfo.performance.status === 'error' 
-                        ? 'bg-red-100 text-red-800' 
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {apiDebugInfo.performance.responseTime}
-                    </span>
-                  )}
-                </span>
-                {isOpen ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="px-4 py-3 bg-white space-y-4">
-                  {/* Current Request Info */}
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                      <span>Request Atual</span>
-                      {tipo_simulacao !== "OFFLINE" && (
-                        <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">ONLINE</span>
-                      )}
-                    </h3>
-                    <div className="bg-gray-50 p-3 rounded font-mono text-sm">
-                      <div className="flex gap-2 mb-2">
-                        <span className="text-green-600 font-bold">POST</span>
-                        <span className="text-dotz-laranja">
-                          {tipo_simulacao !== "OFFLINE" 
-                            ? '/webhook/simuladorPDV/comando'
-                            : '/consulta-fluxo (offline)'
-                          }
-                        </span>
-                      </div>
-                      
-                      {tipo_simulacao !== "OFFLINE" ? (
-                        <div className="space-y-2">
-                          <p className="text-gray-600">Chamada para o webhook do simulador com CPF informado:</p>
-                          <pre className="whitespace-pre-wrap text-xs p-3 bg-gray-100 rounded border overflow-x-auto">
-{`curl --request POST \\
-  --url 'https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/comando' \\
-  --header 'Content-Type: application/json' \\
-  --header 'x-api-key: 0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975' \\
-  --data '{
-    "comando": "RLIINFO",
-    "cpf": "${cpf || '[CPF_DO_USUARIO]'}"
-  }'`}
-                          </pre>
-                          <p className="text-xs text-gray-500 mt-2">
-                            📋 <strong>Fluxo:</strong> Frontend → Webhook → API Externa de Homologação Dotz
-                          </p>
-                        </div>
-                      ) : (
-                        <p className="text-gray-600">Modo offline - sem chamadas externas</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* API Debug Info */}
-                  {apiDebugInfo && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2">Detalhes da Última Chamada</h3>
-                      <div className="space-y-3">
-                        {/* Request Details */}
-                        <div>
-                          <h4 className="font-medium text-gray-700 mb-1">Request</h4>
-                          <div className="bg-gray-50 p-3 rounded text-sm">
-                            <div className="grid grid-cols-2 gap-2 mb-2">
-                              <span><strong>URL:</strong> {apiDebugInfo.request.url}</span>
-                              <span><strong>Method:</strong> {apiDebugInfo.request.method}</span>
-                            </div>
-                            <div className="mb-2">
-                              <strong>Timestamp:</strong> {apiDebugInfo.request.timestamp}
-                            </div>
-                            <div>
-                              <strong>Body:</strong>
-                              <pre className="mt-1 text-xs bg-gray-100 p-2 rounded overflow-x-auto">
-                                {JSON.stringify(apiDebugInfo.request.body, null, 2)}
-                              </pre>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Response or Error Details */}
-                        {apiDebugInfo.response && (
-                          <div>
-                            <h4 className="font-medium text-gray-700 mb-1">Response</h4>
-                            <div className="bg-green-50 p-3 rounded text-sm max-h-60 overflow-y-auto">
-                              <pre className="text-xs overflow-x-auto">
-                                {JSON.stringify(apiDebugInfo.response, null, 2)}
-                              </pre>
-                            </div>
-                          </div>
-                        )}
-
-                        {apiDebugInfo.error && (
-                          <div>
-                            <h4 className="font-medium text-red-700 mb-1">Error Details</h4>
-                            <div className="bg-red-50 p-3 rounded text-sm">
-                              <div className="mb-2"><strong>Message:</strong> {apiDebugInfo.error.message}</div>
-                              <div className="mb-2"><strong>Original:</strong> {apiDebugInfo.error.originalError}</div>
-                              {apiDebugInfo.error.stack && (
-                                <details className="mt-2">
-                                  <summary className="cursor-pointer text-red-600">Stack Trace</summary>
-                                  <pre className="mt-1 text-xs bg-red-100 p-2 rounded overflow-x-auto">
-                                    {apiDebugInfo.error.stack}
-                                  </pre>
-                                </details>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Performance Info */}
-                        <div>
-                          <h4 className="font-medium text-gray-700 mb-1">Performance</h4>
-                          <div className="bg-blue-50 p-3 rounded text-sm">
-                            <div className="flex items-center gap-4">
-                              <span><strong>Tempo de resposta:</strong> {apiDebugInfo.performance.responseTime}</span>
-                              <span className={`px-2 py-1 text-xs rounded ${
-                                apiDebugInfo.performance.status === 'error' 
-                                  ? 'bg-red-200 text-red-800' 
-                                  : 'bg-green-200 text-green-800'
-                              }`}>
-                                {apiDebugInfo.performance.status}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Documentation */}
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Documentação</h3>
-                    <div className="bg-gray-50 p-3 rounded text-sm">
-                      <p className="text-gray-600 mb-2">
-                        Este endpoint identifica o cliente utilizando o CPF informado e retorna 
-                        informações sobre próximos passos do fluxo.
-                      </p>
-                      <div className="text-xs text-gray-500">
-                        <p><strong>Timeout:</strong> 30 segundos</p>
-                        <p><strong>Retries:</strong> Manual via botão "Tentar novamente"</p>
-                        <p><strong>Next Steps:</strong> RLICELL (telefone) | RLIFUND (scan)</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
         </PdvLayout>
       </div>
+      
+      {/* Technical Footer Component */}
+      <TechnicalFooter
+        requestData={apiDebugInfo ? JSON.stringify(apiDebugInfo, null, 2) : undefined}
+        responseData={apiDebugInfo?.response ? JSON.stringify(apiDebugInfo.response, null, 2) : undefined}
+        isLoading={isLoading}
+        slug="RLIINFO"
+        sourceScreen="cpf"
+      />
     </div>
   );
 };

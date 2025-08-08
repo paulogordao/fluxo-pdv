@@ -23,7 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import PdvLayout from "@/components/PdvLayout";
 import PaymentOptionButton from "@/components/payment/PaymentOptionButton";
-import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
+import TechnicalFooter from "@/components/TechnicalFooter";
 import { usePaymentOptions } from "@/hooks/usePaymentOptions";
 import { usePaymentOption } from "@/context/PaymentOptionContext";
 
@@ -95,7 +95,7 @@ const MeiosDePagamentoScreen = () => {
   };
 
   return (
-    <PdvLayout>
+    <PdvLayout className="pb-16">
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader className="bg-dotz-laranja text-white">
           <CardTitle className="text-center">
@@ -151,12 +151,6 @@ const MeiosDePagamentoScreen = () => {
               )}
             </div>
           </div>
-          
-          {/* Technical documentation section - Always render with the fixed slug */}
-          <TechnicalDocumentation 
-            slug={documentationSlug} 
-            loadOnMount={true} 
-          />
           
           {/* Alert Dialog for Option 2 - Styled to match /interesse_pagamento modal */}
           <AlertDialog open={showAlertDialog} onOpenChange={setShowAlertDialog}>
@@ -261,6 +255,13 @@ const MeiosDePagamentoScreen = () => {
           </Dialog>
         </CardContent>
       </Card>
+      
+      {/* Technical Footer Component */}
+      <TechnicalFooter
+        slug={documentationSlug} 
+        loadOnMount={true}
+        sourceScreen="meios_de_pagamento"
+      />
     </PdvLayout>
   );
 };

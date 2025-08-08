@@ -4,7 +4,7 @@ import PdvLayout from "@/components/PdvLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
+import TechnicalFooter from "@/components/TechnicalFooter";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
 import { comandoService } from "@/services/comandoService";
 import { toast } from "sonner";
@@ -234,7 +234,8 @@ const TelefoneScreen = () => {
   };
 
   return (
-    <PdvLayout className="flex flex-col items-center justify-center">
+    <>
+      <PdvLayout className="flex flex-col items-center justify-center pb-16">
       {isSubmitLoading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg text-center">
@@ -284,65 +285,19 @@ const TelefoneScreen = () => {
         </div>
       </Card>
 
-      <div className="mt-8 w-full max-w-3xl">
-        {/* Technical documentation with dynamic cURL and previous response */}
-        <div className="space-y-6">
-          {/* Dynamic cURL display */}
-          {tipoSimulacao !== "OFFLINE" && (
-            <div className="border border-gray-200 rounded-md shadow overflow-hidden">
-              <div className="bg-white px-4 py-3 font-medium border-b">
-                🔧 Comando RLICELL - Configuração da Chamada
-              </div>
-              <div className="p-4 bg-white">
-                <div className="space-y-2">
-                  <p className="text-gray-600">Chamada para o webhook do simulador com telefone informado:</p>
-                  <pre className="whitespace-pre-wrap text-xs p-3 bg-gray-100 rounded border overflow-x-auto">
-{`curl --request POST \\
-  --url 'https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/comando' \\
-  --header 'Content-Type: application/json' \\
-  --header 'x-api-key: 0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975' \\
-  --data '{
-    "comando": "RLICELL",
-    "telefone": "${telefone || '[TELEFONE_DO_USUARIO]'}",
-    "id_transaction": "${transactionId || '[TRANSACTION_ID_DO_SERVICO_ANTERIOR]'}"
-  }'`}
-                  </pre>
-                  <p className="text-xs text-gray-500 mt-2">
-                    📋 <strong>Fluxo:</strong> Frontend → Webhook → API Externa de Homologação Dotz
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    ⏱️ <strong>Timeout:</strong> 30 segundos | <strong>Transaction ID:</strong> {transactionId || 'Não encontrado'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* API Debug Information */}
-          {apiDebugInfo && (
-            <div className="border border-gray-200 rounded-md shadow overflow-hidden">
-              <div className="bg-white px-4 py-3 font-medium border-b">
-                🔍 Informações de Debug da Última Chamada
-              </div>
-              <div className="p-4 bg-white">
-                <pre className="text-xs font-mono bg-gray-100 p-3 rounded overflow-x-auto">
-                  {JSON.stringify(apiDebugInfo, null, 2)}
-                </pre>
-              </div>
-            </div>
-          )}
-
-          <TechnicalDocumentation
-            requestData={apiData.request_servico}
-            responseData={previousResponse && Array.isArray(previousResponse) && previousResponse[0]?.response 
-              ? JSON.stringify(previousResponse[0].response, null, 2) 
-              : apiData.response_servico_anterior}
-            isLoading={isLoading}
-            slug="RLIINFORLICELL"
-          />
-        </div>
-      </div>
-    </PdvLayout>
+      </PdvLayout>
+      
+      {/* Technical Footer Component */}
+      <TechnicalFooter
+        requestData={apiDebugInfo ? JSON.stringify(apiDebugInfo, null, 2) : apiData.request_servico}
+        responseData={previousResponse && Array.isArray(previousResponse) && previousResponse[0]?.response 
+          ? JSON.stringify(previousResponse[0].response, null, 2) 
+          : apiData.response_servico_anterior}
+        isLoading={isLoading}
+        slug="RLIINFORLICELL"
+        sourceScreen="telefone"
+      />
+    </>
   );
 };
 
