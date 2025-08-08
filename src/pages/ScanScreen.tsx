@@ -48,6 +48,7 @@ const ScanScreen = () => {
   
   // Previous response state for technical documentation
   const [previousResponse, setPreviousResponse] = useState<any>(null);
+  const [headerContent, setHeaderContent] = useState<string>("Carregando...");
   
   // Determine the source page from the URL query parameter
   const from = new URLSearchParams(location.search).get('from');
@@ -112,6 +113,14 @@ const ScanScreen = () => {
         if (rlicellData) {
           const parsedData = JSON.parse(rlicellData);
           setPreviousResponse(parsedData);
+          
+          // Extract header content from response
+          if (parsedData && Array.isArray(parsedData) && parsedData[0]?.response?.data?.message?.content) {
+            setHeaderContent(parsedData[0].response.data.message.content);
+          } else {
+            setHeaderContent("Informações de pagamento disponíveis");
+          }
+          
           console.log('Previous response from telefone screen loaded:', parsedData);
         }
       } else {
@@ -120,11 +129,20 @@ const ScanScreen = () => {
         if (onlineData) {
           const parsedData = JSON.parse(onlineData);
           setPreviousResponse(parsedData);
+          
+          // Extract header content from response
+          if (parsedData && Array.isArray(parsedData) && parsedData[0]?.response?.data?.message?.content) {
+            setHeaderContent(parsedData[0].response.data.message.content);
+          } else {
+            setHeaderContent("Informações de pagamento disponíveis");
+          }
+          
           console.log('Previous response from cpf screen loaded:', parsedData);
         }
       }
     } catch (error) {
       console.error('Error loading previous response from localStorage:', error);
+      setHeaderContent("Informações de pagamento disponíveis");
     }
   }, [from]);
 
@@ -282,7 +300,7 @@ const ScanScreen = () => {
   }}>
       {/* Header com nome do cliente e promoção */}
       <div className="bg-dotz-laranja text-white p-4 flex justify-between items-center">
-        <div className="font-medium">Manoel, R$3 à R$1000 em opções de pagamento</div>
+        <div className="font-medium">{headerContent}</div>
         <div className="flex gap-2">
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black">A</div>
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black">B</div>
