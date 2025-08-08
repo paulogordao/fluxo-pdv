@@ -264,11 +264,10 @@ const ScanScreen = () => {
       </div>
 
       <div className="flex h-[calc(100%-10rem)]">
-        {/* Lado esquerdo - Lista de produtos e carrinho */}
-        <div className="w-2/3 p-4 border-r space-y-4">
-          {/* Products List - Only show in online mode */}
-          {isOnlineMode && (
-            <Card className="h-[45%]">
+        {/* Coluna 1: Produtos Disponíveis (só no modo online) */}
+        {isOnlineMode && (
+          <div className="w-1/4 p-4 border-r">
+            <Card className="h-full">
               <CardHeader>
                 <CardTitle>Produtos Disponíveis</CardTitle>
               </CardHeader>
@@ -289,19 +288,20 @@ const ScanScreen = () => {
                 ) : (
                   <div className="grid grid-cols-1 gap-2">
                     {fakeProducts.map((product) => (
-                      <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                        <div className="flex-1">
-                          <div className="font-medium">{product.name}</div>
-                          <div className="text-sm text-gray-500">
-                            R$ {product.price.toFixed(2).replace('.', ',')} • EAN: {product.barcode}
-                          </div>
+                      <div key={product.id} className="flex flex-col p-3 border rounded-lg hover:bg-gray-50">
+                        <div className="font-medium text-sm">{product.name}</div>
+                        <div className="text-xs text-gray-500 mb-2">
+                          R$ {product.price.toFixed(2).replace('.', ',')}
+                        </div>
+                        <div className="text-xs text-gray-400 mb-2">
+                          EAN: {product.barcode}
                         </div>
                         <Button
                           size="sm"
                           onClick={() => handleAddProductToCart(product)}
-                          className="ml-2"
+                          className="w-full"
                         >
-                          <Plus className="h-4 w-4 mr-1" />
+                          <Plus className="h-3 w-3 mr-1" />
                           Adicionar
                         </Button>
                       </div>
@@ -310,10 +310,13 @@ const ScanScreen = () => {
                 )}
               </CardContent>
             </Card>
-          )}
+          </div>
+        )}
 
-          {/* Cart Table */}
-          <div className={isOnlineMode ? "h-[50%]" : "h-full"}>
+        {/* Coluna 2: Carrinho PDV */}
+        <div className={`${isOnlineMode ? 'w-5/12' : 'w-2/3'} p-4 ${isOnlineMode ? 'border-r' : 'border-r'}`}>
+          <div className="h-full">
+            <h3 className="text-lg font-semibold mb-4">Carrinho PDV</h3>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -345,8 +348,8 @@ const ScanScreen = () => {
           </div>
         </div>
 
-        {/* Lado direito - Detalhes do último item */}
-        <div className="w-1/3 flex flex-col">
+        {/* Coluna 3: Detalhes do último item e pagamento */}
+        <div className={`${isOnlineMode ? 'w-1/3' : 'w-1/3'} flex flex-col`}>
           {/* Logo */}
           <div className="text-center p-4">
             
