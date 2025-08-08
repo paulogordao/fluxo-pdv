@@ -176,7 +176,7 @@ const ScanScreen = () => {
       setInitialCart(mockProducts);
       console.log('Modo OFFLINE: iniciando com dados mockados');
     }
-  }, [setInitialCart]);
+  }, []); // Removido [setInitialCart] para evitar loop infinito
 
   // Load fake products from API
   const loadFakeProducts = async () => {
