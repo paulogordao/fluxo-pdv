@@ -8,7 +8,7 @@ import { ShoppingCart, Loader2, Plus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
+import TechnicalFooter from "@/components/TechnicalFooter";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
 import { buscarProdutosFakes } from "@/services/produtoService";
 import { useToast } from "@/hooks/use-toast";
@@ -394,7 +394,7 @@ const ScanScreen = () => {
       </div>
 
       {/* Footer com total e campos de scan */}
-      <div className="bg-white border-t p-4">
+      <div className="bg-white border-t p-4 pb-16">
         <div className="flex justify-between mb-4">
           <div className="flex gap-2 flex-1">
             <Input value={barcode} onChange={e => setBarcode(e.target.value)} onKeyDown={handleKeyDown} placeholder="Digite ou escaneie o código de barras" className="text-lg" disabled={scanning} />
@@ -411,15 +411,15 @@ const ScanScreen = () => {
         {scanning && <div className="text-center p-4 mb-4 bg-blue-50 rounded-md">
             <div className="animate-pulse">Escaneando...</div>
           </div>}
-          
-        {/* Replace the old Collapsible sections with the TechnicalDocumentation component */}
-        <TechnicalDocumentation
-          requestData={apiData.request_servico}
-          responseData={apiData.response_servico_anterior}
-          isLoading={isLoading}
-          slug={detailSlug}
-        />
       </div>
+
+      {/* Technical Footer Component */}
+      <TechnicalFooter
+        requestData={apiData.request_servico}
+        responseData={apiData.response_servico_anterior}
+        isLoading={isLoading}
+        slug={detailSlug}
+      />
     </PdvLayout>;
 };
 
