@@ -266,43 +266,42 @@ const ScanScreen = () => {
       <div className="flex h-[calc(100%-10rem)]">
         {/* Coluna 1: Produtos Disponíveis (só no modo online) */}
         {isOnlineMode && (
-          <div className="w-1/4 p-4 border-r">
+          <div className="w-1/5 p-3 border-r">
             <Card className="h-full">
-              <CardHeader>
-                <CardTitle>Produtos Disponíveis</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Produtos Disponíveis</CardTitle>
               </CardHeader>
-              <CardContent className="h-[calc(100%-80px)] overflow-y-auto">
+              <CardContent className="h-[calc(100%-60px)] overflow-y-auto p-3">
                 {isLoadingProducts ? (
                   <div className="flex items-center justify-center h-full">
-                    <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                    <span>Carregando produtos...</span>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <span className="text-sm">Carregando...</span>
                   </div>
                 ) : productsError ? (
-                  <div className="flex items-center justify-center h-full text-red-500">
+                  <div className="flex items-center justify-center h-full text-red-500 text-sm text-center">
                     {productsError}
                   </div>
                 ) : fakeProducts.length === 0 ? (
-                  <div className="flex items-center justify-center h-full text-gray-500">
+                  <div className="flex items-center justify-center h-full text-gray-500 text-sm text-center">
                     Nenhum produto disponível
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-2">
+                  <div className="space-y-2">
                     {fakeProducts.map((product) => (
-                      <div key={product.id} className="flex flex-col p-3 border rounded-lg hover:bg-gray-50">
-                        <div className="font-medium text-sm">{product.name}</div>
-                        <div className="text-xs text-gray-500 mb-2">
-                          R$ {product.price.toFixed(2).replace('.', ',')}
+                      <div key={product.id} className="p-2 border rounded hover:bg-gray-50">
+                        <div className="font-medium text-xs mb-1 truncate" title={product.name}>
+                          {product.name}
                         </div>
-                        <div className="text-xs text-gray-400 mb-2">
-                          EAN: {product.barcode}
+                        <div className="text-xs text-gray-600 mb-2">
+                          R$ {product.price.toFixed(2).replace('.', ',')}
                         </div>
                         <Button
                           size="sm"
                           onClick={() => handleAddProductToCart(product)}
-                          className="w-full"
+                          className="w-full h-6 text-xs"
                         >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Adicionar
+                          <Plus className="h-2 w-2 mr-1" />
+                          Add
                         </Button>
                       </div>
                     ))}
@@ -314,42 +313,45 @@ const ScanScreen = () => {
         )}
 
         {/* Coluna 2: Carrinho PDV */}
-        <div className={`${isOnlineMode ? 'w-5/12' : 'w-2/3'} p-4 ${isOnlineMode ? 'border-r' : 'border-r'}`}>
+        <div className={`${isOnlineMode ? 'w-11/20' : 'w-3/4'} p-4 border-r`}>
           <div className="h-full">
             <h3 className="text-lg font-semibold mb-4">Carrinho PDV</h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-1/2">Nome</TableHead>
-                  <TableHead className="text-right">Preço</TableHead>
-                  <TableHead className="text-right">Qtde.</TableHead>
-                  <TableHead className="text-right">Total(R$)</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {cart.length === 0 ? (
+            <div className="overflow-auto">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-gray-500">
-                      Nenhum produto no carrinho
-                    </TableCell>
+                    <TableHead className="w-2/5 font-semibold">Nome do Produto</TableHead>
+                    <TableHead className="text-right w-1/5 font-semibold">Preço</TableHead>
+                    <TableHead className="text-center w-1/5 font-semibold">Qtde.</TableHead>
+                    <TableHead className="text-right w-1/5 font-semibold">Total (R$)</TableHead>
                   </TableRow>
-                ) : (
-                  cart.map(item => (
-                    <TableRow key={item.id} className="hover:bg-gray-50">
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
-                      <TableCell className="text-right">{item.quantity}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(item.price * (item.quantity || 1))}</TableCell>
+                </TableHeader>
+                <TableBody>
+                  {cart.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-gray-500 py-8">
+                        <ShoppingCart className="mx-auto mb-2 h-8 w-8 text-gray-300" />
+                        <div>Nenhum produto no carrinho</div>
+                      </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    cart.map(item => (
+                      <TableRow key={item.id} className="hover:bg-gray-50">
+                        <TableCell className="font-medium py-3">{item.name}</TableCell>
+                        <TableCell className="text-right py-3">{formatCurrency(item.price)}</TableCell>
+                        <TableCell className="text-center py-3">{item.quantity}</TableCell>
+                        <TableCell className="text-right font-semibold py-3">{formatCurrency(item.price * (item.quantity || 1))}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </div>
 
         {/* Coluna 3: Detalhes do último item e pagamento */}
-        <div className={`${isOnlineMode ? 'w-1/3' : 'w-1/3'} flex flex-col`}>
+        <div className={`${isOnlineMode ? 'w-1/4' : 'w-1/4'} flex flex-col`}>
           {/* Logo */}
           <div className="text-center p-4">
             
