@@ -4,11 +4,14 @@ import PdvLayout from "@/components/PdvLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePdv, Product } from "@/context/PdvContext";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Loader2, Plus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TechnicalDocumentation from "@/components/technical/TechnicalDocumentation";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
+import { buscarProdutosFakes } from "@/services/produtoService";
+import { useToast } from "@/hooks/use-toast";
 
 const ScanScreen = () => {
   const [barcode, setBarcode] = useState("");
@@ -16,6 +19,7 @@ const ScanScreen = () => {
   const [lastScanned, setLastScanned] = useState<Product | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   
   const {
     addToCart,
@@ -36,6 +40,11 @@ const ScanScreen = () => {
   
   // Check simulation type from localStorage
   const [isOnlineMode, setIsOnlineMode] = useState(false);
+  
+  // Fake products state
+  const [fakeProducts, setFakeProducts] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [productsError, setProductsError] = useState<string | null>(null);
   
   // Determine the source page from the URL query parameter
   const from = new URLSearchParams(location.search).get('from');
@@ -131,10 +140,13 @@ const ScanScreen = () => {
     console.log(`ScanScreen modo: ${isOnline ? 'ONLINE' : 'OFFLINE'} (tipo_simulacao: ${tipoSimulacao})`);
     
     if (isOnline) {
-      // ONLINE mode: start with empty data
+      // ONLINE mode: start with empty data and load fake products
       setLastScanned(null);
       setInitialCart([]);
       console.log('Modo ONLINE: iniciando com dados vazios');
+      
+      // Load fake products for online mode
+      loadFakeProducts();
     } else {
       // OFFLINE mode: use mock data
       const mockProducts = [{
@@ -165,6 +177,34 @@ const ScanScreen = () => {
       console.log('Modo OFFLINE: iniciando com dados mockados');
     }
   }, [setInitialCart]);
+
+  // Load fake products from API
+  const loadFakeProducts = async () => {
+    try {
+      setIsLoadingProducts(true);
+      setProductsError(null);
+      const products = await buscarProdutosFakes();
+      setFakeProducts(products);
+      console.log('Produtos fake carregados:', products);
+    } catch (error) {
+      console.error('Erro ao carregar produtos fake:', error);
+      setProductsError('Erro ao carregar produtos');
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar a lista de produtos",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
+  // Add product to cart from fake products list
+  const handleAddProductToCart = (product: Product) => {
+    addToCart(product);
+    setLastScanned(product);
+    console.log('Produto adicionado ao carrinho via lista:', product);
+  };
   
   const handleScan = () => {
     if (!barcode) return;
@@ -224,9 +264,56 @@ const ScanScreen = () => {
       </div>
 
       <div className="flex h-[calc(100%-10rem)]">
-        {/* Lado esquerdo - Lista de produtos */}
-        <div className="w-2/3 p-4 border-r">
-          <div className="mb-4">
+        {/* Lado esquerdo - Lista de produtos e carrinho */}
+        <div className="w-2/3 p-4 border-r space-y-4">
+          {/* Products List - Only show in online mode */}
+          {isOnlineMode && (
+            <Card className="h-[45%]">
+              <CardHeader>
+                <CardTitle>Produtos Disponíveis</CardTitle>
+              </CardHeader>
+              <CardContent className="h-[calc(100%-80px)] overflow-y-auto">
+                {isLoadingProducts ? (
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                    <span>Carregando produtos...</span>
+                  </div>
+                ) : productsError ? (
+                  <div className="flex items-center justify-center h-full text-red-500">
+                    {productsError}
+                  </div>
+                ) : fakeProducts.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    Nenhum produto disponível
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-2">
+                    {fakeProducts.map((product) => (
+                      <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                        <div className="flex-1">
+                          <div className="font-medium">{product.name}</div>
+                          <div className="text-sm text-gray-500">
+                            R$ {product.price.toFixed(2).replace('.', ',')} • EAN: {product.barcode}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => handleAddProductToCart(product)}
+                          className="ml-2"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Adicionar
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Cart Table */}
+          <div className={isOnlineMode ? "h-[50%]" : "h-full"}>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -237,12 +324,22 @@ const ScanScreen = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {cart.map(item => <TableRow key={item.id} className="hover:bg-gray-50">
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
-                    <TableCell className="text-right">{item.quantity}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.price * (item.quantity || 1))}</TableCell>
-                  </TableRow>)}
+                {cart.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-gray-500">
+                      Nenhum produto no carrinho
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  cart.map(item => (
+                    <TableRow key={item.id} className="hover:bg-gray-50">
+                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
+                      <TableCell className="text-right">{item.quantity}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.price * (item.quantity || 1))}</TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
