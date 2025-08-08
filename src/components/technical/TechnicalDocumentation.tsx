@@ -104,6 +104,9 @@ const TechnicalDocumentation = ({
     return <div className="mt-8 text-center text-red-500">{error}</div>;
   }
   if (!apiData) {
+    if (!loadOnMount) {
+      return <div className="mt-8 text-center text-gray-600">Faça uma requisição para visualizar os dados técnicos.</div>;
+    }
     return <div className="mt-8 text-center">Documentação técnica indisponível no momento.</div>;
   }
   return <div className="mt-8 space-y-4">

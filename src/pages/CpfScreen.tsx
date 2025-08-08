@@ -338,6 +338,7 @@ const CpfScreen = () => {
         responseData={apiDebugInfo?.response ? JSON.stringify(apiDebugInfo.response, null, 2) : undefined}
         isLoading={isLoading}
         slug="RLIINFO"
+        loadOnMount={!!apiDebugInfo}
         sourceScreen="cpf"
       />
     </div>

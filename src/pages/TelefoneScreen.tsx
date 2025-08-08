@@ -295,6 +295,7 @@ const TelefoneScreen = () => {
           : apiData.response_servico_anterior}
         isLoading={isLoading}
         slug="RLIINFORLICELL"
+        loadOnMount={!!apiData.request_servico}
         sourceScreen="telefone"
       />
     </>
