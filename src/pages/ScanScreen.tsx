@@ -46,6 +46,9 @@ const ScanScreen = () => {
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
   
+  // Previous response state for technical documentation
+  const [previousResponse, setPreviousResponse] = useState<any>(null);
+  
   // Determine the source page from the URL query parameter
   const from = new URLSearchParams(location.search).get('from');
   // Set the appropriate slug based on the source page
@@ -99,6 +102,31 @@ const ScanScreen = () => {
     
     fetchApiData();
   }, [detailSlug]);
+
+  // Fetch previous response data from localStorage based on source page
+  useEffect(() => {
+    try {
+      if (from === 'telefone') {
+        // Coming from telefone screen - get RLICELL response
+        const rlicellData = localStorage.getItem('rlicellResponse');
+        if (rlicellData) {
+          const parsedData = JSON.parse(rlicellData);
+          setPreviousResponse(parsedData);
+          console.log('Previous response from telefone screen loaded:', parsedData);
+        }
+      } else {
+        // Coming from cpf screen - get RLIINFO response
+        const onlineData = localStorage.getItem('onlineResponse');
+        if (onlineData) {
+          const parsedData = JSON.parse(onlineData);
+          setPreviousResponse(parsedData);
+          console.log('Previous response from cpf screen loaded:', parsedData);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading previous response from localStorage:', error);
+    }
+  }, [from]);
 
   // Handle payment button click
   const handlePaymentClick = async () => {
@@ -416,9 +444,13 @@ const ScanScreen = () => {
       {/* Technical Footer Component */}
       <TechnicalFooter
         requestData={apiData.request_servico}
-        responseData={apiData.response_servico_anterior}
+        responseData={previousResponse && Array.isArray(previousResponse) && previousResponse[0]?.response 
+          ? JSON.stringify(previousResponse[0].response, null, 2) 
+          : apiData.response_servico_anterior}
         isLoading={isLoading}
         slug={detailSlug}
+        loadOnMount={!!apiData.request_servico}
+        sourceScreen="scan"
       />
     </PdvLayout>;
 };
