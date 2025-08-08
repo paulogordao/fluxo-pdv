@@ -266,7 +266,7 @@ const ScanScreen = () => {
       <div className="flex h-[calc(100%-10rem)]">
         {/* Coluna 1: Produtos Disponíveis (só no modo online) */}
         {isOnlineMode && (
-          <div className="w-1/5 p-3 border-r">
+          <div className="w-1/4 p-4 border-r">
             <Card className="h-full">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Produtos Disponíveis</CardTitle>
@@ -313,7 +313,7 @@ const ScanScreen = () => {
         )}
 
         {/* Coluna 2: Carrinho PDV */}
-        <div className={`${isOnlineMode ? 'w-11/20' : 'w-3/4'} p-4 border-r`}>
+        <div className={`${isOnlineMode ? 'w-1/2' : 'w-3/4'} p-6 border-r`}>
           <div className="h-full">
             <h3 className="text-lg font-semibold mb-4">Carrinho PDV</h3>
             <div className="overflow-auto">

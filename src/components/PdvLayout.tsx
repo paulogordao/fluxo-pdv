@@ -19,8 +19,8 @@ const PdvLayout = ({
   className
 }: PdvLayoutProps) => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
-      <Card className={cn("w-full max-w-3xl min-h-[500px] p-6 shadow-lg", className)}>
+    <div className="min-h-screen flex flex-col bg-gray-100">
+      <Card className={cn("w-full h-screen overflow-hidden shadow-lg", className)}>
         {children}
       </Card>
 
