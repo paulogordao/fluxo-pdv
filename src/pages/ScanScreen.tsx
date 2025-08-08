@@ -34,6 +34,9 @@ const ScanScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   
+  // Check simulation type from localStorage
+  const [isOnlineMode, setIsOnlineMode] = useState(false);
+  
   // Determine the source page from the URL query parameter
   const from = new URLSearchParams(location.search).get('from');
   // Set the appropriate slug based on the source page
@@ -119,34 +122,48 @@ const ScanScreen = () => {
     }
   };
 
-  // Preencher com produtos mockados iniciais ao carregar a tela
+  // Check simulation type and initialize cart accordingly
   useEffect(() => {
-    // Produtos mockados conforme solicitado
-    const mockProducts = [{
-      id: '1',
-      name: 'Deo Aero Suave Men 200ml',
-      price: 9.99,
-      barcode: '7891000315507',
-      quantity: 2
-    }, {
-      id: '2',
-      name: 'AmacConfort Brisa 1L',
-      price: 14.00,
-      barcode: '7891008086697',
-      quantity: 1
-    }, {
-      id: '3',
-      name: 'Sabão Líquido Ba 300ml',
-      price: 6.99,
-      barcode: '7896002301428',
-      quantity: 5
-    }];
+    const tipoSimulacao = localStorage.getItem('tipo_simulacao') || 'OFFLINE';
+    const isOnline = tipoSimulacao !== 'OFFLINE';
+    setIsOnlineMode(isOnline);
+    
+    console.log(`ScanScreen modo: ${isOnline ? 'ONLINE' : 'OFFLINE'} (tipo_simulacao: ${tipoSimulacao})`);
+    
+    if (isOnline) {
+      // ONLINE mode: start with empty data
+      setLastScanned(null);
+      setInitialCart([]);
+      console.log('Modo ONLINE: iniciando com dados vazios');
+    } else {
+      // OFFLINE mode: use mock data
+      const mockProducts = [{
+        id: '1',
+        name: 'Deo Aero Suave Men 200ml',
+        price: 9.99,
+        barcode: '7891000315507',
+        quantity: 2
+      }, {
+        id: '2',
+        name: 'AmacConfort Brisa 1L',
+        price: 14.00,
+        barcode: '7891008086697',
+        quantity: 1
+      }, {
+        id: '3',
+        name: 'Sabão Líquido Ba 300ml',
+        price: 6.99,
+        barcode: '7896002301428',
+        quantity: 5
+      }];
 
-    // Configurar o último item escaneado como o último da lista
-    setLastScanned(mockProducts[mockProducts.length - 1]);
+      // Configurar o último item escaneado como o último da lista
+      setLastScanned(mockProducts[mockProducts.length - 1]);
 
-    // Definir o carrinho inicial com os produtos mockados
-    setInitialCart(mockProducts);
+      // Definir o carrinho inicial com os produtos mockados
+      setInitialCart(mockProducts);
+      console.log('Modo OFFLINE: iniciando com dados mockados');
+    }
   }, [setInitialCart]);
   
   const handleScan = () => {
