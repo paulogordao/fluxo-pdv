@@ -9,8 +9,9 @@ import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TechnicalFooter from "@/components/TechnicalFooter";
+import { comandoService, RlifundItem } from "@/services/comandoService";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
-import { buscarProdutosFakes } from "@/services/produtoService";
+import { buscarProdutosFakes, FakeProduct } from "@/services/produtoService";
 import { useToast } from "@/hooks/use-toast";
 
 const ScanScreen = () => {
@@ -42,7 +43,7 @@ const ScanScreen = () => {
   const [isOnlineMode, setIsOnlineMode] = useState(false);
   
   // Fake products state
-  const [fakeProducts, setFakeProducts] = useState<Product[]>([]);
+  const [fakeProducts, setFakeProducts] = useState<FakeProduct[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
   
@@ -150,28 +151,114 @@ const ScanScreen = () => {
   const handlePaymentClick = async () => {
     try {
       setIsProcessingPayment(true);
-      // Get CPF from localStorage
-      const cpf = localStorage.getItem('cpfDigitado');
       
-      if (!cpf) {
-        console.error('CPF não encontrado. Redirecionando para a etapa de identificação.');
-        navigate('/cpf');
-        return;
-      }
-      
-      console.log("Checking for Dotz benefits...");
-      const data = await consultaFluxoService.consultarFluxo(cpf, 'RLIFUND');
-      console.log("Payment benefits check response:", data);
-      
-      if (data.possui_dotz === true) {
-        // If user has Dotz points, redirect to interest page
-        navigate('/interesse_pagamento');
+      if (isOnlineMode) {
+        // ONLINE MODE: Use RLIFUND service
+        console.log("[ScanScreen] ONLINE mode - using RLIFUND service");
+        
+        // Get transaction ID from localStorage 
+        const transactionId = localStorage.getItem('transactionId');
+        if (!transactionId) {
+          console.error('Transaction ID não encontrado. Redirecionando para identificação.');
+          navigate('/cpf');
+          return;
+        }
+        
+        // Map cart items to RLIFUND format
+        const rlifundItems: RlifundItem[] = cart.map(product => {
+          // Check if product has complete data from fake products API
+          const fakeProduct = fakeProducts.find(fp => fp.ean === product.barcode);
+          
+          if (fakeProduct) {
+            // Use complete data from API
+            return {
+              ean: fakeProduct.ean,
+              sku: fakeProduct.sku,
+              unit_price: fakeProduct.unit_price,
+              discount: fakeProduct.discount,
+              quantity: product.quantity || 1,
+              name: fakeProduct.name,
+              unit_type: fakeProduct.unit_type,
+              brand: fakeProduct.brand || "Unknown",
+              manufacturer: fakeProduct.manufacturer || "Unknown",
+              categories: fakeProduct.categories,
+              gross_profit_amount: fakeProduct.gross_profit_amount,
+              is_private_label: fakeProduct.is_private_label,
+              is_on_sale: fakeProduct.is_on_sale
+            };
+          } else {
+            // Use mock data with defaults for missing fields
+            return {
+              ean: product.barcode,
+              sku: product.id,
+              unit_price: product.price,
+              discount: 0,
+              quantity: product.quantity || 1,
+              name: product.name,
+              unit_type: "UN",
+              brand: "Mock",
+              manufacturer: "Test",
+              categories: ["general"],
+              gross_profit_amount: product.price * 0.1,
+              is_private_label: false,
+              is_on_sale: false
+            };
+          }
+        });
+        
+        console.log("[ScanScreen] Mapped RLIFUND items:", rlifundItems);
+        console.log("[ScanScreen] Total amount:", totalAmount.toString());
+        
+        // Call RLIFUND service
+        const response = await comandoService.enviarComandoRlifund(
+          transactionId,
+          "default", // payment_option_type
+          totalAmount.toString(), // value_total
+          rlifundItems
+        );
+        
+        console.log("[ScanScreen] RLIFUND response:", response);
+        
+        // Store RLIFUND response in localStorage for technical documentation
+        localStorage.setItem('rlifundResponse', JSON.stringify(response));
+        
+        // Check for Dotz benefits from RLIFUND response
+        if (response[0]?.response?.data) {
+          // Navigate based on RLIFUND response logic
+          // For now, check if we should redirect to interest page
+          navigate('/interesse_pagamento');
+        } else {
+          console.log("No specific action defined for RLIFUND response");
+        }
+        
       } else {
-        // If no Dotz points, do nothing for now
-        console.log("User has no Dotz points. No action taken.");
+        // OFFLINE MODE: Use original consultaFluxo service
+        console.log("[ScanScreen] OFFLINE mode - using consultaFluxo service");
+        
+        // Get CPF from localStorage
+        const cpf = localStorage.getItem('cpfDigitado');
+        
+        if (!cpf) {
+          console.error('CPF não encontrado. Redirecionando para a etapa de identificação.');
+          navigate('/cpf');
+          return;
+        }
+        
+        console.log("Checking for Dotz benefits...");
+        const data = await consultaFluxoService.consultarFluxo(cpf, 'RLIFUND');
+        console.log("Payment benefits check response:", data);
+        
+        if (data.possui_dotz === true) {
+          // If user has Dotz points, redirect to interest page
+          navigate('/interesse_pagamento');
+        } else {
+          // If no Dotz points, do nothing for now
+          console.log("User has no Dotz points. No action taken.");
+        }
       }
+      
     } catch (error) {
-      console.error("Error processing payment check:", error);
+      console.error("Error processing payment:", error);
     } finally {
       setIsProcessingPayment(false);
     }
@@ -224,14 +311,36 @@ const ScanScreen = () => {
     }
   }, []); // Removido [setInitialCart] para evitar loop infinito
 
-  // Load fake products from API
+  // Load fake products from API  
   const loadFakeProducts = async () => {
     try {
       setIsLoadingProducts(true);
       setProductsError(null);
       const products = await buscarProdutosFakes();
-      setFakeProducts(products);
-      console.log('Produtos fake carregados:', products);
+      // Convert Product[] to FakeProduct[] by fetching original data
+      const fakeProductsData: FakeProduct[] = [];
+      
+      // For now, we'll work with the converted Product data
+      // but we need to store the original fake products data somewhere
+      // Let's store it in a way that preserves the original API data
+      const fakeProductsResponse = await fetch('https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/produtosFakes', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975'
+        },
+      });
+      
+      if (fakeProductsResponse.ok) {
+        const responseData = await fakeProductsResponse.json();
+        if (responseData.items) {
+          setFakeProducts(responseData.items);
+        }
+      } else {
+        setFakeProducts([]);
+      }
+      
+      console.log('Produtos fake carregados:', fakeProducts);
     } catch (error) {
       console.error('Erro ao carregar produtos fake:', error);
       setProductsError('Erro ao carregar produtos');
@@ -246,7 +355,15 @@ const ScanScreen = () => {
   };
 
   // Add product to cart from fake products list
-  const handleAddProductToCart = (product: Product) => {
+  const handleAddProductToCart = (fakeProduct: FakeProduct) => {
+    // Convert FakeProduct to Product for cart
+    const product: Product = {
+      id: fakeProduct.ean,
+      name: fakeProduct.name,
+      price: fakeProduct.unit_price,
+      barcode: fakeProduct.ean,
+      image: fakeProduct.image,
+    };
     addToCart(product);
     setLastScanned(product);
     console.log('Produto adicionado ao carrinho via lista:', product);
@@ -334,12 +451,12 @@ const ScanScreen = () => {
                 ) : (
                   <div className="space-y-2">
                     {fakeProducts.map((product) => (
-                      <div key={product.id} className="p-2 border rounded hover:bg-gray-50">
+                      <div key={product.ean} className="p-2 border rounded hover:bg-gray-50">
                         <div className="font-medium text-xs mb-1 truncate" title={product.name}>
                           {product.name}
                         </div>
                         <div className="text-xs text-gray-600 mb-2">
-                          R$ {product.price.toFixed(2).replace('.', ',')}
+                          R$ {product.unit_price.toFixed(2).replace('.', ',')}
                         </div>
                         <Button
                           size="sm"
