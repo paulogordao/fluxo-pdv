@@ -240,9 +240,10 @@ const ScanScreen = () => {
         // Store RLIFUND response in localStorage for technical documentation
         localStorage.setItem('rlifundResponse', JSON.stringify(response));
         
-        // Check payment_options in RLIFUND response
-        const paymentOptions = response[0]?.response?.payment_options;
+        // Check payment_options in RLIFUND response (inside data object)
+        const paymentOptions = response[0]?.response?.data?.payment_options;
         console.log("[ScanScreen] Payment options from RLIFUND:", paymentOptions);
+        console.log("[ScanScreen] Full response structure:", JSON.stringify(response[0]?.response, null, 2));
         
         if (Array.isArray(paymentOptions)) {
           if (paymentOptions.length === 0) {

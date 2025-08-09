@@ -62,6 +62,7 @@ export interface ComandoResponseItem {
         content: string;
         link_image: string | null;
       };
+      payment_options?: any[];
       next_step: Array<{
         code: number;
         description: string;
@@ -73,7 +74,6 @@ export interface ComandoResponseItem {
         version: number;
       }>;
     };
-    payment_options?: any[];
     success: boolean;
   };
 }
