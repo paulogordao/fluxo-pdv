@@ -149,6 +149,16 @@ const ScanScreen = () => {
 
   // Handle payment button click
   const handlePaymentClick = async () => {
+    // Validate cart has products before processing payment
+    if (cart.length === 0) {
+      toast({
+        title: "Carrinho vazio",
+        description: "Adicione pelo menos um produto ao carrinho para continuar",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsProcessingPayment(true);
       
@@ -548,8 +558,12 @@ const ScanScreen = () => {
 
           {/* Botão de pagamento */}
           <div 
-            onClick={handlePaymentClick}
-            className={`bg-emerald-500 text-white p-4 text-center font-bold cursor-pointer ${isProcessingPayment ? 'opacity-70' : 'hover:bg-emerald-600'}`}
+            onClick={cart.length > 0 ? handlePaymentClick : undefined}
+            className={`p-4 text-center font-bold ${
+              cart.length === 0 
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-60' 
+                : `bg-emerald-500 text-white cursor-pointer ${isProcessingPayment ? 'opacity-70' : 'hover:bg-emerald-600'}`
+            }`}
           >
             {isProcessingPayment ? "PROCESSANDO..." : "PAGAMENTO"}
           </div>
