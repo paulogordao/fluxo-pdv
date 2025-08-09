@@ -111,17 +111,26 @@ export class RlifundApiError extends Error {
 // Função para fazer parse de erros RLIFUND
 function parseRlifundError(responseString: string): RlifundErrorResponse | null {
   try {
+    console.log('[comandoService] Parsing RLIFUND error string:', responseString);
+    
     // Extrair JSON do formato "400 - "{...}""
     const jsonMatch = responseString.match(/^[\d\s-]*"(.+)"$/);
+    console.log('[comandoService] JSON match result:', jsonMatch);
+    
     if (jsonMatch) {
       const jsonString = jsonMatch[1].replace(/\\"/g, '"');
-      return JSON.parse(jsonString) as RlifundErrorResponse;
+      console.log('[comandoService] Extracted JSON string:', jsonString);
+      const parsed = JSON.parse(jsonString) as RlifundErrorResponse;
+      console.log('[comandoService] Parsed error response:', parsed);
+      return parsed;
     }
     
     // Tentar parse direto se já for JSON
+    console.log('[comandoService] Trying direct JSON parse');
     return JSON.parse(responseString) as RlifundErrorResponse;
   } catch (error) {
     console.error('[comandoService] Erro ao fazer parse do erro RLIFUND:', error);
+    console.error('[comandoService] Failed to parse responseString:', responseString);
     return null;
   }
 }
@@ -403,13 +412,19 @@ export const comandoService = {
       }
       
       // Tratamento específico para RLIFUND: response pode ser string quando há erro
+      console.log('[comandoService] Checking response type:', typeof data[0].response);
+      console.log('[comandoService] Response value:', data[0].response);
+      
       if (typeof data[0].response === 'string') {
         console.log(`[comandoService] RLIFUND response é string, tentando parse de erro:`, data[0].response);
         
         const errorData = parseRlifundError(data[0].response);
+        console.log('[comandoService] Parse result:', errorData);
+        
         if (errorData && !errorData.success && errorData.errors?.length > 0) {
           const firstError = errorData.errors[0];
           console.error(`[comandoService] Erro RLIFUND detectado:`, errorData);
+          console.log('[comandoService] Throwing RlifundApiError with code:', firstError.code, 'message:', firstError.message);
           
           throw new RlifundApiError(
             firstError.code,
@@ -420,6 +435,7 @@ export const comandoService = {
         }
         
         // Se não conseguir parsear como erro, tratar como falha genérica
+        console.error('[comandoService] Could not parse as RLIFUND error, throwing generic error');
         throw new Error(`Resposta RLIFUND em formato inesperado: ${data[0].response}`);
       }
       
