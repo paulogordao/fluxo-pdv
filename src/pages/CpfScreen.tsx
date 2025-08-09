@@ -125,14 +125,69 @@ const CpfScreen = () => {
         console.log("Modo OFFLINE detectado - usando serviço consultaFluxo");
         
         const data = await consultaFluxoService.consultarFluxo(cpf, 'RLIINFO');
+        console.log("Resposta consultaFluxo (OFFLINE):", data);
+        
+        // Store offline response data for future use and debugging
+        localStorage.setItem('offlineResponse', JSON.stringify(data));
+        localStorage.setItem('tipo_simulacao', 'OFFLINE');
+        
+        // Store debug information for offline mode
+        setApiDebugInfo({
+          request: {
+            url: 'offline-consultaFluxo',
+            method: 'consultarFluxo',
+            body: { cpf, slug: 'RLIINFO' },
+            timestamp: new Date().toISOString()
+          },
+          response: data,
+          performance: {
+            responseTime: `${Date.now() - startTime}ms`,
+            status: 'success'
+          }
+        });
+        
+        // Extract SLUG for next step determination
+        const slug = data.SLUG;
+        console.log(`SLUG recebido: ${slug}`);
+        
+        // Consult detailed flow information
+        let nextStepNavigation = "/scan?from=cpf"; // default fallback
+        
+        if (slug) {
+          try {
+            console.log(`Consultando detalhes do fluxo para SLUG: ${slug}`);
+            const detalhes = await consultaFluxoService.consultarFluxoDetalhe(slug);
+            console.log("Detalhes do fluxo:", detalhes);
+            
+            // Determine navigation based on SLUG content and detailed response
+            if (slug.includes('LICELL') || data.pedir_telefone) {
+              nextStepNavigation = "/telefone";
+              console.log("Navegando para /telefone - LICELL detectado ou pedir_telefone=true");
+            } else if (slug.includes('LIFUND')) {
+              nextStepNavigation = "/scan?from=cpf";
+              console.log("Navegando para /scan - LIFUND detectado");
+            } else {
+              console.log(`SLUG não reconhecido: ${slug}, usando navegação padrão: /scan`);
+            }
+          } catch (error) {
+            console.error("Erro ao consultar detalhes do fluxo:", error);
+            console.log("Usando navegação baseada apenas em pedir_telefone como fallback");
+            
+            // Fallback to simple pedir_telefone logic
+            if (data.pedir_telefone) {
+              nextStepNavigation = "/telefone";
+            }
+          }
+        } else {
+          console.log("SLUG não encontrado na resposta, usando navegação baseada em pedir_telefone");
+          if (data.pedir_telefone) {
+            nextStepNavigation = "/telefone";
+          }
+        }
         
         toast.success("CPF processado com sucesso!");
-        
-        if (data.pedir_telefone) {
-          navigate("/telefone");
-        } else {
-          navigate("/scan?from=cpf");
-        }
+        console.log(`Navegando para: ${nextStepNavigation}`);
+        navigate(nextStepNavigation);
       }
     } catch (error: any) {
       const endTime = Date.now();
