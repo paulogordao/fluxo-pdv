@@ -240,13 +240,28 @@ const ScanScreen = () => {
         // Store RLIFUND response in localStorage for technical documentation
         localStorage.setItem('rlifundResponse', JSON.stringify(response));
         
-        // Check for Dotz benefits from RLIFUND response
-        if (response[0]?.response?.data) {
-          // Navigate based on RLIFUND response logic
-          // For now, check if we should redirect to interest page
-          navigate('/interesse_pagamento');
+        // Check payment_options in RLIFUND response
+        const paymentOptions = response[0]?.response?.payment_options;
+        console.log("[ScanScreen] Payment options from RLIFUND:", paymentOptions);
+        
+        if (Array.isArray(paymentOptions)) {
+          if (paymentOptions.length === 0) {
+            // payment_options is empty array - go directly to payment confirmation
+            console.log("[ScanScreen] payment_options is empty - redirecting to confirmacao_pagamento");
+            navigate('/confirmacao_pagamento');
+          } else {
+            // payment_options has content - show interest modal
+            console.log("[ScanScreen] payment_options has content - redirecting to interesse_pagamento");
+            navigate('/interesse_pagamento');
+          }
         } else {
-          console.log("No specific action defined for RLIFUND response");
+          // Fallback: if payment_options is not an array or missing, check for data presence
+          if (response[0]?.response?.data) {
+            console.log("[ScanScreen] No payment_options array, but has data - redirecting to interesse_pagamento");
+            navigate('/interesse_pagamento');
+          } else {
+            console.log("[ScanScreen] No specific action defined for RLIFUND response");
+          }
         }
         
       } else {

@@ -65,6 +65,7 @@ export interface ConsultaFluxoResponse {
   outros_meios_pagamento?: boolean;
   dotz_sem_app?: boolean;
   permitir_pagamento_token?: boolean;
+  payment_options?: any[];
   SLUG?: string;
 }
 

@@ -73,6 +73,7 @@ export interface ComandoResponseItem {
         version: number;
       }>;
     };
+    payment_options?: any[];
     success: boolean;
   };
 }
