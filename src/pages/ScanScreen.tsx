@@ -9,7 +9,8 @@ import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TechnicalFooter from "@/components/TechnicalFooter";
-import { comandoService, RlifundItem } from "@/services/comandoService";
+import { comandoService, RlifundItem, RlifundApiError } from "@/services/comandoService";
+import ErrorModal from "@/components/ErrorModal";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
 import { buscarProdutosFakes, FakeProduct } from "@/services/produtoService";
 import { useToast } from "@/hooks/use-toast";
@@ -38,6 +39,13 @@ const ScanScreen = () => {
   }>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorDetails, setErrorDetails] = useState<{
+    code: string;
+    message: string;
+    fullRequest?: any;
+    fullResponse?: any;
+  } | null>(null);
   
   // Check simulation type from localStorage
   const [isOnlineMode, setIsOnlineMode] = useState(false);
@@ -268,7 +276,25 @@ const ScanScreen = () => {
       }
       
     } catch (error) {
-      console.error("Error processing payment:", error);
+      console.error('Erro no pagamento:', error);
+      
+      // Tratamento específico para erros da API RLIFUND
+      if (error instanceof RlifundApiError) {
+        setErrorDetails({
+          code: error.errorCode,
+          message: error.errorMessage,
+          fullRequest: error.fullRequest,
+          fullResponse: error.fullResponse
+        });
+        setShowErrorModal(true);
+      } else {
+        // Toast para outros tipos de erro
+        toast({
+          title: "Erro no pagamento",
+          description: error instanceof Error ? error.message : "Erro desconhecido",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsProcessingPayment(false);
     }
@@ -601,6 +627,26 @@ const ScanScreen = () => {
         loadOnMount={!!apiData.request_servico}
         sourceScreen="scan"
       />
+
+      {/* Modal de erro para desenvolvedores */}
+      {errorDetails && (
+        <ErrorModal
+          isOpen={showErrorModal}
+          onClose={() => {
+            setShowErrorModal(false);
+            setErrorDetails(null);
+          }}
+          onRetry={() => {
+            setShowErrorModal(false);
+            setErrorDetails(null);
+            handlePaymentClick();
+          }}
+          errorCode={errorDetails.code}
+          errorMessage={errorDetails.message}
+          fullRequest={errorDetails.fullRequest}
+          fullResponse={errorDetails.fullResponse}
+        />
+      )}
     </PdvLayout>;
 };
 
