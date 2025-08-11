@@ -25,6 +25,7 @@ import PdvLayout from "@/components/PdvLayout";
 import PaymentOptionButton from "@/components/payment/PaymentOptionButton";
 import TechnicalFooter from "@/components/TechnicalFooter";
 import { usePaymentOptions } from "@/hooks/usePaymentOptions";
+import { useFundPaymentOptions } from "@/hooks/useFundPaymentOptions";
 import { usePaymentOption } from "@/context/PaymentOptionContext";
 
 const MeiosDePagamentoScreen = () => {
@@ -40,7 +41,13 @@ const MeiosDePagamentoScreen = () => {
   const [showDotzAlertDialog, setShowDotzAlertDialog] = useState(false);
   const [showDotzConfirmDialog, setShowDotzConfirmDialog] = useState(false);
   
-  const { paymentOptions, paymentOptionsLoading } = usePaymentOptions();
+  // Use the appropriate hook based on mode
+  const { paymentOptions: legacyPaymentOptions, paymentOptionsLoading: legacyLoading } = usePaymentOptions();
+  const { paymentOptions: fundPaymentOptions, loading: fundLoading, isOnlineMode } = useFundPaymentOptions();
+  
+  // Determine which data source to use
+  const paymentOptionsLoading = isOnlineMode ? fundLoading : legacyLoading;
+  const currentPaymentOptions = isOnlineMode ? fundPaymentOptions : null;
   
   // Handle option selection
   const handleOptionSelect = (option: string) => {
@@ -54,8 +61,8 @@ const MeiosDePagamentoScreen = () => {
       navigate('/confirmacao_pagamento_app');
     }
     
-    // If "livelo" option (option 2) is selected, show the alert dialog
-    if (option === "livelo") {
+    // If "livelo" or "outros_pagamentos" option (option 2) is selected, show the alert dialog
+    if (option === "livelo" || option === "outros_pagamentos") {
       setShowAlertDialog(true);
     }
     
@@ -69,8 +76,8 @@ const MeiosDePagamentoScreen = () => {
   const handleAlertConfirm = () => {
     setShowAlertDialog(false);
     
-    // If "livelo" option was selected, navigate to OTP data nascimento screen
-    if (selectedOption === "livelo") {
+    // If "livelo" or "outros_pagamentos" option was selected, navigate to OTP data nascimento screen
+    if (selectedOption === "livelo" || selectedOption === "outros_pagamentos") {
       navigate('/otp_data_nascimento');
     }
   };
@@ -114,39 +121,54 @@ const MeiosDePagamentoScreen = () => {
                 <div className="py-4 text-center">Carregando opções de pagamento...</div>
               ) : (
                 <>
-                  {/* App option - Show if possui_dotz is true */}
-                  {paymentOptions.possui_dotz && (
-                    <PaymentOptionButton
-                      selected={selectedOption === "app"}
-                      onClick={() => handleOptionSelect("app")}
-                      label="1. Até R$68,93 no APP"
-                    />
+                  {/* Online mode - Use dynamic payment options from FUND */}
+                  {isOnlineMode && currentPaymentOptions ? (
+                    currentPaymentOptions.map((option) => (
+                      <PaymentOptionButton
+                        key={option.id}
+                        selected={selectedOption === option.id}
+                        onClick={() => handleOptionSelect(option.id)}
+                        label={option.label}
+                      />
+                    ))
+                  ) : (
+                    /* Offline mode - Use legacy behavior with static options */
+                    <>
+                      {/* App option - Show if possui_dotz is true */}
+                      {legacyPaymentOptions.possui_dotz && (
+                        <PaymentOptionButton
+                          selected={selectedOption === "app"}
+                          onClick={() => handleOptionSelect("app")}
+                          label="1. Até R$68,93 no APP"
+                        />
+                      )}
+                      
+                      {/* Livelo option - Show if outros_meios_pagamento is true */}
+                      {legacyPaymentOptions.outros_meios_pagamento && (
+                        <PaymentOptionButton
+                          selected={selectedOption === "livelo"}
+                          onClick={() => handleOptionSelect("livelo")}
+                          label="2. R$60 (Outros pagamentos) sem APP"
+                        />
+                      )}
+                      
+                      {/* Dotz option - Show if dotz_sem_app is true */}
+                      {legacyPaymentOptions.dotz_sem_app && (
+                        <PaymentOptionButton
+                          selected={selectedOption === "dotz"}
+                          onClick={() => handleOptionSelect("dotz")}
+                          label="3. R$3 (Dotz) sem APP"
+                        />
+                      )}
+                      
+                      {/* None option - Always show */}
+                      <PaymentOptionButton
+                        selected={selectedOption === "none"}
+                        onClick={() => handleOptionSelect("none")}
+                        label="4. Nenhum"
+                      />
+                    </>
                   )}
-                  
-                  {/* Livelo option - Show if outros_meios_pagamento is true */}
-                  {paymentOptions.outros_meios_pagamento && (
-                    <PaymentOptionButton
-                      selected={selectedOption === "livelo"}
-                      onClick={() => handleOptionSelect("livelo")}
-                      label="2. R$60 (Outros pagamentos) sem APP"
-                    />
-                  )}
-                  
-                  {/* Dotz option - Show if dotz_sem_app is true */}
-                  {paymentOptions.dotz_sem_app && (
-                    <PaymentOptionButton
-                      selected={selectedOption === "dotz"}
-                      onClick={() => handleOptionSelect("dotz")}
-                      label="3. R$3 (Dotz) sem APP"
-                    />
-                  )}
-                  
-                  {/* None option - Always show */}
-                  <PaymentOptionButton
-                    selected={selectedOption === "none"}
-                    onClick={() => handleOptionSelect("none")}
-                    label="4. Nenhum"
-                  />
                 </>
               )}
             </div>
