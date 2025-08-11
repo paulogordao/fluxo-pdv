@@ -18,6 +18,7 @@ const OtpDataNascimentoScreen = () => {
   const [validationMessage, setValidationMessage] = useState("");
   const [validationNextStep, setValidationNextStep] = useState("");
   const [errorDetails, setErrorDetails] = useState<any>(null);
+  const [pendingRliauthResponse, setPendingRliauthResponse] = useState<any>(null);
   const navigate = useNavigate();
 
   // Handle number input
@@ -62,6 +63,8 @@ const OtpDataNascimentoScreen = () => {
         if (systemMessage) {
           console.log('[OtpDataNascimentoScreen] System message found:', systemMessage);
           console.log('[OtpDataNascimentoScreen] Next step:', nextStep);
+          console.log('[OtpDataNascimentoScreen] Saving RLIAUTH response to pending state');
+          setPendingRliauthResponse(response);
           setValidationMessage(systemMessage);
           setValidationNextStep(nextStep || "");
           setShowValidationModal(true);
@@ -154,14 +157,31 @@ const OtpDataNascimentoScreen = () => {
     if (validationNextStep === "RLIAUTH") {
       // Try again - clear digits for new input
       setDigits([]);
+      setPendingRliauthResponse(null); // Clear pending response
     } else {
       // Continue to next step - navigate based on next_step
       if (validationNextStep === "RLIPAYS") {
         console.log('[OtpDataNascimentoScreen] Navigating to confirmacao_pagamento for RLIPAYS');
-        navigate("/confirmacao_pagamento");
+        
+        // Save pending RLIAUTH response to localStorage before navigation
+        if (pendingRliauthResponse) {
+          console.log('[OtpDataNascimentoScreen] Saving pending RLIAUTH response to localStorage');
+          localStorage.setItem('rliauthResponse', JSON.stringify(pendingRliauthResponse));
+          setPendingRliauthResponse(null); // Clear pending response
+        }
+        
+        navigate("/confirmacao_pagamento", { state: { fromOtpScreen: true } });
       } else {
         // Handle other next steps as needed
         console.log('[OtpDataNascimentoScreen] Unknown next step:', validationNextStep);
+        
+        // Save pending response for any other navigation too
+        if (pendingRliauthResponse) {
+          console.log('[OtpDataNascimentoScreen] Saving pending RLIAUTH response to localStorage for unknown step');
+          localStorage.setItem('rliauthResponse', JSON.stringify(pendingRliauthResponse));
+          setPendingRliauthResponse(null);
+        }
+        
         navigate("/confirmacao_pagamento"); // Default navigation to payment confirmation
       }
     }
