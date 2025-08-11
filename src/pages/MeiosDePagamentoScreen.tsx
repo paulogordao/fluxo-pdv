@@ -27,7 +27,7 @@ import { usePaymentOptions } from "@/hooks/usePaymentOptions";
 import { useFundPaymentOptions } from "@/hooks/useFundPaymentOptions";
 import { usePaymentOption } from "@/context/PaymentOptionContext";
 import ErrorModal from "@/components/ErrorModal";
-import { comandoService } from "@/services/comandoService";
+import { comandoService, RlifundApiError } from "@/services/comandoService";
 import { Loader2 } from "lucide-react";
 
 const MeiosDePagamentoScreen = () => {
@@ -112,12 +112,26 @@ const MeiosDePagamentoScreen = () => {
     } catch (error: any) {
       console.error('[MeiosDePagamentoScreen] Erro RLIDEAL:', error);
       
+      let errorCode = 'RLIDEAL_ERROR';
       let errorMessage = "Erro ao processar opção de pagamento. Tente novamente.";
       let technicalError = error.message;
+      let fullRequest = {
+        method: 'RLIDEAL',
+        transactionId: transactionId,
+        paymentOption: option
+      };
+      let fullResponse = error;
       
       if (error.message === 'TIMEOUT') {
+        errorCode = 'TIMEOUT';
         errorMessage = "Timeout: O serviço não respondeu em tempo hábil (30s)";
         technicalError = "Timeout após 30 segundos - serviço indisponível";
+      } else if (error.constructor.name === 'RlifundApiError') {
+        // Handle structured RLIDEAL API errors (reusing RlifundApiError class)
+        errorCode = error.code;
+        errorMessage = error.message;
+        fullRequest = error.fullRequest;
+        fullResponse = error.fullResponse;
       } else if (error.message.includes('HTTP error')) {
         const statusMatch = error.message.match(/status: (\d+)/);
         const status = statusMatch ? statusMatch[1] : 'desconhecido';
@@ -129,15 +143,11 @@ const MeiosDePagamentoScreen = () => {
       }
 
       setErrorDetails({
-        code: error.message === 'TIMEOUT' ? 'TIMEOUT' : 'RLIDEAL_ERROR',
+        code: errorCode,
         message: errorMessage,
         technicalMessage: technicalError,
-        request: {
-          method: 'RLIDEAL',
-          transactionId: transactionId,
-          paymentOption: option
-        },
-        fullError: error
+        request: fullRequest,
+        fullError: fullResponse
       });
       setShowErrorModal(true);
     } finally {
@@ -380,6 +390,7 @@ const MeiosDePagamentoScreen = () => {
         errorMessage={errorDetails?.message}
         fullRequest={errorDetails?.request}
         fullResponse={errorDetails?.fullError}
+        apiType="RLIDEAL"
       />
 
       <TechnicalFooter

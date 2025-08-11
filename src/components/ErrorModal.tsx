@@ -18,6 +18,7 @@ interface ErrorModalProps {
   errorMessage: string;
   fullRequest?: any;
   fullResponse?: any;
+  apiType?: 'RLIFUND' | 'RLIDEAL' | string;
 }
 
 const ErrorModal = ({ 
@@ -27,7 +28,8 @@ const ErrorModal = ({
   errorCode, 
   errorMessage, 
   fullRequest, 
-  fullResponse 
+  fullResponse,
+  apiType = 'RLIFUND'
 }: ErrorModalProps) => {
   const [showDetails, setShowDetails] = useState(false);
 
@@ -55,7 +57,7 @@ const ErrorModal = ({
       <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-destructive">
-            Erro na API RLIFUND
+            Erro na API {apiType}
           </AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-4">

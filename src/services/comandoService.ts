@@ -528,6 +528,21 @@ export const comandoService = {
         throw new Error('Resposta não contém campo response');
       }
 
+      // Check if response is a string (possible error format)
+      if (typeof data[0].response === 'string') {
+        console.log(`[comandoService] RLIDEAL Response is string, checking for errors:`, data[0].response);
+        
+        // Try to parse RLIDEAL error from string response
+        const errorResponse = parseRlifundError(data[0].response);
+        if (errorResponse && !errorResponse.success && errorResponse.errors?.length > 0) {
+          const error = errorResponse.errors[0];
+          throw new RlifundApiError(error.code, error.message, data[0].request, data[0].response);
+        }
+        
+        // If it's a string but not a structured error, throw generic error
+        throw new Error(`Resposta em formato string inesperado: ${data[0].response}`);
+      }
+
       if (data[0].response.success !== true) {
         throw new Error(`Resposta indica falha: success=${data[0].response.success}`);
       }
