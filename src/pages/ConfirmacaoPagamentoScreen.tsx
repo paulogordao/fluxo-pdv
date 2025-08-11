@@ -9,6 +9,8 @@ import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
 import { usePaymentOption } from "@/context/PaymentOptionContext";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
 import { useUserSession } from "@/hooks/useUserSession";
+import { comandoService, RlifundApiError } from "@/services/comandoService";
+import ErrorModal from "@/components/ErrorModal";
 import { 
   CreditCard,
   CreditCard as DebitCard,
@@ -46,6 +48,12 @@ const ConfirmacaoPagamentoScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [documentationSlug, setDocumentationSlug] = useState("RLIWAITRLIPAYS");
   const [rliauthData, setRliauthData] = useState<any>(null);
+
+  // RLIPAYS button states
+  const [isLoadingPayment, setIsLoadingPayment] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorDetails, setErrorDetails] = useState<any>(null);
+  const [rlipaysResponse, setRlipaysResponse] = useState<any>(null);
 
   // Load RLIAUTH data from localStorage for dynamic content
   useEffect(() => {
@@ -183,6 +191,85 @@ const ConfirmacaoPagamentoScreen = () => {
     navigate('/welcome');
   };
 
+  const handleFinalizarPagamento = async () => {
+    console.log('[ConfirmacaoPagamento] Iniciando finalização de pagamento...');
+    
+    // Get transaction ID from localStorage
+    const transactionId = localStorage.getItem('transaction_id');
+    if (!transactionId) {
+      console.error('[ConfirmacaoPagamento] Transaction ID não encontrado no localStorage');
+      toast.error("ID da transação não encontrado");
+      return;
+    }
+
+    console.log('[ConfirmacaoPagamento] Transaction ID encontrado:', transactionId);
+    setIsLoadingPayment(true);
+
+    try {
+      const response = await comandoService.enviarComandoRlipays(transactionId);
+      console.log('[ConfirmacaoPagamento] RLIPAYS response:', response);
+      
+      // Save response for technical footer
+      setRlipaysResponse(response);
+      
+      // Update technical documentation to show RLIPAYS
+      setApiData({
+        request_servico: JSON.stringify(response[0]?.request || null, null, 2),
+        response_servico_anterior: JSON.stringify(response[0]?.response || null, null, 2)
+      });
+      
+      toast.success("Pagamento finalizado com sucesso!");
+      
+      // You can navigate to a success page or handle next steps based on response
+      // const nextStep = response[0]?.response?.data?.next_step;
+      // if (nextStep?.length > 0) {
+      //   // Handle next step if needed
+      // }
+      
+    } catch (error: any) {
+      console.error('[ConfirmacaoPagamento] Erro ao finalizar pagamento:', error);
+      
+      if (error instanceof RlifundApiError) {
+        console.log('[ConfirmacaoPagamento] Erro específico da API RLIFUND:', {
+          code: error.errorCode,
+          message: error.errorMessage,
+          request: error.fullRequest,
+          response: error.fullResponse
+        });
+        
+        setErrorDetails({
+          errorCode: error.errorCode,
+          errorMessage: error.errorMessage,
+          fullRequest: JSON.stringify(error.fullRequest, null, 2),
+          fullResponse: JSON.stringify(error.fullResponse, null, 2),
+          apiType: 'RLIPAYS'
+        });
+      } else {
+        console.log('[ConfirmacaoPagamento] Erro genérico:', error.message);
+        
+        setErrorDetails({
+          errorCode: 'ERRO_GENERICO',
+          errorMessage: error.message || 'Erro desconhecido ao finalizar pagamento',
+          fullRequest: JSON.stringify({ 
+            comando: 'RLIPAYS', 
+            id_transaction: transactionId 
+          }, null, 2),
+          fullResponse: null,
+          apiType: 'RLIPAYS'
+        });
+      }
+      
+      setShowErrorModal(true);
+    } finally {
+      setIsLoadingPayment(false);
+    }
+  };
+
+  const handleRetryPayment = () => {
+    setShowErrorModal(false);
+    handleFinalizarPagamento();
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-4 pb-16">
       <div className="w-full max-w-6xl mx-auto">
@@ -223,7 +310,17 @@ const ConfirmacaoPagamentoScreen = () => {
             
             {/* Footer */}
             <div className="bg-red-600 text-white p-3 text-center">
-              <p>Sem troco {!displayValues.showEncargos ? `- R$ ${paymentAmount.encargos}` : ''}</p>
+              {tipo_simulacao !== "OFFLINE" && !sessionLoading ? (
+                <Button
+                  onClick={handleFinalizarPagamento}
+                  disabled={isLoadingPayment}
+                  className="bg-white text-red-600 hover:bg-gray-100 font-medium px-6 py-2 rounded"
+                >
+                  {isLoadingPayment ? "Finalizando..." : "Finalizar pagamento"}
+                </Button>
+              ) : (
+                <p>Sem troco {!displayValues.showEncargos ? `- R$ ${paymentAmount.encargos}` : ''}</p>
+              )}
             </div>
           </div>
 
@@ -305,6 +402,18 @@ const ConfirmacaoPagamentoScreen = () => {
         requestData={apiData.request_servico}
         responseData={apiData.response_servico_anterior}
         isLoading={isLoading}
+      />
+
+      {/* Error Modal */}
+      <ErrorModal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        onRetry={handleRetryPayment}
+        errorCode={errorDetails?.errorCode}
+        errorMessage={errorDetails?.errorMessage}
+        fullRequest={errorDetails?.fullRequest}
+        fullResponse={errorDetails?.fullResponse}
+        apiType={errorDetails?.apiType}
       />
     </div>
   );
