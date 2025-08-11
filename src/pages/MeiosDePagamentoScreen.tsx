@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +26,9 @@ import TechnicalFooter from "@/components/TechnicalFooter";
 import { usePaymentOptions } from "@/hooks/usePaymentOptions";
 import { useFundPaymentOptions } from "@/hooks/useFundPaymentOptions";
 import { usePaymentOption } from "@/context/PaymentOptionContext";
+import ErrorModal from "@/components/ErrorModal";
+import { comandoService } from "@/services/comandoService";
+import { Loader2 } from "lucide-react";
 
 const MeiosDePagamentoScreen = () => {
   const [selectedOption, setSelectedOption] = useState("app");
@@ -41,6 +43,11 @@ const MeiosDePagamentoScreen = () => {
   const [showDotzAlertDialog, setShowDotzAlertDialog] = useState(false);
   const [showDotzConfirmDialog, setShowDotzConfirmDialog] = useState(false);
   
+  // State for RLIDEAL API call
+  const [isLoadingRlideal, setIsLoadingRlideal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorDetails, setErrorDetails] = useState<any>(null);
+  
   // Use the appropriate hook based on mode
   const { paymentOptions: legacyPaymentOptions, paymentOptionsLoading: legacyLoading } = usePaymentOptions();
   const { paymentOptions: fundPaymentOptions, loading: fundLoading, isOnlineMode } = useFundPaymentOptions();
@@ -50,12 +57,96 @@ const MeiosDePagamentoScreen = () => {
   const currentPaymentOptions = isOnlineMode ? fundPaymentOptions : null;
   
   // Handle option selection
-  const handleOptionSelect = (option: string) => {
+  const handleOptionSelect = async (option: string) => {
     setSelectedOption(option);
     setSelectedPaymentOption(option as any);
     
     console.log(`Opção selecionada: ${option === "app" ? "1" : option === "livelo" ? "2" : option === "dotz" ? "3" : "4"} – Aplicando valores na confirmação.`);
     
+    // If in ONLINE mode, call RLIDEAL service first
+    if (isOnlineMode) {
+      await handleRlidealCall(option);
+      return;
+    }
+    
+    // OFFLINE mode - use existing logic
+    handleOfflineNavigation(option);
+  };
+
+  // Handle RLIDEAL API call for ONLINE mode
+  const handleRlidealCall = async (option: string) => {
+    const transactionId = localStorage.getItem('transactionId');
+    if (!transactionId) {
+      console.error('Transaction ID não encontrado');
+      navigate('/cpf');
+      return;
+    }
+
+    setIsLoadingRlideal(true);
+    
+    try {
+      // Create timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('TIMEOUT')), 30000);
+      });
+
+      const response = await Promise.race([
+        comandoService.enviarComandoRlideal(transactionId, option),
+        timeoutPromise
+      ]) as any;
+
+      console.log('[MeiosDePagamentoScreen] RLIDEAL response:', response);
+      
+      // Store RLIDEAL response
+      localStorage.setItem('rlidealResponse', JSON.stringify(response));
+
+      // Navigate based on token requirements
+      const tokenInfo = response[0]?.response?.data?.token;
+      if (tokenInfo?.required === true && tokenInfo?.type === 'birthdate') {
+        navigate('/otp_data_nascimento');
+      } else {
+        // Default navigation for other cases
+        navigate('/confirmacao_pagamento');
+      }
+
+    } catch (error: any) {
+      console.error('[MeiosDePagamentoScreen] Erro RLIDEAL:', error);
+      
+      let errorMessage = "Erro ao processar opção de pagamento. Tente novamente.";
+      let technicalError = error.message;
+      
+      if (error.message === 'TIMEOUT') {
+        errorMessage = "Timeout: O serviço não respondeu em tempo hábil (30s)";
+        technicalError = "Timeout após 30 segundos - serviço indisponível";
+      } else if (error.message.includes('HTTP error')) {
+        const statusMatch = error.message.match(/status: (\d+)/);
+        const status = statusMatch ? statusMatch[1] : 'desconhecido';
+        errorMessage = `Erro HTTP ${status}: Problema no servidor`;
+        technicalError = `HTTP ${status} - ${error.message}`;
+      } else if (error.message.includes('fetch')) {
+        errorMessage = "Erro de rede: Verifique sua conexão";
+        technicalError = "Erro de conectividade - " + error.message;
+      }
+
+      setErrorDetails({
+        code: error.message === 'TIMEOUT' ? 'TIMEOUT' : 'RLIDEAL_ERROR',
+        message: errorMessage,
+        technicalMessage: technicalError,
+        request: {
+          method: 'RLIDEAL',
+          transactionId: transactionId,
+          paymentOption: option
+        },
+        fullError: error
+      });
+      setShowErrorModal(true);
+    } finally {
+      setIsLoadingRlideal(false);
+    }
+  };
+
+  // Handle navigation for OFFLINE mode
+  const handleOfflineNavigation = (option: string) => {
     // If "app" option is selected, navigate
     if (option === "app") {
       navigate('/confirmacao_pagamento_app');
@@ -101,187 +192,199 @@ const MeiosDePagamentoScreen = () => {
     // No further action needed - just close the dialog
   };
 
+  // Handle retry for RLIDEAL call
+  const handleRetryRlideal = () => {
+    setShowErrorModal(false);
+    setErrorDetails(null);
+    if (selectedOption) {
+      handleRlidealCall(selectedOption);
+    }
+  };
+
   return (
-    <PdvLayout className="pb-16">
-      <Card className="w-full max-w-2xl mx-auto">
-        <CardHeader className="bg-dotz-laranja text-white">
-          <CardTitle className="text-center">
-            Benefícios cliente A
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="text-center mb-6">
-            <h3 className="text-xl font-semibold mb-4">
-              Manoel, você quer pagar com seus pontos?
-            </h3>
-            
-            <div className="space-y-3 mt-6">
-              {/* Loading state */}
+    <PdvLayout>
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <Card className="w-full max-w-md p-8 relative">
+          {/* Loading Overlay for RLIDEAL call */}
+          {isLoadingRlideal && (
+            <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center z-10 rounded-lg">
+              <Loader2 className="h-8 w-8 animate-spin text-dotz-laranja mb-2" />
+              <p className="text-sm font-medium text-gray-600">Processando opção de pagamento...</p>
+            </div>
+          )}
+
+          <div className="flex flex-col items-center space-y-6">
+            <h1 className="text-2xl font-bold text-center text-gray-900">
+              Escolha a forma de pagamento
+            </h1>
+            <p className="text-center text-gray-600 mb-6">
+              Como você gostaria de pagar?
+            </p>
+
+            <div className="w-full space-y-4">
               {paymentOptionsLoading ? (
-                <div className="py-4 text-center">Carregando opções de pagamento...</div>
-              ) : (
+                // Show loading skeletons when loading
                 <>
-                  {/* Online mode - Use dynamic payment options from FUND */}
-                  {isOnlineMode && currentPaymentOptions ? (
-                    currentPaymentOptions.map((option) => (
-                      <PaymentOptionButton
-                        key={option.id}
-                        selected={selectedOption === option.id}
-                        onClick={() => handleOptionSelect(option.id)}
-                        label={option.label}
-                      />
-                    ))
-                  ) : (
-                    /* Offline mode - Use legacy behavior with static options */
-                    <>
-                      {/* App option - Show if possui_dotz is true */}
-                      {legacyPaymentOptions.possui_dotz && (
-                        <PaymentOptionButton
-                          selected={selectedOption === "app"}
-                          onClick={() => handleOptionSelect("app")}
-                          label="1. Até R$68,93 no APP"
-                        />
-                      )}
-                      
-                      {/* Livelo option - Show if outros_meios_pagamento is true */}
-                      {legacyPaymentOptions.outros_meios_pagamento && (
-                        <PaymentOptionButton
-                          selected={selectedOption === "livelo"}
-                          onClick={() => handleOptionSelect("livelo")}
-                          label="2. R$60 (Outros pagamentos) sem APP"
-                        />
-                      )}
-                      
-                      {/* Dotz option - Show if dotz_sem_app is true */}
-                      {legacyPaymentOptions.dotz_sem_app && (
-                        <PaymentOptionButton
-                          selected={selectedOption === "dotz"}
-                          onClick={() => handleOptionSelect("dotz")}
-                          label="3. R$3 (Dotz) sem APP"
-                        />
-                      )}
-                      
-                      {/* None option - Always show */}
-                      <PaymentOptionButton
-                        selected={selectedOption === "none"}
-                        onClick={() => handleOptionSelect("none")}
-                        label="4. Nenhum"
-                      />
-                    </>
-                  )}
+                  <div className="h-12 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-12 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-12 bg-gray-200 rounded animate-pulse" />
+                </>
+              ) : isOnlineMode && currentPaymentOptions ? (
+                // Show dynamic options from FUND response when in ONLINE mode
+                currentPaymentOptions.map((option) => (
+                  <PaymentOptionButton
+                    key={option.id}
+                    selected={selectedOption === option.id}
+                    onClick={() => handleOptionSelect(option.id)}
+                    label={option.label}
+                  />
+                ))
+              ) : (
+                // Show default options when in OFFLINE mode or when no FUND data
+                <>
+                  <PaymentOptionButton
+                    selected={selectedOption === "app"}
+                    onClick={() => handleOptionSelect("app")}
+                    label="Pagar pelo App"
+                  />
+                  <PaymentOptionButton
+                    selected={selectedOption === "livelo"}
+                    onClick={() => handleOptionSelect("livelo")}
+                    label="Livelo"
+                  />
+                  <PaymentOptionButton
+                    selected={selectedOption === "dotz"}
+                    onClick={() => handleOptionSelect("dotz")}
+                    label="Dotz"
+                  />
+                  <PaymentOptionButton
+                    selected={selectedOption === "none"}
+                    onClick={() => handleOptionSelect("none")}
+                    label="Não desejo usar nenhum programa"
+                  />
                 </>
               )}
             </div>
           </div>
+        </Card>
+      </div>
           
-          {/* Alert Dialog for Option 2 - Styled to match /interesse_pagamento modal */}
-          <AlertDialog open={showAlertDialog} onOpenChange={setShowAlertDialog}>
-            <AlertDialogContent className="max-w-md mx-auto p-0 overflow-hidden">
-              <AlertDialogHeader className="bg-dotz-laranja p-4 text-white mb-4">
-                <AlertDialogTitle className="text-center">
-                  Atenção!!!
-                </AlertDialogTitle>
-              </AlertDialogHeader>
-              
-              <div className="p-4 text-center">
-                <AlertDialogDescription className="text-base">
-                  <p className="mb-3">
-                    Na chamada do serviço RLIDEAL é retornado a variável <span className="font-mono font-medium">otp_payment_enabled</span>.
-                  </p>
-                  <p>
-                    Quando <span className="font-bold">TRUE</span>, é necessário solicitar uma autenticação do cliente (token, data de nascimento, etc).
-                  </p>
-                </AlertDialogDescription>
-              </div>
-              
-              <AlertDialogFooter className="p-4 justify-center">
-                <AlertDialogAction 
-                  className="min-w-[120px] bg-dotz-laranja hover:bg-dotz-laranja/90"
-                  onClick={handleAlertConfirm}
-                >
-                  OK
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+      {/* Alert Dialog for Option 2 - Styled to match /interesse_pagamento modal */}
+      <AlertDialog open={showAlertDialog} onOpenChange={setShowAlertDialog}>
+        <AlertDialogContent className="max-w-md mx-auto p-0 overflow-hidden">
+          <AlertDialogHeader className="bg-dotz-laranja p-4 text-white mb-4">
+            <AlertDialogTitle className="text-center">
+              Atenção!!!
+            </AlertDialogTitle>
+          </AlertDialogHeader>
           
-          {/* First Alert Dialog for Option 3 (Dotz) - Uses the same styling as Option 2 */}
-          <AlertDialog 
-            open={showDotzAlertDialog} 
-            onOpenChange={setShowDotzAlertDialog}
-          >
-            <AlertDialogContent className="max-w-md mx-auto p-0 overflow-hidden">
-              <AlertDialogHeader className="bg-dotz-laranja p-4 text-white mb-4">
-                <AlertDialogTitle className="text-center">
-                  Atenção!!!
-                </AlertDialogTitle>
-              </AlertDialogHeader>
-              
-              <div className="p-4 text-center">
-                <AlertDialogDescription className="text-base">
-                  <p className="mb-3">
-                    Na chamada do serviço RLIDEAL é retornado a variável <span className="font-mono font-medium">otp_payment_enabled</span>.
-                  </p>
-                  <p>
-                    Quando <span className="font-bold">TRUE</span>, é necessário solicitar uma autenticação do cliente (token, data de nascimento, etc).
-                  </p>
-                </AlertDialogDescription>
-              </div>
-              
-              <AlertDialogFooter className="p-4 justify-center">
-                <AlertDialogAction 
-                  className="min-w-[120px] bg-dotz-laranja hover:bg-dotz-laranja/90"
-                  onClick={handleDotzAlertConfirm}
-                >
-                  OK
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <div className="p-4 text-center">
+            <AlertDialogDescription className="text-base">
+              <p className="mb-3">
+                Na chamada do serviço RLIDEAL é retornado a variável <span className="font-mono font-medium">otp_payment_enabled</span>.
+              </p>
+              <p>
+                Quando <span className="font-bold">TRUE</span>, é necessário solicitar uma autenticação do cliente (token, data de nascimento, etc).
+              </p>
+            </AlertDialogDescription>
+          </div>
           
-          {/* Second Dialog for Option 3 (Dotz) - Confirmation dialog */}
-          <Dialog 
-            open={showDotzConfirmDialog} 
-            onOpenChange={setShowDotzConfirmDialog}
-          >
-            <DialogContent className="max-w-md mx-auto p-0 overflow-hidden">
-              <DialogHeader className="bg-dotz-laranja p-4 text-white mb-4">
-                <DialogTitle className="text-center">
-                  Confirmação
-                </DialogTitle>
-              </DialogHeader>
-              
-              <div className="p-6 text-center">
-                <DialogDescription className="text-base text-black font-medium">
-                  R$3 em Dotz.
-                </DialogDescription>
-              </div>
-              
-              <DialogFooter className="p-4 flex justify-center gap-4">
-                <Button 
-                  variant="cancel" 
-                  className="min-w-[120px]"
-                  onClick={handleDotzConfirmCancel}
-                >
-                  Cancelar
-                </Button>
-                <Button 
-                  variant="dotz" 
-                  className="min-w-[120px]"
-                  onClick={handleDotzConfirmUse}
-                >
-                  Usar
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </CardContent>
-      </Card>
+          <AlertDialogFooter className="p-4 justify-center">
+            <AlertDialogAction 
+              className="min-w-[120px] bg-dotz-laranja hover:bg-dotz-laranja/90"
+              onClick={handleAlertConfirm}
+            >
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       
-      {/* Technical Footer Component */}
+      {/* First Alert Dialog for Option 3 (Dotz) - Uses the same styling as Option 2 */}
+      <AlertDialog 
+        open={showDotzAlertDialog} 
+        onOpenChange={setShowDotzAlertDialog}
+      >
+        <AlertDialogContent className="max-w-md mx-auto p-0 overflow-hidden">
+          <AlertDialogHeader className="bg-dotz-laranja p-4 text-white mb-4">
+            <AlertDialogTitle className="text-center">
+              Atenção!!!
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+          
+          <div className="p-4 text-center">
+            <AlertDialogDescription className="text-base">
+              <p className="mb-3">
+                Na chamada do serviço RLIDEAL é retornado a variável <span className="font-mono font-medium">otp_payment_enabled</span>.
+              </p>
+              <p>
+                Quando <span className="font-bold">TRUE</span>, é necessário solicitar uma autenticação do cliente (token, data de nascimento, etc).
+              </p>
+            </AlertDialogDescription>
+          </div>
+          
+          <AlertDialogFooter className="p-4 justify-center">
+            <AlertDialogAction 
+              className="min-w-[120px] bg-dotz-laranja hover:bg-dotz-laranja/90"
+              onClick={handleDotzAlertConfirm}
+            >
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Second Dialog for Option 3 (Dotz) - Confirmation dialog */}
+      <Dialog 
+        open={showDotzConfirmDialog} 
+        onOpenChange={setShowDotzConfirmDialog}
+      >
+        <DialogContent className="max-w-md mx-auto p-0 overflow-hidden">
+          <DialogHeader className="bg-dotz-laranja p-4 text-white mb-4">
+            <DialogTitle className="text-center">
+              Confirmação
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="p-6 text-center">
+            <DialogDescription className="text-base text-black font-medium">
+              R$3 em Dotz.
+            </DialogDescription>
+          </div>
+          
+          <DialogFooter className="p-4 flex justify-center gap-4">
+            <Button 
+              variant="cancel" 
+              className="min-w-[120px]"
+              onClick={handleDotzConfirmCancel}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              variant="dotz" 
+              className="min-w-[120px]"
+              onClick={handleDotzConfirmUse}
+            >
+              Usar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Error Modal for RLIDEAL */}
+      <ErrorModal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        onRetry={handleRetryRlideal}
+        errorCode={errorDetails?.code}
+        errorMessage={errorDetails?.message}
+        fullRequest={errorDetails?.request}
+        fullResponse={errorDetails?.fullError}
+      />
+
       <TechnicalFooter
-        slug={documentationSlug} 
-        loadOnMount={true}
+        isLoading={isLoadingRlideal}
+        slug={documentationSlug}
         sourceScreen="meios_de_pagamento"
       />
     </PdvLayout>

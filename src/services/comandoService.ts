@@ -11,6 +11,12 @@ export interface ComandoRlicellRequest {
   id_transaction: string;
 }
 
+export interface ComandoRlidealRequest {
+  comando: string;
+  payment_option: string;
+  id_transaction: string;
+}
+
 export interface RlifundItem {
   ean: string;
   sku: string;
@@ -447,6 +453,89 @@ export const comandoService = {
     } catch (error) {
       clearTimeout(timeoutId);
       console.error('[comandoService] Erro ao enviar comando RLIFUND:', error);
+      throw error;
+    }
+  },
+
+  // RLIDEAL command method
+  async enviarComandoRlideal(transactionId: string, paymentOption: string): Promise<ComandoResponse> {
+    const requestBody: ComandoRlidealRequest = {
+      comando: 'RLIDEAL',
+      payment_option: paymentOption,
+      id_transaction: transactionId
+    };
+
+    console.log(`[comandoService] Enviando comando RLIDEAL:`, requestBody);
+
+    const timeoutId = setTimeout(() => {
+      throw new Error('TIMEOUT');
+    }, 30000);
+
+    try {
+      const url = buildApiUrl('comando');
+      console.log(`[comandoService] RLIDEAL URL: ${url}`);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: API_CONFIG.defaultHeaders,
+        body: JSON.stringify(requestBody),
+      });
+
+      clearTimeout(timeoutId);
+
+      console.log(`[comandoService] RLIDEAL Response status:`, response.status);
+      console.log(`[comandoService] RLIDEAL Response headers:`, Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const responseText = await response.text();
+      console.log(`[comandoService] RLIDEAL Raw response:`, responseText);
+
+      let parsedData;
+      try {
+        parsedData = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error(`[comandoService] RLIDEAL JSON parse error:`, parseError);
+        throw new Error(`Invalid JSON response: ${responseText}`);
+      }
+
+      // Adaptive parsing: handle both object and array responses
+      let data: ComandoResponse;
+      if (Array.isArray(parsedData)) {
+        console.log(`[comandoService] RLIDEAL Response is already an array`);
+        data = parsedData;
+      } else if (parsedData && typeof parsedData === 'object') {
+        console.log(`[comandoService] RLIDEAL Response is an object, converting to array`);
+        data = [parsedData];
+      } else {
+        console.error(`[comandoService] RLIDEAL Unexpected response format:`, parsedData);
+        throw new Error(`Formato de resposta inesperado: esperado objeto ou array`);
+      }
+
+      console.log(`[comandoService] RLIDEAL Final data:`, data);
+
+      if (!Array.isArray(data)) {
+        throw new Error('Resposta não é um array');
+      }
+
+      if (!data[0]) {
+        throw new Error('Array de resposta está vazio');
+      }
+
+      if (!data[0].response) {
+        throw new Error('Resposta não contém campo response');
+      }
+
+      if (data[0].response.success !== true) {
+        throw new Error(`Resposta indica falha: success=${data[0].response.success}`);
+      }
+
+      return data;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.error('[comandoService] Erro ao enviar comando RLIDEAL:', error);
       throw error;
     }
   }
