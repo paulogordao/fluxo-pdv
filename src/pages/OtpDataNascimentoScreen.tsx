@@ -157,11 +157,12 @@ const OtpDataNascimentoScreen = () => {
     } else {
       // Continue to next step - navigate based on next_step
       if (validationNextStep === "RLIPAYS") {
-        navigate("/meios_de_pagamento");
+        console.log('[OtpDataNascimentoScreen] Navigating to confirmacao_pagamento for RLIPAYS');
+        navigate("/confirmacao_pagamento");
       } else {
         // Handle other next steps as needed
         console.log('[OtpDataNascimentoScreen] Unknown next step:', validationNextStep);
-        navigate("/meios_de_pagamento"); // Default navigation
+        navigate("/confirmacao_pagamento"); // Default navigation to payment confirmation
       }
     }
   };
