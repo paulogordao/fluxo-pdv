@@ -17,6 +17,13 @@ export interface ComandoRlidealRequest {
   id_transaction: string;
 }
 
+export interface ComandoRliauthRequest {
+  comando: string;
+  id_transaction: string;
+  token: string;
+  cancel: boolean;
+}
+
 export interface RlifundItem {
   ean: string;
   sku: string;
@@ -145,7 +152,7 @@ export const comandoService = {
   async enviarComando(comando: string, cpf: string): Promise<ComandoResponse> {
     console.log(`[comandoService] Enviando comando: ${comando}, CPF: ${cpf}`);
     
-    const url = buildApiUrl('comando');
+    const url = buildApiUrl('comando?=');
     const requestBody: ComandoRequest = {
       comando,
       cpf
@@ -239,7 +246,7 @@ export const comandoService = {
   async enviarComandoRlicell(telefone: string, transactionId: string): Promise<ComandoResponse> {
     console.log(`[comandoService] Enviando comando RLICELL: telefone=${telefone}, transaction_id=${transactionId}`);
     
-    const url = buildApiUrl('comando');
+    const url = buildApiUrl('comando?=');
     const requestBody: ComandoRlicellRequest = {
       comando: "RLICELL",
       telefone,
@@ -335,7 +342,7 @@ export const comandoService = {
     console.log(`[comandoService] Enviando comando RLIFUND: transaction_id=${transactionId}, payment_option_type=${paymentOptionType}, value_total=${valueTotal}`);
     console.log(`[comandoService] Items:`, items);
     
-    const url = buildApiUrl('comando');
+    const url = buildApiUrl('comando?=');
     const requestBody: ComandoRlifundRequest = {
       comando: "RLIFUND",
       id_transaction: transactionId,
@@ -472,7 +479,7 @@ export const comandoService = {
     }, 30000);
 
     try {
-      const url = buildApiUrl('comando');
+      const url = buildApiUrl('comando?=');
       console.log(`[comandoService] RLIDEAL URL: ${url}`);
 
       const response = await fetch(url, {
@@ -551,6 +558,109 @@ export const comandoService = {
     } catch (error) {
       clearTimeout(timeoutId);
       console.error('[comandoService] Erro ao enviar comando RLIDEAL:', error);
+      throw error;
+    }
+  },
+
+  // RLIAUTH command method
+  async enviarComandoRliauth(transactionId: string, token: string): Promise<ComandoResponse> {
+    const requestBody: ComandoRliauthRequest = {
+      comando: 'RLIAUTH',
+      id_transaction: transactionId,
+      token: token,
+      cancel: false
+    };
+
+    console.log(`[comandoService] Enviando comando RLIAUTH:`, requestBody);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
+
+    try {
+      const url = buildApiUrl('comando?=');
+      console.log(`[comandoService] RLIAUTH URL: ${url}`);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: API_CONFIG.defaultHeaders,
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+      console.log(`[comandoService] RLIAUTH Response status:`, response.status);
+      console.log(`[comandoService] RLIAUTH Response headers:`, Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const responseText = await response.text();
+      console.log(`[comandoService] RLIAUTH Raw response:`, responseText);
+
+      let parsedData;
+      try {
+        parsedData = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error(`[comandoService] RLIAUTH JSON parse error:`, parseError);
+        throw new Error(`Invalid JSON response: ${responseText}`);
+      }
+
+      // Adaptive parsing: handle both object and array responses
+      let data: ComandoResponse;
+      if (Array.isArray(parsedData)) {
+        console.log(`[comandoService] RLIAUTH Response is already an array`);
+        data = parsedData;
+      } else if (parsedData && typeof parsedData === 'object') {
+        console.log(`[comandoService] RLIAUTH Response is an object, converting to array`);
+        data = [parsedData];
+      } else {
+        console.error(`[comandoService] RLIAUTH Unexpected response format:`, parsedData);
+        throw new Error(`Formato de resposta inesperado: esperado objeto ou array`);
+      }
+
+      console.log(`[comandoService] RLIAUTH Final data:`, data);
+
+      if (!Array.isArray(data)) {
+        throw new Error('Resposta não é um array');
+      }
+
+      if (!data[0]) {
+        throw new Error('Array de resposta está vazio');
+      }
+
+      if (!data[0].response) {
+        throw new Error('Resposta não contém campo response');
+      }
+
+      // Check if response is a string (possible error format)
+      if (typeof data[0].response === 'string') {
+        console.log(`[comandoService] RLIAUTH Response is string, checking for errors:`, data[0].response);
+        
+        // Try to parse RLIAUTH error from string response
+        const errorResponse = parseRlifundError(data[0].response);
+        if (errorResponse && !errorResponse.success && errorResponse.errors?.length > 0) {
+          const error = errorResponse.errors[0];
+          throw new RlifundApiError(error.code, error.message, requestBody, data[0]);
+        }
+        
+        // If it's a string but not a structured error, throw generic error
+        throw new Error(`Resposta em formato string inesperado: ${data[0].response}`);
+      }
+
+      if (data[0].response.success !== true) {
+        throw new Error(`Resposta indica falha: success=${data[0].response.success}`);
+      }
+
+      return data;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.error('[comandoService] Erro ao enviar comando RLIAUTH:', error);
+      
+      if (error.name === 'AbortError') {
+        throw new Error('TIMEOUT');
+      }
+      
       throw error;
     }
   }

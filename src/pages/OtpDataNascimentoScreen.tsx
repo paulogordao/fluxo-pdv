@@ -2,12 +2,18 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import PdvLayout from "@/components/PdvLayout";
 import TechnicalFooter from "@/components/TechnicalFooter";
+import { comandoService, RlifundApiError } from "@/services/comandoService";
+import ErrorModal from "@/components/ErrorModal";
+import { toast } from "sonner";
 
 const OtpDataNascimentoScreen = () => {
   const [digits, setDigits] = useState<string[]>([]);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorDetails, setErrorDetails] = useState<any>(null);
   const navigate = useNavigate();
 
   // Handle number input
@@ -25,10 +31,77 @@ const OtpDataNascimentoScreen = () => {
   };
 
   // Handle enter button
-  const handleEnter = () => {
-    if (digits.length === 8) {
-      // Navigate to confirmation page with state indicating where we're coming from
-      navigate("/confirmacao_pagamento", { state: { fromOtpScreen: true } });
+  const handleEnter = async () => {
+    if (digits.length === 8 && !isLoadingAuth) {
+      setIsLoadingAuth(true);
+      
+      try {
+        // Get transaction ID from localStorage
+        const transactionId = localStorage.getItem('transactionId');
+        if (!transactionId) {
+          toast.error("Sessão expirada. Redirecionando...");
+          navigate('/');
+          return;
+        }
+
+        // Send RLIAUTH command with the numeric token (no formatting)
+        const numericToken = digits.join('');
+        console.log('[OtpDataNascimentoScreen] Sending RLIAUTH with token:', numericToken);
+        
+        const response = await comandoService.enviarComandoRliauth(transactionId, numericToken);
+        console.log('[OtpDataNascimentoScreen] RLIAUTH Response:', response);
+
+        // Store response in localStorage for next screen
+        localStorage.setItem('rliauthResponse', JSON.stringify(response));
+        
+        // Navigate to confirmation page with state indicating where we're coming from
+        navigate("/confirmacao_pagamento", { state: { fromOtpScreen: true } });
+        
+      } catch (error: any) {
+        console.error('[OtpDataNascimentoScreen] Erro RLIAUTH:', error);
+        
+        let errorCode = 'RLIAUTH_ERROR';
+        let errorMessage = "Erro ao validar token. Tente novamente.";
+        let technicalError = error.message;
+        let fullRequest = {
+          method: 'RLIAUTH',
+          transactionId: localStorage.getItem('transactionId'),
+          token: digits.join('')
+        };
+        let fullResponse = error;
+        
+        if (error.message === 'TIMEOUT') {
+          errorCode = 'TIMEOUT';
+          errorMessage = "Timeout: O serviço não respondeu em tempo hábil (30s)";
+          technicalError = "Timeout após 30 segundos - serviço indisponível";
+        } else if (error.constructor.name === 'RlifundApiError') {
+          // Handle structured RLIAUTH API errors (reusing RlifundApiError class)
+          errorCode = error.errorCode;
+          errorMessage = error.errorMessage;
+          fullRequest = error.fullRequest;
+          fullResponse = error.fullResponse;
+        } else if (error.message.includes('HTTP error')) {
+          const statusMatch = error.message.match(/status: (\d+)/);
+          const status = statusMatch ? statusMatch[1] : 'desconhecido';
+          errorCode = `HTTP_${status}`;
+          errorMessage = `Erro HTTP ${status}: Falha na comunicação com o servidor`;
+          technicalError = `HTTP ${status} - ${error.message}`;
+        } else if (error.message.includes('Sessão expirada')) {
+          // Don't show error modal for session expiration, just navigate
+          return;
+        }
+
+        setErrorDetails({
+          code: errorCode,
+          message: errorMessage,
+          technicalMessage: technicalError,
+          request: fullRequest,
+          fullError: fullResponse
+        });
+        setShowErrorModal(true);
+      } finally {
+        setIsLoadingAuth(false);
+      }
     }
   };
 
@@ -46,7 +119,14 @@ const OtpDataNascimentoScreen = () => {
   };
 
   // Check if enter button should be enabled
-  const isEnterEnabled = digits.length === 8;
+  const isEnterEnabled = digits.length === 8 && !isLoadingAuth;
+
+  // Retry function for error modal
+  const handleRetry = () => {
+    setShowErrorModal(false);
+    setErrorDetails(null);
+    handleEnter();
+  };
 
   return (
     <PdvLayout className="pb-16">
@@ -72,53 +152,125 @@ const OtpDataNascimentoScreen = () => {
             {/* Numeric keypad */}
             <div className="grid grid-cols-3 gap-4">
               {/* Row 1: 1, 2, 3 */}
-              <Button variant="outline" onClick={() => handleNumberClick("1")} className="h-14 text-xl shadow-sm">
+              <Button 
+                variant="outline" 
+                onClick={() => handleNumberClick("1")} 
+                className="h-14 text-xl shadow-sm"
+                disabled={isLoadingAuth}
+              >
                 1
               </Button>
-              <Button variant="outline" onClick={() => handleNumberClick("2")} className="h-14 text-xl shadow-sm">
+              <Button 
+                variant="outline" 
+                onClick={() => handleNumberClick("2")} 
+                className="h-14 text-xl shadow-sm"
+                disabled={isLoadingAuth}
+              >
                 2
               </Button>
-              <Button variant="outline" onClick={() => handleNumberClick("3")} className="h-14 text-xl shadow-sm">
+              <Button 
+                variant="outline" 
+                onClick={() => handleNumberClick("3")} 
+                className="h-14 text-xl shadow-sm"
+                disabled={isLoadingAuth}
+              >
                 3
               </Button>
               
               {/* Row 2: 4, 5, 6 */}
-              <Button variant="outline" onClick={() => handleNumberClick("4")} className="h-14 text-xl shadow-sm">
+              <Button 
+                variant="outline" 
+                onClick={() => handleNumberClick("4")} 
+                className="h-14 text-xl shadow-sm"
+                disabled={isLoadingAuth}
+              >
                 4
               </Button>
-              <Button variant="outline" onClick={() => handleNumberClick("5")} className="h-14 text-xl shadow-sm">
+              <Button 
+                variant="outline" 
+                onClick={() => handleNumberClick("5")} 
+                className="h-14 text-xl shadow-sm"
+                disabled={isLoadingAuth}
+              >
                 5
               </Button>
-              <Button variant="outline" onClick={() => handleNumberClick("6")} className="h-14 text-xl shadow-sm">
+              <Button 
+                variant="outline" 
+                onClick={() => handleNumberClick("6")} 
+                className="h-14 text-xl shadow-sm"
+                disabled={isLoadingAuth}
+              >
                 6
               </Button>
               
               {/* Row 3: 7, 8, 9 */}
-              <Button variant="outline" onClick={() => handleNumberClick("7")} className="h-14 text-xl shadow-sm">
+              <Button 
+                variant="outline" 
+                onClick={() => handleNumberClick("7")} 
+                className="h-14 text-xl shadow-sm"
+                disabled={isLoadingAuth}
+              >
                 7
               </Button>
-              <Button variant="outline" onClick={() => handleNumberClick("8")} className="h-14 text-xl shadow-sm">
+              <Button 
+                variant="outline" 
+                onClick={() => handleNumberClick("8")} 
+                className="h-14 text-xl shadow-sm"
+                disabled={isLoadingAuth}
+              >
                 8
               </Button>
-              <Button variant="outline" onClick={() => handleNumberClick("9")} className="h-14 text-xl shadow-sm">
+              <Button 
+                variant="outline" 
+                onClick={() => handleNumberClick("9")} 
+                className="h-14 text-xl shadow-sm"
+                disabled={isLoadingAuth}
+              >
                 9
               </Button>
               
               {/* Row 4: Backspace, 0, Enter */}
-              <Button variant="outline" onClick={handleBackspace} className="h-14 text-xl shadow-sm">
+              <Button 
+                variant="outline" 
+                onClick={handleBackspace} 
+                className="h-14 text-xl shadow-sm"
+                disabled={isLoadingAuth}
+              >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <Button variant="outline" onClick={() => handleNumberClick("0")} className="h-14 text-xl shadow-sm">
+              <Button 
+                variant="outline" 
+                onClick={() => handleNumberClick("0")} 
+                className="h-14 text-xl shadow-sm"
+                disabled={isLoadingAuth}
+              >
                 0
               </Button>
-              <Button variant={isEnterEnabled ? "dotz" : "outline"} onClick={handleEnter} disabled={!isEnterEnabled} className="h-14 text-sm font-bold shadow-sm">
-                ENTRA
+              <Button 
+                variant={isEnterEnabled ? "dotz" : "outline"} 
+                onClick={handleEnter} 
+                disabled={!isEnterEnabled || isLoadingAuth} 
+                className="h-14 text-sm font-bold shadow-sm"
+              >
+                {isLoadingAuth ? <Loader2 className="h-4 w-4 animate-spin" /> : "ENTRA"}
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
       
+      {/* Error Modal */}
+      <ErrorModal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        onRetry={handleRetry}
+        errorCode={errorDetails?.code}
+        errorMessage={errorDetails?.message}
+        fullRequest={errorDetails?.request}
+        fullResponse={errorDetails?.fullError}
+        apiType="RLIAUTH"
+      />
+
       {/* Technical Footer Component */}
       <TechnicalFooter
         slug="RLIDEALRLIAUTH"
