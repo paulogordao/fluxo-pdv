@@ -7,12 +7,15 @@ import PdvLayout from "@/components/PdvLayout";
 import TechnicalFooter from "@/components/TechnicalFooter";
 import { comandoService, RlifundApiError } from "@/services/comandoService";
 import ErrorModal from "@/components/ErrorModal";
+import ValidationModal from "@/components/ValidationModal";
 import { toast } from "sonner";
 
 const OtpDataNascimentoScreen = () => {
   const [digits, setDigits] = useState<string[]>([]);
   const [isLoadingAuth, setIsLoadingAuth] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showValidationModal, setShowValidationModal] = useState(false);
+  const [validationMessage, setValidationMessage] = useState("");
   const [errorDetails, setErrorDetails] = useState<any>(null);
   const navigate = useNavigate();
 
@@ -50,6 +53,15 @@ const OtpDataNascimentoScreen = () => {
         
         const response = await comandoService.enviarComandoRliauth(transactionId, numericToken);
         console.log('[OtpDataNascimentoScreen] RLIAUTH Response:', response);
+
+        // Check if validation failed (next_step is still RLIAUTH)
+        if (response?.[0]?.response?.data?.next_step?.[0]?.description === "RLIAUTH") {
+          console.log('[OtpDataNascimentoScreen] Validation failed - next_step is RLIAUTH');
+          const message = response[0].response.data.message?.content || "Token inválido, tentar novamente?";
+          setValidationMessage(message);
+          setShowValidationModal(true);
+          return;
+        }
 
         // Store response in localStorage for next screen
         localStorage.setItem('rliauthResponse', JSON.stringify(response));
@@ -126,6 +138,19 @@ const OtpDataNascimentoScreen = () => {
     setShowErrorModal(false);
     setErrorDetails(null);
     handleEnter();
+  };
+
+  // Validation modal handlers
+  const handleValidationTryAgain = () => {
+    setShowValidationModal(false);
+    setValidationMessage("");
+    setDigits([]); // Clear the digits for new input
+  };
+
+  const handleValidationCancel = () => {
+    setShowValidationModal(false);
+    setValidationMessage("");
+    navigate(-1); // Go back to previous screen
   };
 
   return (
@@ -269,6 +294,14 @@ const OtpDataNascimentoScreen = () => {
         fullRequest={errorDetails?.request}
         fullResponse={errorDetails?.fullError}
         apiType="RLIAUTH"
+      />
+
+      {/* Validation Modal */}
+      <ValidationModal
+        isOpen={showValidationModal}
+        onTryAgain={handleValidationTryAgain}
+        onCancel={handleValidationCancel}
+        message={validationMessage}
       />
 
       {/* Technical Footer Component */}
