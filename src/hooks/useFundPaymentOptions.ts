@@ -39,7 +39,8 @@ export const useFundPaymentOptions = () => {
         console.log('[useFundPaymentOptions] Parsed RLIFUND response:', rlifundResponse);
         
         // Verificar se tem payment_options (indicativo de modo ONLINE)
-        const fundPaymentOptions = rlifundResponse.payment_options;
+        // A estrutura real é: rlifundResponse[0]?.response?.data?.payment_options
+        const fundPaymentOptions = rlifundResponse[0]?.response?.data?.payment_options;
         if (!fundPaymentOptions || !Array.isArray(fundPaymentOptions)) {
           console.log('[useFundPaymentOptions] No payment_options found, using default options');
           setIsOnlineMode(false);
