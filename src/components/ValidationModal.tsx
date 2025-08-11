@@ -11,18 +11,22 @@ import {
 
 interface ValidationModalProps {
   isOpen: boolean;
-  onTryAgain: () => void;
+  onPrimaryAction: () => void;
   onCancel: () => void;
   message: string;
   title?: string;
+  primaryButtonText?: string;
+  cancelButtonText?: string;
 }
 
 const ValidationModal = ({ 
   isOpen, 
-  onTryAgain, 
+  onPrimaryAction, 
   onCancel, 
   message, 
-  title = "Validação do Token" 
+  title = "Validação do Token",
+  primaryButtonText = "Tentar Novamente",
+  cancelButtonText = "Cancelar"
 }: ValidationModalProps) => {
   return (
     <AlertDialog open={isOpen}>
@@ -35,10 +39,10 @@ const ValidationModal = ({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onCancel}>
-            Cancelar
+            {cancelButtonText}
           </AlertDialogCancel>
-          <AlertDialogAction onClick={onTryAgain}>
-            Tentar Novamente
+          <AlertDialogAction onClick={onPrimaryAction}>
+            {primaryButtonText}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

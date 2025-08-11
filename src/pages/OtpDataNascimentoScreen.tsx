@@ -16,6 +16,7 @@ const OtpDataNascimentoScreen = () => {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [validationMessage, setValidationMessage] = useState("");
+  const [validationNextStep, setValidationNextStep] = useState("");
   const [errorDetails, setErrorDetails] = useState<any>(null);
   const navigate = useNavigate();
 
@@ -54,11 +55,15 @@ const OtpDataNascimentoScreen = () => {
         const response = await comandoService.enviarComandoRliauth(transactionId, numericToken);
         console.log('[OtpDataNascimentoScreen] RLIAUTH Response:', response);
 
-        // Check if validation failed (next_step is still RLIAUTH)
-        if (response?.[0]?.response?.data?.next_step?.[0]?.description === "RLIAUTH") {
-          console.log('[OtpDataNascimentoScreen] Validation failed - next_step is RLIAUTH');
-          const message = response[0].response.data.message?.content || "Token inválido, tentar novamente?";
-          setValidationMessage(message);
+        // Check if there's a system message to show the user
+        const systemMessage = response?.[0]?.response?.data?.message?.content;
+        const nextStep = response?.[0]?.response?.data?.next_step?.[0]?.description;
+        
+        if (systemMessage) {
+          console.log('[OtpDataNascimentoScreen] System message found:', systemMessage);
+          console.log('[OtpDataNascimentoScreen] Next step:', nextStep);
+          setValidationMessage(systemMessage);
+          setValidationNextStep(nextStep || "");
           setShowValidationModal(true);
           return;
         }
@@ -141,15 +146,30 @@ const OtpDataNascimentoScreen = () => {
   };
 
   // Validation modal handlers
-  const handleValidationTryAgain = () => {
+  const handleValidationPrimaryAction = () => {
     setShowValidationModal(false);
     setValidationMessage("");
-    setDigits([]); // Clear the digits for new input
+    setValidationNextStep("");
+    
+    if (validationNextStep === "RLIAUTH") {
+      // Try again - clear digits for new input
+      setDigits([]);
+    } else {
+      // Continue to next step - navigate based on next_step
+      if (validationNextStep === "RLIPAYS") {
+        navigate("/meios_de_pagamento");
+      } else {
+        // Handle other next steps as needed
+        console.log('[OtpDataNascimentoScreen] Unknown next step:', validationNextStep);
+        navigate("/meios_de_pagamento"); // Default navigation
+      }
+    }
   };
 
   const handleValidationCancel = () => {
     setShowValidationModal(false);
     setValidationMessage("");
+    setValidationNextStep("");
     navigate(-1); // Go back to previous screen
   };
 
@@ -299,9 +319,11 @@ const OtpDataNascimentoScreen = () => {
       {/* Validation Modal */}
       <ValidationModal
         isOpen={showValidationModal}
-        onTryAgain={handleValidationTryAgain}
+        onPrimaryAction={handleValidationPrimaryAction}
         onCancel={handleValidationCancel}
         message={validationMessage}
+        primaryButtonText={validationNextStep === "RLIAUTH" ? "Tentar Novamente" : "Continuar"}
+        cancelButtonText="Cancelar"
       />
 
       {/* Technical Footer Component */}
