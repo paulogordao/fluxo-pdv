@@ -8,6 +8,7 @@ import TechnicalFooter from "@/components/TechnicalFooter";
 import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
 import { usePaymentOption } from "@/context/PaymentOptionContext";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
+import { useUserSession } from "@/hooks/useUserSession";
 import { 
   CreditCard,
   CreditCard as DebitCard,
@@ -22,13 +23,20 @@ const ConfirmacaoPagamentoScreen = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedPaymentOption } = usePaymentOption();
+  const { tipo_simulacao, isLoading: sessionLoading } = useUserSession();
   
   // Check if coming from token screen or otp screen
   const comingFromTokenScreen = location.state?.fromTokenScreen || false;
   const comingFromOtpScreen = location.state?.fromOtpScreen || false;
   
-  // Payment amounts based on selected option
+  // Payment amounts and display values
   const [paymentAmount, setPaymentAmount] = useState({ encargos: "68,93", recebido: "68,93" });
+  const [displayValues, setDisplayValues] = useState({
+    subtotal: "68,93",
+    desconto: "0,00",
+    recebido: "68,93",
+    showEncargos: true
+  });
   
   // Technical documentation states
   const [apiData, setApiData] = useState<{
@@ -37,49 +45,139 @@ const ConfirmacaoPagamentoScreen = () => {
   }>({});
   const [isLoading, setIsLoading] = useState(true);
   const [documentationSlug, setDocumentationSlug] = useState("RLIWAITRLIPAYS");
+  const [rliauthData, setRliauthData] = useState<any>(null);
 
-  // Set payment amount based on selected option and navigation source
+  // Load RLIAUTH data from localStorage for dynamic content
   useEffect(() => {
+    const loadRliauthData = () => {
+      try {
+        const stored = localStorage.getItem('rliauthResponse');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          console.log('[ConfirmacaoPagamento] RLIAUTH data loaded:', parsed);
+          setRliauthData(parsed);
+        }
+      } catch (error) {
+        console.error('[ConfirmacaoPagamento] Error loading RLIAUTH data:', error);
+      }
+    };
+
+    loadRliauthData();
+  }, []);
+
+  // Set payment amount and display values based on company type and data source
+  useEffect(() => {
+    if (sessionLoading) return;
+
+    const isOfflineCompany = tipo_simulacao === "OFFLINE";
+    console.log('[ConfirmacaoPagamento] Company type check:', { tipo_simulacao, isOfflineCompany });
+
+    if (!isOfflineCompany && rliauthData?.length > 0 && (comingFromTokenScreen || comingFromOtpScreen)) {
+      // Use dynamic data from RLIAUTH for non-OFFLINE companies
+      const orderData = rliauthData[0]?.response?.data?.order;
+      if (orderData) {
+        const subtotal = orderData.value?.toFixed(2).replace('.', ',') || "0,00";
+        const desconto = orderData.discount?.toFixed(2).replace('.', ',') || "0,00";
+        const recebido = orderData.paid_out?.toFixed(2).replace('.', ',') || "0,00";
+        const remainingValue = (orderData.value - orderData.paid_out).toFixed(2).replace('.', ',');
+
+        setDisplayValues({
+          subtotal,
+          desconto,
+          recebido,
+          showEncargos: false
+        });
+        
+        setPaymentAmount({ encargos: remainingValue, recebido });
+        setDocumentationSlug("RLIAUTHRLIPAYS");
+        
+        console.log('[ConfirmacaoPagamento] Using dynamic RLIAUTH data:', {
+          subtotal, desconto, recebido, remainingValue
+        });
+        return;
+      }
+    }
+
+    // Fallback to static values (for OFFLINE companies or when no RLIAUTH data)
     if (comingFromTokenScreen || comingFromOtpScreen) {
-      // Special values when coming from token screen or OTP data nascimento screen
       setPaymentAmount({ encargos: "30,00", recebido: "30,00" });
+      setDisplayValues({
+        subtotal: "68,93",
+        desconto: "0,00", 
+        recebido: "30,00",
+        showEncargos: true
+      });
       setDocumentationSlug("RLIAUTHRLIPAYS");
-      console.log("Origem: tela especial. Usando valores R$ 30,00 e documentação específica RLIAUTHRLIPAYS.");
+      console.log('[ConfirmacaoPagamento] Using static values for token/OTP flow');
     } else if (selectedPaymentOption === "livelo") {
       setPaymentAmount({ encargos: "60,00", recebido: "60,00" });
-      console.log("Opção selecionada: 2 – Aplicando valores na confirmação.");
+      setDisplayValues({
+        subtotal: "68,93",
+        desconto: "0,00",
+        recebido: "60,00", 
+        showEncargos: true
+      });
+      console.log('[ConfirmacaoPagamento] Livelo option selected');
     } else if (selectedPaymentOption === "dotz") {
       setPaymentAmount({ encargos: "3,00", recebido: "3,00" });
-      console.log("Opção selecionada: 3 – Aplicando valores na confirmação.");
-      // Set the documentation slug for option 3 if not from token screen
+      setDisplayValues({
+        subtotal: "68,93",
+        desconto: "0,00",
+        recebido: "3,00",
+        showEncargos: true
+      });
       if (!comingFromTokenScreen && !comingFromOtpScreen) {
         setDocumentationSlug("RLIDEALRLIPAYS");
       }
+      console.log('[ConfirmacaoPagamento] Dotz option selected');
     } else {
       setPaymentAmount({ encargos: "68,93", recebido: "68,93" });
-      console.log("Opção selecionada: 1 – Aplicando valores na confirmação.");
+      setDisplayValues({
+        subtotal: "68,93",
+        desconto: "0,00",
+        recebido: "68,93",
+        showEncargos: true
+      });
+      console.log('[ConfirmacaoPagamento] Default option selected');
     }
-  }, [selectedPaymentOption, comingFromTokenScreen, comingFromOtpScreen]);
+  }, [selectedPaymentOption, comingFromTokenScreen, comingFromOtpScreen, tipo_simulacao, sessionLoading, rliauthData]);
 
-  // Fetch API data for technical documentation using the service
+  // Prepare technical documentation data
   useEffect(() => {
-    const fetchApiData = async () => {
+    const prepareApiData = async () => {
       try {
-        console.log(`Carregando documentação técnica para ${documentationSlug}`);
-        
+        // For non-OFFLINE companies with RLIAUTH data, use that instead of API call
+        if (tipo_simulacao !== "OFFLINE" && rliauthData?.length > 0 && (comingFromTokenScreen || comingFromOtpScreen)) {
+          const requestData = JSON.stringify(rliauthData[0]?.request || null, null, 2);
+          const responseData = JSON.stringify(rliauthData[0]?.response || null, null, 2);
+          
+          setApiData({
+            request_servico: requestData,
+            response_servico_anterior: responseData
+          });
+          
+          console.log('[ConfirmacaoPagamento] Using RLIAUTH data for technical docs');
+          setIsLoading(false);
+          return;
+        }
+
+        // Fallback to API call for other cases
+        console.log(`[ConfirmacaoPagamento] Loading technical docs for ${documentationSlug}`);
         const data = await consultaFluxoService.consultarFluxoDetalhe(documentationSlug);
         setApiData(data);
-        console.log("API data:", data);
+        console.log('[ConfirmacaoPagamento] API data loaded:', data);
       } catch (error) {
-        console.error("Error fetching API data:", error);
+        console.error('[ConfirmacaoPagamento] Error fetching API data:', error);
         toast.error("Erro ao carregar detalhes técnicos");
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchApiData();
-  }, [documentationSlug]);
+    if (!sessionLoading) {
+      prepareApiData();
+    }
+  }, [documentationSlug, tipo_simulacao, sessionLoading, rliauthData, comingFromTokenScreen, comingFromOtpScreen]);
 
   const handleRestartFlow = () => {
     navigate('/welcome');
@@ -102,28 +200,30 @@ const ConfirmacaoPagamentoScreen = () => {
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600">SubTotal (R$):</span>
-                  <span>68,93</span>
+                  <span>{displayValues.subtotal}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Desconto (R$):</span>
-                  <span>0,00</span>
+                  <span>{displayValues.desconto}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Encargos (R$):</span>
-                  <span className="text-red-600 font-medium">{paymentAmount.encargos}</span>
-                </div>
+                {displayValues.showEncargos && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Encargos (R$):</span>
+                    <span className="text-red-600 font-medium">{paymentAmount.encargos}</span>
+                  </div>
+                )}
               </div>
               
               {/* Total */}
               <div className="bg-gray-200 p-3 mt-4 flex justify-between">
                 <span className="font-medium">Recebido (R$):</span>
-                <span className="font-medium">{paymentAmount.recebido}</span>
+                <span className="font-medium">{displayValues.recebido}</span>
               </div>
             </div>
             
             {/* Footer */}
             <div className="bg-red-600 text-white p-3 text-center">
-              <p>Sem troco</p>
+              <p>Sem troco {!displayValues.showEncargos ? `- R$ ${paymentAmount.encargos}` : ''}</p>
             </div>
           </div>
 
@@ -200,8 +300,11 @@ const ConfirmacaoPagamentoScreen = () => {
       {/* Technical Footer Component */}
       <TechnicalFooter
         slug={documentationSlug}
-        loadOnMount={true}
+        loadOnMount={false}
         sourceScreen="confirmacao_pagamento"
+        requestData={apiData.request_servico}
+        responseData={apiData.response_servico_anterior}
+        isLoading={isLoading}
       />
     </div>
   );
