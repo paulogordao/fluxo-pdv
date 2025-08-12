@@ -304,12 +304,14 @@ const ScanScreen = () => {
         });
         setShowErrorModal(true);
       } else {
-        // Toast para outros tipos de erro
-        toast({
-          title: "Erro no pagamento",
-          description: error instanceof Error ? error.message : "Erro desconhecido",
-          variant: "destructive",
+        // Use ErrorModal for other types of errors (including timeout)
+        setErrorDetails({
+          code: 'ERRO_GENERICO',
+          message: error instanceof Error ? error.message : "Erro desconhecido",
+          fullRequest: null,
+          fullResponse: null
         });
+        setShowErrorModal(true);
       }
     } finally {
       setIsProcessingPayment(false);

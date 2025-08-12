@@ -195,7 +195,7 @@ const ConfirmacaoPagamentoScreen = () => {
     console.log('[ConfirmacaoPagamento] Iniciando finalização de pagamento...');
     
     // Get transaction ID from localStorage
-    const transactionId = localStorage.getItem('transaction_id');
+    const transactionId = localStorage.getItem('transactionId');
     if (!transactionId) {
       console.error('[ConfirmacaoPagamento] Transaction ID não encontrado no localStorage');
       toast.error("ID da transação não encontrado");
@@ -293,6 +293,23 @@ const ConfirmacaoPagamentoScreen = () => {
                   <span className="text-gray-600">Desconto (R$):</span>
                   <span>{displayValues.desconto}</span>
                 </div>
+                {/* Show "Valor Restante" for non-OFFLINE companies when there's remaining amount */}
+                {tipo_simulacao !== "OFFLINE" && (
+                  (() => {
+                    const subtotalValue = parseFloat(displayValues.subtotal.replace('R$ ', '').replace('.', '').replace(',', '.'));
+                    const recebidoValue = parseFloat(displayValues.recebido.replace('R$ ', '').replace('.', '').replace(',', '.'));
+                    const valorRestante = subtotalValue - recebidoValue;
+                    
+                    return valorRestante > 0 ? (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Valor Restante (R$):</span>
+                        <span className="text-orange-600 font-medium">
+                          R$ {valorRestante.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    ) : null;
+                  })()
+                )}
                 {displayValues.showEncargos && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Encargos (R$):</span>
