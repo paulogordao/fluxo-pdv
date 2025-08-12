@@ -54,6 +54,8 @@ const ConfirmacaoPagamentoScreen = () => {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorDetails, setErrorDetails] = useState<any>(null);
   const [rlipaysResponse, setRlipaysResponse] = useState<any>(null);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [countdown, setCountdown] = useState(5);
 
   // Load RLIAUTH data from localStorage for dynamic content
   useEffect(() => {
@@ -187,6 +189,32 @@ const ConfirmacaoPagamentoScreen = () => {
     }
   }, [documentationSlug, tipo_simulacao, sessionLoading, rliauthData, comingFromTokenScreen, comingFromOtpScreen]);
 
+  // Calculate remaining amount for non-OFFLINE companies
+  const calculateRemainingAmount = (): number => {
+    if (tipo_simulacao === "OFFLINE") return 0;
+    
+    const subtotalValue = parseFloat(displayValues.subtotal.replace('R$ ', '').replace('.', '').replace(',', '.'));
+    const recebidoValue = parseFloat(displayValues.recebido.replace('R$ ', '').replace('.', '').replace(',', '.'));
+    return subtotalValue - recebidoValue;
+  };
+
+  // Success countdown effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (showSuccessMessage && countdown > 0) {
+      interval = setInterval(() => {
+        setCountdown(prev => prev - 1);
+      }, 1000);
+    } else if (showSuccessMessage && countdown === 0) {
+      navigate('/');
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [showSuccessMessage, countdown, navigate]);
+
   const handleRestartFlow = () => {
     navigate('/welcome');
   };
@@ -206,7 +234,12 @@ const ConfirmacaoPagamentoScreen = () => {
     setIsLoadingPayment(true);
 
     try {
-      const response = await comandoService.enviarComandoRlipays(transactionId);
+      // Calculate remaining amount to send
+      const remainingAmount = calculateRemainingAmount();
+      console.log('[ConfirmacaoPagamento] Sending amount:', remainingAmount);
+      
+      // Call RLIPAYS service with amount
+      const response = await comandoService.enviarComandoRlipays(transactionId, remainingAmount > 0 ? remainingAmount : undefined);
       console.log('[ConfirmacaoPagamento] RLIPAYS response:', response);
       
       // Save response for technical footer
@@ -218,7 +251,9 @@ const ConfirmacaoPagamentoScreen = () => {
         response_servico_anterior: JSON.stringify(response[0]?.response || null, null, 2)
       });
       
-      toast.success("Pagamento finalizado com sucesso!");
+      // Show success message with countdown
+      setShowSuccessMessage(true);
+      setCountdown(5);
       
       // You can navigate to a success page or handle next steps based on response
       // const nextStep = response[0]?.response?.data?.next_step;
@@ -272,6 +307,24 @@ const ConfirmacaoPagamentoScreen = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 pb-16">
+      {/* Success Message Overlay */}
+      {showSuccessMessage && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 text-center max-w-md mx-4">
+            <div className="text-green-500 text-6xl mb-4">✓</div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Pagamento realizado com sucesso!
+            </h2>
+            <p className="text-gray-600 mb-6">
+              A transação foi processada.
+            </p>
+            <div className="text-lg font-semibold text-primary">
+              Redirecionando em {countdown} segundos...
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full max-w-6xl mx-auto">
         {/* PDV Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -330,7 +383,7 @@ const ConfirmacaoPagamentoScreen = () => {
               {tipo_simulacao !== "OFFLINE" && !sessionLoading ? (
                 <Button
                   onClick={handleFinalizarPagamento}
-                  disabled={isLoadingPayment}
+                  disabled={isLoadingPayment || showSuccessMessage}
                   className="bg-white text-red-600 hover:bg-gray-100 font-medium px-6 py-2 rounded"
                 >
                   {isLoadingPayment ? "Finalizando..." : "Finalizar pagamento"}

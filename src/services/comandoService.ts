@@ -27,6 +27,7 @@ export interface ComandoRliauthRequest {
 export interface ComandoRlipaysRequest {
   comando: string;
   id_transaction: string;
+  amount?: number;
 }
 
 export interface RlifundItem {
@@ -671,10 +672,11 @@ export const comandoService = {
   },
 
   // RLIPAYS command method
-  async enviarComandoRlipays(transactionId: string): Promise<ComandoResponse> {
+  async enviarComandoRlipays(transactionId: string, amount?: number): Promise<ComandoResponse> {
     const requestBody: ComandoRlipaysRequest = {
       comando: 'RLIPAYS',
-      id_transaction: transactionId
+      id_transaction: transactionId,
+      ...(amount !== undefined && { amount })
     };
 
     console.log(`[comandoService] Enviando comando RLIPAYS:`, requestBody);
