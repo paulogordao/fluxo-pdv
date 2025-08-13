@@ -11,7 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, Loader2, Clock, AlertCircle } from "lucide-react";
+import { AlertTriangle, Loader2, Clock, AlertCircle, Shuffle } from "lucide-react";
 import TechnicalFooter from "@/components/TechnicalFooter";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
 import { comandoService } from "@/services/comandoService";
@@ -39,6 +39,39 @@ const CpfScreen = () => {
   const handleCpfSelect = (selectedCpf: string) => {
     setCpf(selectedCpf);
     toast.success(`CPF ${formatCPF(selectedCpf)} selecionado!`);
+  };
+
+  const generateValidCPF = (): string => {
+    // Generate 9 random digits
+    const digits = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10));
+    
+    // Calculate first verification digit
+    let sum = 0;
+    for (let i = 0; i < 9; i++) {
+      sum += digits[i] * (10 - i);
+    }
+    let firstDigit = (sum * 10) % 11;
+    if (firstDigit === 10) firstDigit = 0;
+    
+    // Calculate second verification digit
+    sum = 0;
+    for (let i = 0; i < 9; i++) {
+      sum += digits[i] * (11 - i);
+    }
+    sum += firstDigit * 2;
+    let secondDigit = (sum * 10) % 11;
+    if (secondDigit === 10) secondDigit = 0;
+    
+    // Return complete CPF as string
+    return [...digits, firstDigit, secondDigit].join('');
+  };
+
+  const handleGenerateCPF = () => {
+    if (isLoading) return;
+    
+    const validCPF = generateValidCPF();
+    setCpf(validCPF);
+    toast.success(`CPF válido gerado: ${formatCPF(validCPF)}`);
   };
 
   const handleSubmit = async () => {
@@ -374,12 +407,24 @@ const CpfScreen = () => {
                 </Alert>
               )}
               
-              <Input
-                className="text-center text-xl h-14 mb-6"
-                value={formatCPF(cpf)}
-                readOnly
-                placeholder="Digite seu CPF"
-              />
+              <div className="relative mb-6">
+                <Input
+                  className="text-center text-xl h-14 pr-14"
+                  value={formatCPF(cpf)}
+                  readOnly
+                  placeholder="Digite seu CPF"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-10 w-10 hover:bg-gray-100"
+                  onClick={handleGenerateCPF}
+                  disabled={isLoading}
+                  title="Gerar CPF válido"
+                >
+                  <Shuffle className="h-4 w-4" />
+                </Button>
+              </div>
               <NumPad />
             </div>
           </Card>
