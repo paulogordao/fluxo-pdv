@@ -195,7 +195,12 @@ const ConfirmacaoPagamentoScreen = () => {
     
     const subtotalValue = parseFloat(displayValues.subtotal.replace('R$ ', '').replace('.', '').replace(',', '.'));
     const recebidoValue = parseFloat(displayValues.recebido.replace('R$ ', '').replace('.', '').replace(',', '.'));
-    return subtotalValue - recebidoValue;
+    
+    // Apply toFixed(2) to avoid floating point precision errors
+    const result = parseFloat((subtotalValue - recebidoValue).toFixed(2));
+    console.log('[ConfirmacaoPagamento] Calculated amount - subtotal:', subtotalValue, 'recebido:', recebidoValue, 'result:', result);
+    
+    return result;
   };
 
   // Success countdown effect
