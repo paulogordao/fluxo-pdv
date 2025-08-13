@@ -182,12 +182,27 @@ const ScanScreen = () => {
           return;
         }
         
+        // Function to calculate minimum gross profit when the value is 0 or invalid
+        const calculateMinimumGrossProfit = (unitPrice: number): number => {
+          const minimumMargin = Math.max(unitPrice * 0.1, 0.01); // 10% margin or minimum 0.01
+          return parseFloat(minimumMargin.toFixed(2));
+        };
+
         // Map cart items to RLIFUND format
         const rlifundItems: RlifundItem[] = cart.map(product => {
           // Check if product has complete data from fake products API
           const fakeProduct = fakeProducts.find(fp => fp.ean === product.barcode);
           
           if (fakeProduct) {
+            // Ensure gross_profit_amount is never 0
+            const grossProfitAmount = fakeProduct.gross_profit_amount <= 0 
+              ? calculateMinimumGrossProfit(fakeProduct.unit_price)
+              : fakeProduct.gross_profit_amount;
+              
+            if (fakeProduct.gross_profit_amount <= 0) {
+              console.log(`[ScanScreen] Corrected gross_profit_amount for ${fakeProduct.name}: ${fakeProduct.gross_profit_amount} -> ${grossProfitAmount}`);
+            }
+            
             // Use complete data from API
             return {
               ean: fakeProduct.ean,
@@ -200,12 +215,14 @@ const ScanScreen = () => {
               brand: fakeProduct.brand || "Unknown",
               manufacturer: fakeProduct.manufacturer || "Unknown",
               categories: fakeProduct.categories,
-              gross_profit_amount: fakeProduct.gross_profit_amount,
+              gross_profit_amount: grossProfitAmount,
               is_private_label: fakeProduct.is_private_label,
               is_on_sale: fakeProduct.is_on_sale
             };
           } else {
             // Use mock data with defaults for missing fields
+            const mockGrossProfit = calculateMinimumGrossProfit(product.price);
+            
             return {
               ean: product.barcode,
               sku: product.id,
@@ -217,7 +234,7 @@ const ScanScreen = () => {
               brand: "Mock",
               manufacturer: "Test",
               categories: ["general"],
-              gross_profit_amount: product.price * 0.1,
+              gross_profit_amount: mockGrossProfit,
               is_private_label: false,
               is_on_sale: false
             };
