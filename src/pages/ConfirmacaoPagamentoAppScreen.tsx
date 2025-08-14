@@ -272,28 +272,57 @@ const ConfirmacaoPagamentoAppScreen = () => {
   };
 
   // Handle payment option selection in token modal
-  const handlePaymentOptionSelect = (option: string) => {
+  const handlePaymentOptionSelect = async (option: string) => {
     console.log(`[Token] Opção selecionada: ${option}`);
-    setTokenModalOpen(false);
     
-    // Navigate based on payment option type
-    switch (option) {
-      case 'dotz':
-        console.log('[Token] Navegando para confirmacao_pagamento_token (Dotz)');
-        navigate("/confirmacao_pagamento_token");
-        break;
-      case 'app':
-        console.log('[Token] Navegando para confirmacao_pagamento_token (App)');
-        navigate("/confirmacao_pagamento_token");
-        break;
-      case 'outros_pagamentos':
-        console.log('[Token] Navegando para otp_data_nascimento (Outros Pagamentos)');
-        navigate("/otp_data_nascimento");
-        break;
-      default:
-        console.log('[Token] Opção não reconhecida, navegando para confirmacao_pagamento_token');
-        navigate("/confirmacao_pagamento_token");
-        break;
+    // Get transaction ID from localStorage
+    const transactionId = localStorage.getItem('currentTransactionId');
+    if (!transactionId) {
+      console.error('[Token] TransactionId não encontrado no localStorage');
+      toast.error("Erro: ID da transação não encontrado");
+      return;
+    }
+
+    try {
+      setIsTokenLoading(true);
+      console.log(`[Token] Chamando RLIDEAL com payment_option: ${option}, transactionId: ${transactionId}`);
+      
+      // Call RLIDEAL service with selected payment option
+      const rlidealResponse = await comandoService.enviarComandoRlideal(transactionId, option);
+      
+      console.log('[Token] Resposta RLIDEAL recebida:', rlidealResponse);
+      
+      // Store RLIDEAL response in localStorage
+      localStorage.setItem('rlidealResponse', JSON.stringify(rlidealResponse));
+      
+      setTokenModalOpen(false);
+      toast.success("Opção de pagamento processada com sucesso!");
+      
+      // Navigate based on payment option type
+      switch (option) {
+        case 'dotz':
+          console.log('[Token] Navegando para confirmacao_pagamento_token (Dotz)');
+          navigate("/confirmacao_pagamento_token");
+          break;
+        case 'app':
+          console.log('[Token] Navegando para confirmacao_pagamento_token (App)');
+          navigate("/confirmacao_pagamento_token");
+          break;
+        case 'outros_pagamentos':
+          console.log('[Token] Navegando para otp_data_nascimento (Outros Pagamentos)');
+          navigate("/otp_data_nascimento");
+          break;
+        default:
+          console.log('[Token] Opção não reconhecida, navegando para confirmacao_pagamento_token');
+          navigate("/confirmacao_pagamento_token");
+          break;
+      }
+      
+    } catch (error) {
+      console.error('[Token] Erro ao processar opção de pagamento:', error);
+      toast.error("Erro ao processar opção de pagamento. Tente novamente.");
+    } finally {
+      setIsTokenLoading(false);
     }
   };
   
