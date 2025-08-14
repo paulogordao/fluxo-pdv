@@ -163,9 +163,11 @@ const ConfirmacaoPagamentoAppScreen = () => {
           </div>
           <div className="p-6 text-center">
             <p className="text-lg mb-6">Aguardando pagamento no APP Cliente A.</p>
-            <div className="flex justify-center my-6">
-              <Loader2 className="h-10 w-10 animate-spin text-dotz-laranja" />
-            </div>
+            {!isOnlineFlow && (
+              <div className="flex justify-center my-6">
+                <Loader2 className="h-10 w-10 animate-spin text-dotz-laranja" />
+              </div>
+            )}
             <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
               {/* Token Payment Button - Conditionally rendered */}
               {tokenButtonLoading ? (
