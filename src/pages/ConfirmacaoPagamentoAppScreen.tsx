@@ -276,7 +276,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
     console.log(`[Token] Opção selecionada: ${option}`);
     
     // Get transaction ID from localStorage
-    const transactionId = localStorage.getItem('currentTransactionId');
+    const transactionId = localStorage.getItem('transactionId');
     if (!transactionId) {
       console.error('[Token] TransactionId não encontrado no localStorage');
       toast.error("Erro: ID da transação não encontrado");
