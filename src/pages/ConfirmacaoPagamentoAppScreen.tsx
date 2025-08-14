@@ -163,10 +163,27 @@ const ConfirmacaoPagamentoAppScreen = () => {
         return;
       }
       
-      // Extrair informações necessárias da resposta original
+      // Extrair informações necessárias da estrutura RLIFUND correta
+      const originalRequest = originalRlifundData[0]?.request?.data?.input?.order;
       const originalResponse = originalRlifundData[0]?.response?.data;
-      if (!originalResponse || !originalResponse.value_total || !originalResponse.items) {
-        console.error('[Token] Dados RLIFUND inválidos - faltam value_total ou items:', originalResponse);
+      
+      if (!originalRequest || !originalResponse) {
+        console.error('[Token] Estrutura RLIFUND inválida - request.data.input.order ou response.data não encontrados');
+        console.log('[Token] originalRequest:', originalRequest);
+        console.log('[Token] originalResponse:', originalResponse);
+        toast.error("Estrutura de dados inválida. Retorne para o início.");
+        navigate('/meios_de_pagamento');
+        return;
+      }
+      
+      // Extrair value_total e items da estrutura correta
+      const valueTotal = originalRequest.value;
+      const items = originalRequest.items;
+      
+      if (!valueTotal || !items || !Array.isArray(items)) {
+        console.error('[Token] Dados da compra inválidos - order.value ou order.items não encontrados');
+        console.log('[Token] valueTotal:', valueTotal);
+        console.log('[Token] items:', items);
         toast.error("Dados da compra inválidos. Retorne para o início.");
         navigate('/meios_de_pagamento');
         return;
@@ -181,20 +198,20 @@ const ConfirmacaoPagamentoAppScreen = () => {
       const rlifundPayload = {
         transactionId: newTransactionId,
         paymentOptionType: "otp",
-        valueTotal: originalResponse.value_total,
-        items: originalResponse.items
+        valueTotal: valueTotal,
+        items: items
       };
       
       console.log('[Token] Preparando chamada RLIFUND com OTP:', rlifundPayload);
-      console.log('[Token] Value total original:', originalResponse.value_total);
-      console.log('[Token] Items originais (quantidade):', originalResponse.items?.length);
+      console.log('[Token] Value total original:', valueTotal);
+      console.log('[Token] Items originais (quantidade):', items?.length);
       
       // Chamar RLIFUND com payment_option_type: "otp"
       const rlifundResponse = await comandoService.enviarComandoRlifund(
         newTransactionId,
         "otp",
-        originalResponse.value_total,
-        originalResponse.items
+        valueTotal,
+        items
       );
       
       console.log('[Token] Resposta RLIFUND com OTP recebida:', rlifundResponse);
