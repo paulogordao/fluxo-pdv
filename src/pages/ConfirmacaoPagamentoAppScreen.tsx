@@ -95,21 +95,22 @@ const ConfirmacaoPagamentoAppScreen = () => {
     }
   }, [isOnlineFlow, transactionId]);
 
-  // Handle polling completion
-  useEffect(() => {
-    if (pollingStatus.status === 'completed' && pollingStatus.nextStepData) {
-      const nextStepDescription = pollingStatus.nextStepData.description;
-      console.log('[ConfirmacaoPagamentoAppScreen] Polling completed, navigating based on next_step:', nextStepDescription);
+  // Handle finalizar pagamento button click
+  const handleFinalizarPagamento = () => {
+    if (pollingStatus.orderData) {
+      // Store complete payment data for RLIPAYS
+      localStorage.setItem('orderData', JSON.stringify({
+        order: pollingStatus.orderData.order,
+        payments: pollingStatus.orderData.payments,
+        transaction_id: pollingStatus.orderData.transaction_id,
+        customer_info_id: pollingStatus.orderData.customer_info_id,
+        next_step: pollingStatus.nextStepData
+      }));
       
-      // Navigate based on next_step.description
-      if (nextStepDescription === 'RLIPAGO' || nextStepDescription === 'PAYMENT_COMPLETED') {
-        navigate('/confirmacao_pagamento');
-      } else {
-        // Handle other next_step cases if needed
-        console.log('[ConfirmacaoPagamentoAppScreen] Unknown next_step, staying on current page');
-      }
+      console.log('[ConfirmacaoPagamentoAppScreen] Order data stored, navigating to confirmacao_pagamento');
+      navigate('/confirmacao_pagamento');
     }
-  }, [pollingStatus.status, pollingStatus.nextStepData, navigate]);
+  };
 
   const handlePaymentConfirmation = () => {
     navigate("/confirmacao_pagamento");
@@ -169,38 +170,53 @@ const ConfirmacaoPagamentoAppScreen = () => {
               </div>
             )}
             <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
-              {/* Token Payment Button - Conditionally rendered */}
-              {tokenButtonLoading ? (
-                <div className="h-10 w-36 flex items-center justify-center">
-                  <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
-                </div>
+              {/* Show different buttons based on polling status */}
+              {pollingStatus.status === 'completed' ? (
+                /* Payment completed - show only finalizar pagamento button */
+                <Button 
+                  variant="dotz"
+                  className="bg-green-600 hover:bg-green-700"
+                  onClick={handleFinalizarPagamento}
+                >
+                  Finalizar Pagamento
+                </Button>
               ) : (
-                showTokenPaymentButton && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button 
-                          variant="token"
-                          className="bg-gray-800 hover:bg-gray-700"
-                          onClick={handleTokenPaymentClick}
-                        >
-                          Pagar com Token
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Este meio de pagamento requer autenticação por token.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )
+                /* Normal state - show token and cancel buttons */
+                <>
+                  {/* Token Payment Button - Conditionally rendered */}
+                  {tokenButtonLoading ? (
+                    <div className="h-10 w-36 flex items-center justify-center">
+                      <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
+                    </div>
+                  ) : (
+                    showTokenPaymentButton && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="token"
+                              className="bg-gray-800 hover:bg-gray-700"
+                              onClick={handleTokenPaymentClick}
+                            >
+                              Pagar com Token
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Este meio de pagamento requer autenticação por token.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )
+                  )}
+                  <Button 
+                    variant="outline" 
+                    className="bg-gray-300 hover:bg-gray-400 text-gray-900"
+                    onClick={handleCancel}
+                  >
+                    Cancelar
+                  </Button>
+                </>
               )}
-              <Button 
-                variant="outline" 
-                className="bg-gray-300 hover:bg-gray-400 text-gray-900"
-                onClick={handleCancel}
-              >
-                Cancelar
-              </Button>
             </div>
           </div>
         </div>

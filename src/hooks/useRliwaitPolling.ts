@@ -8,6 +8,7 @@ export interface PollingStatus {
   lastAttemptTime: Date | null;
   status: 'waiting' | 'polling' | 'completed' | 'cancelled' | 'error';
   nextStepData: any | null;
+  orderData: any | null;
   error: string | null;
 }
 
@@ -18,6 +19,7 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
     lastAttemptTime: null,
     status: 'waiting',
     nextStepData: null,
+    orderData: null,
     error: null
   });
 
@@ -44,13 +46,16 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
       if (!isMountedRef.current) return false;
 
       const nextStep = response[0]?.response?.data?.next_step?.[0];
+      const responseData = response[0]?.response?.data;
       console.log(`[useRliwaitPolling] Next step recebido:`, nextStep);
+      console.log(`[useRliwaitPolling] Complete response data:`, responseData);
 
       setPollingStatus(prev => ({
         ...prev,
         attempts: prev.attempts + 1,
         lastAttemptTime: new Date(),
         nextStepData: nextStep,
+        orderData: responseData,
         error: null
       }));
 
