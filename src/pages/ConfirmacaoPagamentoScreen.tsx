@@ -255,7 +255,8 @@ const ConfirmacaoPagamentoScreen = () => {
         setCountdown(prev => prev - 1);
       }, 1000);
     } else if (showSuccessMessage && countdown === 0) {
-      navigate('/');
+      console.log('[ConfirmacaoPagamento] Redirecting to /index after successful payment');
+      navigate('/index');
     }
     
     return () => {
