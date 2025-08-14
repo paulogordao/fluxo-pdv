@@ -348,9 +348,10 @@ const ConfirmacaoPagamentoScreen = () => {
       // Calculate remaining amount to send
       const remainingAmount = calculateRemainingAmount();
       console.log('[ConfirmacaoPagamento] Sending amount:', remainingAmount);
+      console.log('[ConfirmacaoPagamento] Flow type:', comingFromAppScreen ? 'RLIWAIT->RLIPAYS' : 'FUND->RLIPAYS');
       
-      // Call RLIPAYS service with amount
-      const response = await comandoService.enviarComandoRlipays(transactionId, remainingAmount > 0 ? remainingAmount : undefined);
+      // Call RLIPAYS service with amount (always pass amount, even if 0)
+      const response = await comandoService.enviarComandoRlipays(transactionId, remainingAmount);
       console.log('[ConfirmacaoPagamento] RLIPAYS response:', response);
       
       // Save response for technical footer
