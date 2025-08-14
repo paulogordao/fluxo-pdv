@@ -52,6 +52,9 @@ const ConfirmacaoPagamentoAppScreen = () => {
   // Token loading state
   const [isTokenLoading, setIsTokenLoading] = useState(false);
   
+  // Dynamic token amount state
+  const [tokenAmount, setTokenAmount] = useState<string>("R$ 30,00");
+  
   // Get client name from localStorage (fallback to empty string if not available)
   const clientName = localStorage.getItem('nomeCliente') || '';
   
@@ -134,22 +137,10 @@ const ConfirmacaoPagamentoAppScreen = () => {
   };
   
   // Handler for when alert OK button is clicked
-  const handleAlertConfirm = () => {
-    setAlertDialogOpen(false);
-    setTokenModalOpen(true);
-  };
-  
-  const handleNoneOption = () => {
-    console.log("Usuário retornou para meios de pagamento a partir do modal de token.");
-    setTokenModalOpen(false);
-    navigate("/meios_de_pagamento");
-  };
-
-  // Handle option 1 in token payment modal - Refazer checkout with OTP
-  const handleTokenAmountOption = async () => {
+  const handleAlertConfirm = async () => {
     console.log("[Token] Iniciando refazer checkout com payment_option_type: otp");
     setIsTokenLoading(true);
-    setTokenModalOpen(false);
+    setAlertDialogOpen(false);
     
     try {
       // Recuperar dados da compra original do localStorage
@@ -189,7 +180,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
       // Preparar dados para nova chamada RLIFUND com OTP
       const rlifundPayload = {
         transactionId: newTransactionId,
-        paymentOptionType: "otp", // Tipo específico para token
+        paymentOptionType: "otp",
         valueTotal: originalResponse.value_total,
         items: originalResponse.items
       };
@@ -222,14 +213,21 @@ const ConfirmacaoPagamentoAppScreen = () => {
       console.log('[Token] Nova resposta RLIFUND armazenada com sucesso');
       console.log('[Token] TransactionId atualizado para:', newTransactionId);
       
-      // Verificar se otp_payment_enabled está habilitado na nova resposta
-      const otpEnabled = (rlifundResponse[0]?.response?.data as any)?.otp_payment_enabled;
+      // Extrair valor dinâmico da resposta OTP
+      const otpData = rlifundResponse[0]?.response?.data as any;
+      const otpEnabled = otpData?.otp_payment_enabled;
+      
       console.log('[Token] otp_payment_enabled na nova resposta:', otpEnabled);
       
       if (otpEnabled === true) {
-        console.log('[Token] OTP habilitado, navegando para confirmacao_pagamento_token');
+        // Atualizar valor dinâmico do token (buscar campo específico da resposta)
+        const dynamicValue = otpData?.otp_max_amount || otpData?.value_total || "30,00";
+        const formattedAmount = `R$ ${dynamicValue}`;
+        setTokenAmount(formattedAmount);
+        
+        console.log('[Token] Valor dinâmico extraído:', formattedAmount);
         toast.success("Checkout refeito com sucesso!");
-        navigate("/confirmacao_pagamento_token");
+        setTokenModalOpen(true);
       } else {
         console.warn('[Token] OTP não habilitado na nova resposta');
         toast.error("Token não disponível para esta transação.");
@@ -241,6 +239,19 @@ const ConfirmacaoPagamentoAppScreen = () => {
     } finally {
       setIsTokenLoading(false);
     }
+  };
+  
+  const handleNoneOption = () => {
+    console.log("Usuário retornou para meios de pagamento a partir do modal de token.");
+    setTokenModalOpen(false);
+    navigate("/meios_de_pagamento");
+  };
+
+  // Handle option 1 in token payment modal - Navigate to token screen
+  const handleTokenAmountOption = () => {
+    console.log('[Token] Navegando para confirmacao_pagamento_token');
+    setTokenModalOpen(false);
+    navigate("/confirmacao_pagamento_token");
   };
   
   // Handler for the RLIDEAL alert OK button
@@ -288,13 +299,21 @@ const ConfirmacaoPagamentoAppScreen = () => {
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button 
-                              variant="token"
-                              className="bg-gray-800 hover:bg-gray-700"
-                              onClick={handleTokenPaymentClick}
-                            >
-                              Pagar com Token
-                            </Button>
+                             <Button 
+                               variant="token"
+                               className="bg-gray-800 hover:bg-gray-700"
+                               onClick={handleTokenPaymentClick}
+                               disabled={isTokenLoading}
+                             >
+                               {isTokenLoading ? (
+                                 <>
+                                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                   Processando...
+                                 </>
+                               ) : (
+                                 "Pagar com Token"
+                               )}
+                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>Este meio de pagamento requer autenticação por token.</p>
@@ -581,9 +600,9 @@ const ConfirmacaoPagamentoAppScreen = () => {
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span>Processando...</span>
                   </div>
-                ) : (
-                  "1. Até R$30 com token"
-                )}
+                 ) : (
+                   `1. Até ${tokenAmount} com token`
+                 )}
               </Button>
               <Button 
                 variant="cancel" 
