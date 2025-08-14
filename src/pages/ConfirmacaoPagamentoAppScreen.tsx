@@ -45,6 +45,9 @@ const ConfirmacaoPagamentoAppScreen = () => {
   // Token payment modal state
   const [tokenModalOpen, setTokenModalOpen] = useState(false);
   
+  // Available payment options from OTP response
+  const [availablePaymentOptions, setAvailablePaymentOptions] = useState<Array<{option: string, message: string}>>([]);
+  
   // Alert dialogs state
   const [alertDialogOpen, setAlertDialogOpen] = useState(false);
   const [rlidealAlertOpen, setRlidealAlertOpen] = useState(false);
@@ -228,24 +231,30 @@ const ConfirmacaoPagamentoAppScreen = () => {
       console.log('[Token] Nova resposta RLIFUND armazenada com sucesso');
       console.log('[Token] Usando o mesmo transactionId:', transactionId);
       
-      // Extrair valor dinâmico da resposta OTP
+      // Extrair payment_options da resposta OTP
       const otpData = rlifundResponse[0]?.response?.data as any;
-      const otpEnabled = otpData?.otp_payment_enabled;
+      const paymentOptions = otpData?.payment_options || [];
       
-      console.log('[Token] otp_payment_enabled na nova resposta:', otpEnabled);
+      console.log('[Token] payment_options na nova resposta:', paymentOptions);
       
-      if (otpEnabled === true) {
-        // Atualizar valor dinâmico do token (buscar campo específico da resposta)
+      if (Array.isArray(paymentOptions) && paymentOptions.length > 0) {
+        // Armazenar opções disponíveis para renderização dinâmica
+        setAvailablePaymentOptions(paymentOptions);
+        
+        // Extrair valor dinâmico do primeiro item (ou usar lógica específica)
+        const firstOption = paymentOptions[0];
         const dynamicValue = otpData?.otp_max_amount || otpData?.value_total || "30,00";
         const formattedAmount = `R$ ${dynamicValue}`;
         setTokenAmount(formattedAmount);
         
+        console.log('[Token] Opções de pagamento encontradas:', paymentOptions.length);
         console.log('[Token] Valor dinâmico extraído:', formattedAmount);
         toast.success("Checkout refeito com sucesso!");
         setTokenModalOpen(true);
       } else {
-        console.warn('[Token] OTP não habilitado na nova resposta');
-        toast.error("Token não disponível para esta transação.");
+        console.warn('[Token] Nenhuma opção de pagamento OTP encontrada na resposta');
+        console.log('[Token] payment_options array:', paymentOptions);
+        toast.error("Não foi encontrado pagamento do tipo OTP para esta transação.");
       }
       
     } catch (error) {
@@ -262,11 +271,30 @@ const ConfirmacaoPagamentoAppScreen = () => {
     navigate("/meios_de_pagamento");
   };
 
-  // Handle option 1 in token payment modal - Navigate to token screen
-  const handleTokenAmountOption = () => {
-    console.log('[Token] Navegando para confirmacao_pagamento_token');
+  // Handle payment option selection in token modal
+  const handlePaymentOptionSelect = (option: string) => {
+    console.log(`[Token] Opção selecionada: ${option}`);
     setTokenModalOpen(false);
-    navigate("/confirmacao_pagamento_token");
+    
+    // Navigate based on payment option type
+    switch (option) {
+      case 'dotz':
+        console.log('[Token] Navegando para confirmacao_pagamento_token (Dotz)');
+        navigate("/confirmacao_pagamento_token");
+        break;
+      case 'app':
+        console.log('[Token] Navegando para confirmacao_pagamento_token (App)');
+        navigate("/confirmacao_pagamento_token");
+        break;
+      case 'outros_pagamentos':
+        console.log('[Token] Navegando para otp_data_nascimento (Outros Pagamentos)');
+        navigate("/otp_data_nascimento");
+        break;
+      default:
+        console.log('[Token] Opção não reconhecida, navegando para confirmacao_pagamento_token');
+        navigate("/confirmacao_pagamento_token");
+        break;
+    }
   };
   
   // Handler for the RLIDEAL alert OK button
@@ -596,37 +624,32 @@ const ConfirmacaoPagamentoAppScreen = () => {
       
       {/* Token Payment Modal */}
       <Dialog open={tokenModalOpen} onOpenChange={setTokenModalOpen}>
-        <DialogContent className="p-0 overflow-hidden max-w-md" onInteractOutside={(e) => e.preventDefault()}>
-          <DialogHeader className="bg-dotz-laranja text-white px-6 py-4">
-            <DialogTitle className="text-lg font-semibold text-center">Pagamento com Token</DialogTitle>
+        <DialogContent className="max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle className="text-center text-lg font-semibold mb-4">
+              Escolha uma opção:
+            </DialogTitle>
           </DialogHeader>
-          <div className="p-6">
-            <p className="text-center text-lg mb-6">
-              {clientName ? `${clientName}, você quer pagar com seus pontos?` : 'Você quer pagar com seus pontos?'}
-            </p>
-            <div className="space-y-4">
+          <div className="space-y-3">
+            {/* Dynamic buttons based on available payment options */}
+            {availablePaymentOptions.map((option, index) => (
               <Button 
-                className="w-full bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
-                onClick={handleTokenAmountOption}
-                disabled={isTokenLoading}
+                key={option.option}
+                onClick={() => handlePaymentOptionSelect(option.option)}
+                className="w-full bg-dotz-laranja hover:bg-dotz-laranja/90 text-white py-3 text-base text-left"
               >
-                {isTokenLoading ? (
-                  <div className="flex items-center space-x-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Processando...</span>
-                  </div>
-                 ) : (
-                   `1. Até ${tokenAmount} com token`
-                 )}
+                {index + 1}. {option.message}
               </Button>
-              <Button 
-                variant="cancel" 
-                className="w-full"
-                onClick={handleNoneOption}
-              >
-                4. Nenhum
-              </Button>
-            </div>
+            ))}
+            
+            {/* Always show "Nenhum" option */}
+            <Button 
+              onClick={handleNoneOption}
+              variant="outline" 
+              className="w-full py-3 text-base border-gray-300 hover:bg-gray-50"
+            >
+              {availablePaymentOptions.length + 1}. Nenhum
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
