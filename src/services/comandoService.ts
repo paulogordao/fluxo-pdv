@@ -24,10 +24,17 @@ export interface ComandoRliauthRequest {
   cancel: boolean;
 }
 
+export interface PaymentItem {
+  type: number;
+  bin: string;
+  amount: number;
+  description: string;
+}
+
 export interface ComandoRlipaysRequest {
   comando: string;
   id_transaction: string;
-  amount?: number;
+  payments?: PaymentItem[];
 }
 
 export interface ComandoRliwaitRequest {
@@ -677,14 +684,19 @@ export const comandoService = {
   },
 
   // RLIPAYS command method
-  async enviarComandoRlipays(transactionId: string, amount?: number): Promise<ComandoResponse> {
-    const requestBody: ComandoRlipaysRequest = {
-      comando: 'RLIPAYS',
-      id_transaction: transactionId,
-      ...(amount !== undefined && { amount })
+  async enviarComandoRlipays(transactionId: string, payments?: PaymentItem[]): Promise<ComandoResponse> {
+    const requestBody = {
+      data: {
+        route: 'RLIPAYS',
+        input: {
+          transaction_id: transactionId,
+          ...(payments && payments.length > 0 && { payments })
+        }
+      }
     };
 
     console.log(`[comandoService] Enviando comando RLIPAYS:`, requestBody);
+    console.log(`[comandoService] Payments array:`, payments);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
