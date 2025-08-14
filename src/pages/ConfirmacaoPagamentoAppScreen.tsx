@@ -189,14 +189,12 @@ const ConfirmacaoPagamentoAppScreen = () => {
         return;
       }
       
-      // Gerar novo transactionId para o fluxo de token
-      const newTransactionId = crypto.randomUUID();
-      console.log('[Token] Novo transactionId gerado para token:', newTransactionId);
-      console.log('[Token] TransactionId original era:', transactionId);
+      // Usar o transactionId existente para manter a sessão no backend
+      console.log('[Token] Reutilizando transactionId existente para token:', transactionId);
       
-      // Preparar dados para nova chamada RLIFUND com OTP
+      // Preparar dados para nova chamada RLIFUND com OTP (mesmo transactionId)
       const rlifundPayload = {
-        transactionId: newTransactionId,
+        transactionId: transactionId,
         paymentOptionType: "otp",
         valueTotal: valueTotal,
         items: items
@@ -206,9 +204,9 @@ const ConfirmacaoPagamentoAppScreen = () => {
       console.log('[Token] Value total original:', valueTotal);
       console.log('[Token] Items originais (quantidade):', items?.length);
       
-      // Chamar RLIFUND com payment_option_type: "otp"
+      // Chamar RLIFUND com payment_option_type: "otp" usando o mesmo transactionId
       const rlifundResponse = await comandoService.enviarComandoRlifund(
-        newTransactionId,
+        transactionId,
         "otp",
         valueTotal,
         items
@@ -225,10 +223,10 @@ const ConfirmacaoPagamentoAppScreen = () => {
       
       // Armazenar nova resposta RLIFUND no localStorage
       localStorage.setItem('rlifundResponse', JSON.stringify(rlifundResponse));
-      localStorage.setItem('transactionId', newTransactionId);
+      // Não precisa atualizar o transactionId pois está usando o mesmo
       
       console.log('[Token] Nova resposta RLIFUND armazenada com sucesso');
-      console.log('[Token] TransactionId atualizado para:', newTransactionId);
+      console.log('[Token] Usando o mesmo transactionId:', transactionId);
       
       // Extrair valor dinâmico da resposta OTP
       const otpData = rlifundResponse[0]?.response?.data as any;
