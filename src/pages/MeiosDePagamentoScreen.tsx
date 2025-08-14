@@ -100,10 +100,13 @@ const MeiosDePagamentoScreen = () => {
       // Store RLIDEAL response
       localStorage.setItem('rlidealResponse', JSON.stringify(response));
 
-      // Navigate based on token requirements
+      // Navigate based on payment option and token requirements
       const tokenInfo = response[0]?.response?.data?.token;
       if (tokenInfo?.required === true && tokenInfo?.type === 'birthdate') {
         navigate('/otp_data_nascimento');
+      } else if (option === "app") {
+        console.log('[MeiosDePagamentoScreen] Redirecting to /confirmacao_pagamento_app for app option');
+        navigate('/confirmacao_pagamento_app');
       } else {
         // Default navigation for other cases
         navigate('/confirmacao_pagamento');

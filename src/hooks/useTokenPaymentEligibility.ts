@@ -7,25 +7,32 @@ export const useTokenPaymentEligibility = () => {
   const [tokenButtonLoading, setTokenButtonLoading] = useState(true);
 
   useEffect(() => {
-    const checkTokenPaymentEligibility = async () => {
+    const checkTokenPaymentEligibility = () => {
       try {
         setTokenButtonLoading(true);
         
-        const cpf = localStorage.getItem('cpfDigitado');
+        console.log("Verificando elegibilidade para pagamento com token usando resposta RLIDEAL");
         
-        if (!cpf) {
-          console.error('CPF não encontrado para verificação de pagamento por token.');
+        // Get RLIDEAL response from localStorage
+        const rlidealResponseStr = localStorage.getItem('rlidealResponse');
+        
+        if (!rlidealResponseStr) {
+          console.log('Resposta RLIDEAL não encontrada no localStorage ➝ Botão oculto');
           setShowTokenPaymentButton(false);
           return;
         }
         
-        console.log("Verificando elegibilidade para pagamento com token usando consultaFluxoService");
-        
-        const data = await consultaFluxoService.consultarFluxo(cpf, 'RLIWAIT');
-        const canUseToken = data.permitir_pagamento_token === true;
-        setShowTokenPaymentButton(canUseToken);
-        
-        console.log(`permitir_pagamento_token = ${canUseToken ? 'true ➝ Botão exibido' : 'false ➝ Botão oculto'}`);
+        try {
+          const rlidealResponse = JSON.parse(rlidealResponseStr);
+          const otpPaymentEnabled = rlidealResponse[0]?.response?.data?.otp_payment_enabled === true;
+          setShowTokenPaymentButton(otpPaymentEnabled);
+          
+          console.log(`otp_payment_enabled = ${otpPaymentEnabled ? 'true ➝ Botão exibido' : 'false ➝ Botão oculto'}`);
+          
+        } catch (parseError) {
+          console.error("Erro ao fazer parse da resposta RLIDEAL:", parseError);
+          setShowTokenPaymentButton(false);
+        }
         
       } catch (error) {
         console.error("Error checking token payment eligibility:", error);
