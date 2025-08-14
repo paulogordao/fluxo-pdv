@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { buildApiUrl } from "@/config/api";
 import { useTokenPaymentEligibility } from "@/hooks/useTokenPaymentEligibility";
+import { comandoService } from "@/services/comandoService";
 
 const ConfirmacaoPagamentoAppScreen = () => {
   const navigate = useNavigate();
@@ -47,6 +48,9 @@ const ConfirmacaoPagamentoAppScreen = () => {
   // Alert dialogs state
   const [alertDialogOpen, setAlertDialogOpen] = useState(false);
   const [rlidealAlertOpen, setRlidealAlertOpen] = useState(false);
+  
+  // Token loading state
+  const [isTokenLoading, setIsTokenLoading] = useState(false);
   
   // Get client name from localStorage (fallback to empty string if not available)
   const clientName = localStorage.getItem('nomeCliente') || '';
@@ -141,11 +145,102 @@ const ConfirmacaoPagamentoAppScreen = () => {
     navigate("/meios_de_pagamento");
   };
 
-  // Handle option 1 in token payment modal
-  const handleTokenAmountOption = () => {
-    console.log("Alerta exibido: RLIDEAL deve ser chamado novamente para validar a cesta antes do token.");
+  // Handle option 1 in token payment modal - Refazer checkout with OTP
+  const handleTokenAmountOption = async () => {
+    console.log("[Token] Iniciando refazer checkout com payment_option_type: otp");
+    setIsTokenLoading(true);
     setTokenModalOpen(false);
-    setRlidealAlertOpen(true);
+    
+    try {
+      // Recuperar dados da compra original do localStorage
+      const rlifundResponseStr = localStorage.getItem('rlifundResponse');
+      if (!rlifundResponseStr) {
+        console.error('[Token] Resposta RLIFUND original não encontrada no localStorage');
+        toast.error("Dados da compra não encontrados. Retorne para o início.");
+        navigate('/meios_de_pagamento');
+        return;
+      }
+      
+      let originalRlifundData;
+      try {
+        originalRlifundData = JSON.parse(rlifundResponseStr);
+        console.log('[Token] Dados RLIFUND originais recuperados:', originalRlifundData);
+      } catch (parseError) {
+        console.error('[Token] Erro ao fazer parse dos dados RLIFUND:', parseError);
+        toast.error("Erro nos dados da compra. Retorne para o início.");
+        navigate('/meios_de_pagamento');
+        return;
+      }
+      
+      // Extrair informações necessárias da resposta original
+      const originalResponse = originalRlifundData[0]?.response?.data;
+      if (!originalResponse || !originalResponse.value_total || !originalResponse.items) {
+        console.error('[Token] Dados RLIFUND inválidos - faltam value_total ou items:', originalResponse);
+        toast.error("Dados da compra inválidos. Retorne para o início.");
+        navigate('/meios_de_pagamento');
+        return;
+      }
+      
+      // Gerar novo transactionId para o fluxo de token
+      const newTransactionId = crypto.randomUUID();
+      console.log('[Token] Novo transactionId gerado para token:', newTransactionId);
+      console.log('[Token] TransactionId original era:', transactionId);
+      
+      // Preparar dados para nova chamada RLIFUND com OTP
+      const rlifundPayload = {
+        transactionId: newTransactionId,
+        paymentOptionType: "otp", // Tipo específico para token
+        valueTotal: originalResponse.value_total,
+        items: originalResponse.items
+      };
+      
+      console.log('[Token] Preparando chamada RLIFUND com OTP:', rlifundPayload);
+      console.log('[Token] Value total original:', originalResponse.value_total);
+      console.log('[Token] Items originais (quantidade):', originalResponse.items?.length);
+      
+      // Chamar RLIFUND com payment_option_type: "otp"
+      const rlifundResponse = await comandoService.enviarComandoRlifund(
+        newTransactionId,
+        "otp",
+        originalResponse.value_total,
+        originalResponse.items
+      );
+      
+      console.log('[Token] Resposta RLIFUND com OTP recebida:', rlifundResponse);
+      
+      // Verificar se a resposta é válida
+      if (!rlifundResponse || !rlifundResponse[0]?.response?.data) {
+        console.error('[Token] Resposta RLIFUND com OTP inválida:', rlifundResponse);
+        toast.error("Erro ao processar checkout com token. Tente novamente.");
+        return;
+      }
+      
+      // Armazenar nova resposta RLIFUND no localStorage
+      localStorage.setItem('rlifundResponse', JSON.stringify(rlifundResponse));
+      localStorage.setItem('transactionId', newTransactionId);
+      
+      console.log('[Token] Nova resposta RLIFUND armazenada com sucesso');
+      console.log('[Token] TransactionId atualizado para:', newTransactionId);
+      
+      // Verificar se otp_payment_enabled está habilitado na nova resposta
+      const otpEnabled = (rlifundResponse[0]?.response?.data as any)?.otp_payment_enabled;
+      console.log('[Token] otp_payment_enabled na nova resposta:', otpEnabled);
+      
+      if (otpEnabled === true) {
+        console.log('[Token] OTP habilitado, navegando para confirmacao_pagamento_token');
+        toast.success("Checkout refeito com sucesso!");
+        navigate("/confirmacao_pagamento_token");
+      } else {
+        console.warn('[Token] OTP não habilitado na nova resposta');
+        toast.error("Token não disponível para esta transação.");
+      }
+      
+    } catch (error) {
+      console.error('[Token] Erro durante refazer checkout:', error);
+      toast.error("Erro ao processar pagamento com token. Tente novamente.");
+    } finally {
+      setIsTokenLoading(false);
+    }
   };
   
   // Handler for the RLIDEAL alert OK button
@@ -479,8 +574,16 @@ const ConfirmacaoPagamentoAppScreen = () => {
               <Button 
                 className="w-full bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
                 onClick={handleTokenAmountOption}
+                disabled={isTokenLoading}
               >
-                1. Até R$30 com token
+                {isTokenLoading ? (
+                  <div className="flex items-center space-x-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Processando...</span>
+                  </div>
+                ) : (
+                  "1. Até R$30 com token"
+                )}
               </Button>
               <Button 
                 variant="cancel" 
