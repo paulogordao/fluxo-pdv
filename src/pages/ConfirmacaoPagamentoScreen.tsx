@@ -36,6 +36,9 @@ const ConfirmacaoPagamentoScreen = () => {
   // Check if coming directly from ScanScreen (FUND -> RLIPAYS flow)
   const comingFromScanScreen = location.state?.fromScanScreenFund || false;
   
+  // Check if coming from app screen (RLIWAIT -> RLIPAYS flow)
+  const comingFromAppScreen = location.state?.fromAppScreen || false;
+  
   // Payment amounts and display values
   const [paymentAmount, setPaymentAmount] = useState({ encargos: "68,93", recebido: "68,93" });
   const [displayValues, setDisplayValues] = useState({
@@ -89,8 +92,49 @@ const ConfirmacaoPagamentoScreen = () => {
       tipo_simulacao, 
       isOfflineCompany, 
       comingFromScanScreen, 
+      comingFromAppScreen,
       totalAmount 
     });
+
+    // Check if coming from app screen (RLIWAIT -> RLIPAYS flow)
+    if (comingFromAppScreen) {
+      try {
+        const orderDataStr = localStorage.getItem('orderData');
+        if (orderDataStr) {
+          const orderData = JSON.parse(orderDataStr);
+          console.log('[ConfirmacaoPagamento] Using RLIWAIT order data:', orderData);
+          
+          const order = orderData.order;
+          if (order) {
+            const subtotal = order.value?.toFixed(2).replace('.', ',') || "0,00";
+            const desconto = order.discount?.toFixed(2).replace('.', ',') || "0,00";
+            const paidOut = order.paid_out?.toFixed(2).replace('.', ',') || "0,00";
+            const remainingValue = (order.value - order.paid_out).toFixed(2).replace('.', ',');
+            
+            setDisplayValues({
+              subtotal,
+              desconto,
+              recebido: paidOut,
+              showEncargos: false
+            });
+            
+            setPaymentAmount({ 
+              encargos: remainingValue, 
+              recebido: paidOut 
+            });
+            
+            setDocumentationSlug("RLIWAITRLIPAYS");
+            
+            console.log('[ConfirmacaoPagamento] Using RLIWAIT values:', {
+              subtotal, desconto, paidOut, remainingValue
+            });
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('[ConfirmacaoPagamento] Error reading orderData from localStorage:', error);
+      }
+    }
 
     // Check if coming directly from ScanScreen (FUND -> RLIPAYS flow)
     if (comingFromScanScreen && totalAmount > 0) {
@@ -187,7 +231,7 @@ const ConfirmacaoPagamentoScreen = () => {
       });
       console.log('[ConfirmacaoPagamento] Default option selected');
     }
-  }, [selectedPaymentOption, comingFromTokenScreen, comingFromOtpScreen, comingFromScanScreen, tipo_simulacao, sessionLoading, rliauthData, totalAmount]);
+  }, [selectedPaymentOption, comingFromTokenScreen, comingFromOtpScreen, comingFromScanScreen, comingFromAppScreen, tipo_simulacao, sessionLoading, rliauthData, totalAmount]);
 
   // Prepare technical documentation data
   useEffect(() => {
@@ -229,6 +273,24 @@ const ConfirmacaoPagamentoScreen = () => {
   // Calculate remaining amount for non-OFFLINE companies
   const calculateRemainingAmount = (): number => {
     if (tipo_simulacao === "OFFLINE") return 0;
+    
+    // If coming from app screen (RLIWAIT -> RLIPAYS flow), use orderData
+    if (comingFromAppScreen) {
+      try {
+        const orderDataStr = localStorage.getItem('orderData');
+        if (orderDataStr) {
+          const orderData = JSON.parse(orderDataStr);
+          const order = orderData.order;
+          if (order) {
+            const remainingAmount = order.value - order.paid_out;
+            console.log('[ConfirmacaoPagamento] Using RLIWAIT remaining amount for RLIPAYS:', remainingAmount);
+            return remainingAmount;
+          }
+        }
+      } catch (error) {
+        console.error('[ConfirmacaoPagamento] Error reading orderData for calculation:', error);
+      }
+    }
     
     // If coming directly from ScanScreen (FUND -> RLIPAYS flow), return the real cart total
     if (comingFromScanScreen && totalAmount > 0) {

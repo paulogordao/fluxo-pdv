@@ -108,7 +108,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
       }));
       
       console.log('[ConfirmacaoPagamentoAppScreen] Order data stored, navigating to confirmacao_pagamento');
-      navigate('/confirmacao_pagamento');
+      navigate('/confirmacao_pagamento', { state: { fromAppScreen: true } });
     }
   };
 
