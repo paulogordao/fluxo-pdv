@@ -685,14 +685,10 @@ export const comandoService = {
 
   // RLIPAYS command method
   async enviarComandoRlipays(transactionId: string, payments?: PaymentItem[]): Promise<ComandoResponse> {
-    const requestBody = {
-      data: {
-        route: 'RLIPAYS',
-        input: {
-          transaction_id: transactionId,
-          ...(payments && payments.length > 0 && { payments })
-        }
-      }
+    const requestBody: ComandoRlipaysRequest = {
+      comando: 'RLIPAYS',
+      id_transaction: transactionId,
+      ...(payments && payments.length > 0 && { payments })
     };
 
     console.log(`[comandoService] Enviando comando RLIPAYS:`, requestBody);
