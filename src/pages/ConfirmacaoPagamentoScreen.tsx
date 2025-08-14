@@ -108,7 +108,9 @@ const ConfirmacaoPagamentoScreen = () => {
         recebido: totalAmountStr 
       });
       
-      setDocumentationSlug("RLIFUNDRLIPAYS");
+      // Use RLIPAYS for FUND → RLIPAYS flow since RLIFUNDRLIPAYS may not exist
+      console.log('[ConfirmacaoPagamento] Setting documentation SLUG to RLIPAYS for FUND → RLIPAYS flow');
+      setDocumentationSlug("RLIPAYS");
       
       console.log('[ConfirmacaoPagamento] Using real cart value from PdvContext:', {
         totalAmount,
