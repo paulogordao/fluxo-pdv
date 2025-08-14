@@ -18,6 +18,14 @@ const ConfirmacaoPagamentoTokenScreen = () => {
   
   const { tipo_simulacao, isLoading: sessionLoading } = useUserSession();
   
+  // Debug log to see the actual value
+  console.log('[TokenScreen] tipo_simulacao:', tipo_simulacao);
+  
+  // Determine if this is an ONLINE company (UAT or any non-OFFLINE company)
+  const isOnlineCompany = tipo_simulacao && !tipo_simulacao.includes('OFFLINE');
+  
+  console.log('[TokenScreen] isOnlineCompany:', isOnlineCompany);
+  
   // Mock token for the app emulator
   const mockToken = "128456";
 
@@ -57,7 +65,7 @@ const ConfirmacaoPagamentoTokenScreen = () => {
       const token = tokenDigits.join('');
       
       // For ONLINE companies, make RLIAUTH call
-      if (tipo_simulacao === 'ONLINE') {
+      if (isOnlineCompany) {
         setIsLoading(true);
         
         try {
@@ -217,7 +225,7 @@ const ConfirmacaoPagamentoTokenScreen = () => {
         </Card>
 
         {/* Right Panel - Instructions for ONLINE or App Emulator for OFFLINE */}
-        {tipo_simulacao === 'ONLINE' ? (
+        {isOnlineCompany ? (
           /* Instructions Card for ONLINE companies */
           <Card className="w-full shadow-lg">
             <CardHeader className="bg-blue-600 text-white">
