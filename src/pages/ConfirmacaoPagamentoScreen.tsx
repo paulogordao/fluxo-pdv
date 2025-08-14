@@ -34,7 +34,7 @@ const ConfirmacaoPagamentoScreen = () => {
   const comingFromOtpScreen = location.state?.fromOtpScreen || false;
   
   // Check if coming directly from ScanScreen (FUND -> RLIPAYS flow)
-  const comingFromScanScreen = !comingFromTokenScreen && !comingFromOtpScreen && !selectedPaymentOption;
+  const comingFromScanScreen = location.state?.fromScanScreenFund || false;
   
   // Payment amounts and display values
   const [paymentAmount, setPaymentAmount] = useState({ encargos: "68,93", recebido: "68,93" });

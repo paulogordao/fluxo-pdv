@@ -266,7 +266,7 @@ const ScanScreen = () => {
           if (paymentOptions.length === 0) {
             // payment_options is empty array - go directly to payment confirmation
             console.log("[ScanScreen] payment_options is empty - redirecting to confirmacao_pagamento");
-            navigate('/confirmacao_pagamento');
+            navigate('/confirmacao_pagamento', { state: { fromScanScreenFund: true } });
           } else {
             // payment_options has content - show interest modal
             console.log("[ScanScreen] payment_options has content - redirecting to interesse_pagamento");
