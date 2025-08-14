@@ -11,6 +11,7 @@ import { consultaFluxoService } from "@/services/consultaFluxoService";
 import { useUserSession } from "@/hooks/useUserSession";
 import { comandoService, RlifundApiError } from "@/services/comandoService";
 import ErrorModal from "@/components/ErrorModal";
+import { usePdv } from "@/context/PdvContext";
 import { 
   CreditCard,
   CreditCard as DebitCard,
@@ -26,10 +27,14 @@ const ConfirmacaoPagamentoScreen = () => {
   const location = useLocation();
   const { selectedPaymentOption } = usePaymentOption();
   const { tipo_simulacao, isLoading: sessionLoading } = useUserSession();
+  const { totalAmount } = usePdv();
   
   // Check if coming from token screen or otp screen
   const comingFromTokenScreen = location.state?.fromTokenScreen || false;
   const comingFromOtpScreen = location.state?.fromOtpScreen || false;
+  
+  // Check if coming directly from ScanScreen (FUND -> RLIPAYS flow)
+  const comingFromScanScreen = !comingFromTokenScreen && !comingFromOtpScreen && !selectedPaymentOption;
   
   // Payment amounts and display values
   const [paymentAmount, setPaymentAmount] = useState({ encargos: "68,93", recebido: "68,93" });
@@ -80,7 +85,37 @@ const ConfirmacaoPagamentoScreen = () => {
     if (sessionLoading) return;
 
     const isOfflineCompany = tipo_simulacao === "OFFLINE";
-    console.log('[ConfirmacaoPagamento] Company type check:', { tipo_simulacao, isOfflineCompany });
+    console.log('[ConfirmacaoPagamento] Company type check:', { 
+      tipo_simulacao, 
+      isOfflineCompany, 
+      comingFromScanScreen, 
+      totalAmount 
+    });
+
+    // Check if coming directly from ScanScreen (FUND -> RLIPAYS flow)
+    if (comingFromScanScreen && totalAmount > 0) {
+      const totalAmountStr = totalAmount.toFixed(2).replace('.', ',');
+      
+      setDisplayValues({
+        subtotal: totalAmountStr,
+        desconto: "0,00",
+        recebido: totalAmountStr,
+        showEncargos: true
+      });
+      
+      setPaymentAmount({ 
+        encargos: totalAmountStr, 
+        recebido: totalAmountStr 
+      });
+      
+      setDocumentationSlug("RLIFUNDRLIPAYS");
+      
+      console.log('[ConfirmacaoPagamento] Using real cart value from PdvContext:', {
+        totalAmount,
+        totalAmountStr
+      });
+      return;
+    }
 
     if (!isOfflineCompany && rliauthData?.length > 0 && (comingFromTokenScreen || comingFromOtpScreen)) {
       // Use dynamic data from RLIAUTH for non-OFFLINE companies
@@ -150,7 +185,7 @@ const ConfirmacaoPagamentoScreen = () => {
       });
       console.log('[ConfirmacaoPagamento] Default option selected');
     }
-  }, [selectedPaymentOption, comingFromTokenScreen, comingFromOtpScreen, tipo_simulacao, sessionLoading, rliauthData]);
+  }, [selectedPaymentOption, comingFromTokenScreen, comingFromOtpScreen, comingFromScanScreen, tipo_simulacao, sessionLoading, rliauthData, totalAmount]);
 
   // Prepare technical documentation data
   useEffect(() => {
@@ -192,6 +227,12 @@ const ConfirmacaoPagamentoScreen = () => {
   // Calculate remaining amount for non-OFFLINE companies
   const calculateRemainingAmount = (): number => {
     if (tipo_simulacao === "OFFLINE") return 0;
+    
+    // If coming directly from ScanScreen (FUND -> RLIPAYS flow), return the real cart total
+    if (comingFromScanScreen && totalAmount > 0) {
+      console.log('[ConfirmacaoPagamento] Using real cart total for RLIPAYS:', totalAmount);
+      return totalAmount;
+    }
     
     const subtotalValue = parseFloat(displayValues.subtotal.replace('R$ ', '').replace('.', '').replace(',', '.'));
     const recebidoValue = parseFloat(displayValues.recebido.replace('R$ ', '').replace('.', '').replace(',', '.'));
