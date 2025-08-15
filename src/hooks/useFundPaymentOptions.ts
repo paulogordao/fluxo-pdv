@@ -72,9 +72,12 @@ export const useFundPaymentOptions = () => {
   const mapFundOptions = (fundOptions: FundPaymentOption[]): MappedPaymentOption[] => {
     const mappedOptions: MappedPaymentOption[] = [];
     
+    console.log('[useFundPaymentOptions] All available fund options:', fundOptions.map(opt => opt.option));
+    
     // Buscar cada tipo de opção
     const appOption = fundOptions.find(opt => opt.option === 'app');
-    const outrosPagamentosOption = fundOptions.find(opt => opt.option === 'outros_pagamentos');
+    // Map both 'outros_pagamentos' and 'livelo' for backward compatibility
+    const outrosPagamentosOption = fundOptions.find(opt => opt.option === 'outros_pagamentos' || opt.option === 'livelo');
     const dotzOption = fundOptions.find(opt => opt.option === 'dotz');
     
     // Opção 1: App (sempre primeiro se disponível)

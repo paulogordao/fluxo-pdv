@@ -248,7 +248,7 @@ const ScanScreen = () => {
         const response = await comandoService.enviarComandoRlifund(
           transactionId,
           "default", // payment_option_type
-          totalAmount.toString(), // value_total
+          parseFloat(totalAmount.toFixed(2)).toString(), // value_total - fix decimal precision
           rlifundItems
         );
         
