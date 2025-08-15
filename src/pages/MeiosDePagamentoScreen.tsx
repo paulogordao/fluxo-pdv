@@ -49,8 +49,11 @@ const MeiosDePagamentoScreen = () => {
   const [errorDetails, setErrorDetails] = useState<any>(null);
   
   // Use the appropriate hook based on mode
-  const { paymentOptions: legacyPaymentOptions, paymentOptionsLoading: legacyLoading } = usePaymentOptions();
   const { paymentOptions: fundPaymentOptions, loading: fundLoading, isOnlineMode } = useFundPaymentOptions();
+  // Only use legacy payment options when NOT in online mode to prevent unnecessary API calls
+  const { paymentOptions: legacyPaymentOptions, paymentOptionsLoading: legacyLoading } = isOnlineMode 
+    ? { paymentOptions: {}, paymentOptionsLoading: false } 
+    : usePaymentOptions();
   
   // Determine which data source to use
   const paymentOptionsLoading = isOnlineMode ? fundLoading : legacyLoading;

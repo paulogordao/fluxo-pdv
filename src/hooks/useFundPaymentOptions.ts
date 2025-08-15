@@ -83,16 +83,16 @@ export const useFundPaymentOptions = () => {
     // Opção 1: App (sempre primeiro se disponível)
     if (appOption) {
       mappedOptions.push({
-        id: 'app',
+        id: appOption.option, // Use original option value for correct RLIDEAL mapping
         label: `1. ${appOption.message}`,
         available: true
       });
     }
     
-    // Opção 2: Outros pagamentos
+    // Opção 2: Outros pagamentos/Livelo
     if (outrosPagamentosOption) {
       mappedOptions.push({
-        id: 'outros_pagamentos',
+        id: outrosPagamentosOption.option, // Use original option value (livelo/outros_pagamentos)
         label: `2. ${outrosPagamentosOption.message}`,
         available: true
       });
@@ -101,7 +101,7 @@ export const useFundPaymentOptions = () => {
     // Opção 3: Dotz
     if (dotzOption) {
       mappedOptions.push({
-        id: 'dotz',
+        id: dotzOption.option, // Use original option value for correct RLIDEAL mapping
         label: `3. ${dotzOption.message}`,
         available: true
       });

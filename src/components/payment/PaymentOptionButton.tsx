@@ -16,7 +16,7 @@ const PaymentOptionButton = ({
     <Button 
       onClick={onClick}
       variant={selected ? "default" : "outline"}
-      className={`w-full py-6 text-base font-medium ${
+      className={`w-full min-h-[60px] h-auto px-4 py-3 text-base font-medium whitespace-normal leading-relaxed ${
         selected 
           ? "bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" 
           : "bg-gray-300 hover:bg-gray-400 text-black"
