@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import PdvLayout from "@/components/PdvLayout";
@@ -33,6 +33,43 @@ const CpfScreen = () => {
       setCpf(prev => prev.slice(0, -1));
     } else if (cpf.length < 11) {
       setCpf(prev => prev + value);
+    }
+  };
+
+  // Handle physical keyboard input
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Don't process if loading or input is focused and user is typing normally
+      if (isLoading) return;
+      
+      const key = event.key;
+      
+      // Handle numeric keys (0-9)
+      if (/^[0-9]$/.test(key) && cpf.length < 11) {
+        event.preventDefault();
+        setCpf(prev => prev + key);
+      }
+      // Handle Backspace and Delete
+      else if ((key === 'Backspace' || key === 'Delete') && cpf.length > 0) {
+        event.preventDefault();
+        setCpf(prev => prev.slice(0, -1));
+      }
+      // Handle Enter to submit
+      else if (key === 'Enter' && cpf.length === 11 && !isLoading) {
+        event.preventDefault();
+        handleSubmit();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [cpf, isLoading]);
+
+  // Handle direct input change
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value.replace(/\D/g, ''); // Remove non-digits
+    if (value.length <= 11) {
+      setCpf(value);
     }
   };
 
@@ -411,8 +448,10 @@ const CpfScreen = () => {
                 <Input
                   className="text-center text-xl h-14 pr-14"
                   value={formatCPF(cpf)}
-                  readOnly
+                  onChange={handleInputChange}
                   placeholder="Digite seu CPF"
+                  maxLength={14}
+                  autoFocus
                 />
                 <Button
                   variant="ghost"
