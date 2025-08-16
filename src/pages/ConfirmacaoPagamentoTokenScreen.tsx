@@ -17,6 +17,11 @@ const ConfirmacaoPagamentoTokenScreen = () => {
   const navigate = useNavigate();
   
   const { tipo_simulacao, isLoading: sessionLoading } = useUserSession();
+
+  // Technical documentation states
+  const [technicalRequestData, setTechnicalRequestData] = useState<string | undefined>();
+  const [technicalResponseData, setTechnicalResponseData] = useState<string | undefined>();
+  const [technicalPreviousRequestData, setTechnicalPreviousRequestData] = useState<string | undefined>();
   
   // Debug log to see the actual value
   console.log('[TokenScreen] tipo_simulacao:', tipo_simulacao);
@@ -28,6 +33,53 @@ const ConfirmacaoPagamentoTokenScreen = () => {
   
   // Mock token for the app emulator
   const mockToken = "128456";
+
+  // Load technical documentation data
+  useEffect(() => {
+    // Load previous RLIDEAL response from localStorage
+    const rlidealResponse = localStorage.getItem('rlidealResponse');
+    if (rlidealResponse) {
+      try {
+        const parsedData = JSON.parse(rlidealResponse);
+        if (Array.isArray(parsedData) && parsedData[0]) {
+          // Previous request (RLIDEAL)
+          if (parsedData[0].request) {
+            setTechnicalPreviousRequestData(JSON.stringify(parsedData[0].request, null, 2));
+          }
+          // Previous response (RLIDEAL)
+          if (parsedData[0].response) {
+            setTechnicalResponseData(JSON.stringify(parsedData[0].response, null, 2));
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao parsear rlidealResponse:', error);
+      }
+    }
+
+    // Generate current RLIAUTH request
+    generateCurrentRequest();
+  }, [tokenDigits]);
+
+  // Generate current RLIAUTH request for technical documentation
+  const generateCurrentRequest = () => {
+    try {
+      const transactionId = localStorage.getItem('transactionId');
+      if (!transactionId) return;
+
+      const currentRequest = {
+        route: "RLIAUTH",
+        version: 1,
+        input: {
+          transaction_id: transactionId,
+          token: tokenDigits.join('')
+        }
+      };
+
+      setTechnicalRequestData(JSON.stringify(currentRequest, null, 2));
+    } catch (error) {
+      console.error('Error generating current request:', error);
+    }
+  };
 
   // Simulated timer for token expiration
   useEffect(() => {
@@ -356,8 +408,12 @@ const ConfirmacaoPagamentoTokenScreen = () => {
       
       {/* Technical Footer Component */}
       <TechnicalFooter
+        requestData={technicalRequestData}
+        responseData={technicalResponseData}
+        previousRequestData={technicalPreviousRequestData}
+        isLoading={isLoading}
         slug="RLIDEALRLIAUTH"
-        loadOnMount={true}
+        loadOnMount={false}
         sourceScreen="confirmacao_pagamento_token"
       />
     </div>

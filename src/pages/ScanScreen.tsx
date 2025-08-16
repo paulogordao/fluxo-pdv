@@ -55,6 +55,11 @@ const ScanScreen = () => {
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
   
+  // Technical documentation states
+  const [technicalRequestData, setTechnicalRequestData] = useState<string | undefined>();
+  const [technicalResponseData, setTechnicalResponseData] = useState<string | undefined>();
+  const [technicalPreviousRequestData, setTechnicalPreviousRequestData] = useState<string | undefined>();
+  
   // Previous response state for technical documentation
   const [previousResponse, setPreviousResponse] = useState<any>(null);
   const [headerContent, setHeaderContent] = useState<string>("Carregando...");
@@ -113,7 +118,7 @@ const ScanScreen = () => {
     fetchApiData();
   }, [detailSlug]);
 
-  // Fetch previous response data from localStorage based on source page
+  // Load technical documentation data
   useEffect(() => {
     try {
       if (from === 'telefone') {
@@ -122,6 +127,18 @@ const ScanScreen = () => {
         if (rlicellData) {
           const parsedData = JSON.parse(rlicellData);
           setPreviousResponse(parsedData);
+          
+          // Extract data for technical documentation
+          if (Array.isArray(parsedData) && parsedData[0]) {
+            // Previous request (RLICELL)
+            if (parsedData[0].request) {
+              setTechnicalPreviousRequestData(JSON.stringify(parsedData[0].request, null, 2));
+            }
+            // Previous response (RLICELL)  
+            if (parsedData[0].response) {
+              setTechnicalResponseData(JSON.stringify(parsedData[0].response, null, 2));
+            }
+          }
           
           // Extract header content from response
           if (parsedData && Array.isArray(parsedData) && parsedData[0]?.response?.data?.message?.content) {
@@ -139,6 +156,18 @@ const ScanScreen = () => {
           const parsedData = JSON.parse(onlineData);
           setPreviousResponse(parsedData);
           
+          // Extract data for technical documentation
+          if (Array.isArray(parsedData) && parsedData[0]) {
+            // Previous request (RLIINFO)
+            if (parsedData[0].request) {
+              setTechnicalPreviousRequestData(JSON.stringify(parsedData[0].request, null, 2));
+            }
+            // Previous response (RLIINFO)
+            if (parsedData[0].response) {
+              setTechnicalResponseData(JSON.stringify(parsedData[0].response, null, 2));
+            }
+          }
+          
           // Extract header content from response
           if (parsedData && Array.isArray(parsedData) && parsedData[0]?.response?.data?.message?.content) {
             setHeaderContent(parsedData[0].response.data.message.content);
@@ -149,11 +178,55 @@ const ScanScreen = () => {
           console.log('Previous response from cpf screen loaded:', parsedData);
         }
       }
+      
+      // Generate current RLIFUND request
+      generateCurrentRequest();
     } catch (error) {
       console.error('Error loading previous response from localStorage:', error);
       setHeaderContent("Informações de pagamento disponíveis");
     }
-  }, [from]);
+  }, [from, cart, totalAmount]);
+
+  // Generate current RLIFUND request for technical documentation
+  const generateCurrentRequest = () => {
+    try {
+      const transactionId = localStorage.getItem('transactionId');
+      if (!transactionId) return;
+
+      const currentRequest = {
+        route: "RLIFUND",
+        version: 1,
+        input: {
+          transaction_id: transactionId,
+          payment_option_type: "default",
+          order: {
+            value: parseFloat(totalAmount.toFixed(2)),
+            discount: 0,
+            date: new Date().toISOString(),
+            items: cart.map(product => ({
+              ean: product.barcode,
+              sku: product.id,
+              unit_price: product.price,
+              discount: 0,
+              quantity: product.quantity || 1,
+              name: product.name,
+              unit_type: "UN",
+              brand: "Unknown",
+              manufacturer: "Unknown",
+              categories: ["groceries"],
+              gross_profit_amount: Math.max(product.price * 0.1, 0.01),
+              is_private_label: false,
+              is_on_sale: false
+            }))
+          }
+        }
+      };
+
+      setTechnicalRequestData(JSON.stringify(currentRequest, null, 2));
+    } catch (error) {
+      console.error('Error generating current request:', error);
+    }
+  };
 
   // Handle payment button click
   const handlePaymentClick = async () => {
@@ -653,13 +726,12 @@ const ScanScreen = () => {
 
       {/* Technical Footer Component */}
       <TechnicalFooter
-        requestData={apiData.request_servico}
-        responseData={previousResponse && Array.isArray(previousResponse) && previousResponse[0]?.response 
-          ? JSON.stringify(previousResponse[0].response, null, 2) 
-          : apiData.response_servico_anterior}
-        isLoading={isLoading}
+        requestData={technicalRequestData}
+        responseData={technicalResponseData}
+        previousRequestData={technicalPreviousRequestData}
+        isLoading={isLoading || isProcessingPayment}
         slug={detailSlug}
-        loadOnMount={!!apiData.request_servico}
+        loadOnMount={false}
         sourceScreen="scan"
       />
 

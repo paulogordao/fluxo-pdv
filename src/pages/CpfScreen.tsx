@@ -25,6 +25,10 @@ const CpfScreen = () => {
   const [apiDebugInfo, setApiDebugInfo] = useState<any>(null);
   const [lastError, setLastError] = useState<string | null>(null);
   const [rliinfoRequest, setRliinfoRequest] = useState<string | null>(null);
+  
+  // Technical documentation states
+  const [technicalRequestData, setTechnicalRequestData] = useState<string | undefined>();
+  const [technicalResponseData, setTechnicalResponseData] = useState<string | undefined>();
   const navigate = useNavigate();
   const { userName, companyName, tipo_simulacao, userId, isLoading: sessionLoading } = useUserSession();
 
@@ -34,8 +38,36 @@ const CpfScreen = () => {
       // Use sample CPF or current CPF value
       const cpfToUse = cpf || "12345678901";
       generateRliinfoRequest(cpfToUse);
+      generateTechnicalRequest(cpfToUse);
     }
   }, [tipo_simulacao, userId, sessionLoading]);
+
+  // Load technical documentation data
+  useEffect(() => {
+    // Generate current RLIINFO request data
+    const cpfToUse = cpf || "12345678901";
+    generateTechnicalRequest(cpfToUse);
+
+    // Load previous response from localStorage if available
+    const onlineResponse = localStorage.getItem('onlineResponse');
+    const offlineResponse = localStorage.getItem('offlineResponse');
+    
+    if (onlineResponse) {
+      try {
+        const parsedData = JSON.parse(onlineResponse);
+        setTechnicalResponseData(JSON.stringify(parsedData, null, 2));
+      } catch (error) {
+        console.error('Erro ao parsear onlineResponse:', error);
+      }
+    } else if (offlineResponse) {
+      try {
+        const parsedData = JSON.parse(offlineResponse);
+        setTechnicalResponseData(JSON.stringify(parsedData, null, 2));
+      } catch (error) {
+        console.error('Erro ao parsear offlineResponse:', error);
+      }
+    }
+  }, [cpf]);
 
   // Update RLIINFO request when CPF changes in ONLINE mode
   useEffect(() => {
@@ -339,6 +371,47 @@ const CpfScreen = () => {
     handleSubmit();
   };
 
+  const generateTechnicalRequest = async (cpfValue: string) => {
+    try {
+      if (!userId) {
+        console.warn("User ID not available for technical request generation");
+        return;
+      }
+
+      // Get cached user session data first
+      const cachedData = localStorage.getItem("user_session_cache");
+      let employee_id = "284538";
+      let pos_id = "228";
+      let order_id = "11957";
+      
+      if (cachedData) {
+        try {
+          const parsed = JSON.parse(cachedData);
+          // You can extend this to get real IDs from empresa data if needed
+        } catch (error) {
+          console.warn("Error parsing cached data:", error);
+        }
+      }
+
+      // Generate RLIINFO request for technical documentation
+      const technicalRequest = {
+        route: "RLIINFO",
+        version: 2,
+        input: {
+          customer_info_id: cpfValue,
+          customer_info_id_type: 1,
+          employee_id,
+          pos_id,
+          order_id
+        }
+      };
+
+      setTechnicalRequestData(JSON.stringify(technicalRequest, null, 2));
+    } catch (error) {
+      console.error("Error generating technical request:", error);
+    }
+  };
+
   const generateRliinfoRequest = async (cpfValue: string) => {
     try {
       if (!userId) {
@@ -543,11 +616,11 @@ curl --location 'https://uat-loyalty.dotznext.com/integration-router/api/default
       
       {/* Technical Footer Component */}
       <TechnicalFooter
-        requestData={tipo_simulacao !== "OFFLINE" && rliinfoRequest ? rliinfoRequest : (apiDebugInfo ? JSON.stringify(apiDebugInfo, null, 2) : undefined)}
-        responseData={apiDebugInfo?.response ? JSON.stringify(apiDebugInfo.response, null, 2) : undefined}
+        requestData={technicalRequestData}
+        responseData={technicalResponseData}
         isLoading={isLoading}
         slug="RLIINFO"
-        loadOnMount={!!(rliinfoRequest || apiDebugInfo)}
+        loadOnMount={false}
         sourceScreen="cpf"
       />
     </div>
