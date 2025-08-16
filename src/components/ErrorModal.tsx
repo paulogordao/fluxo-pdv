@@ -33,6 +33,17 @@ const ErrorModal = ({
 }: ErrorModalProps) => {
   const [showDetails, setShowDetails] = useState(false);
 
+  const getErrorMessage = (code: string, originalMessage: string) => {
+    switch (code) {
+      case '008':
+        return 'Timeout: O serviço não respondeu em tempo hábil. Tente novamente.';
+      default:
+        return originalMessage;
+    }
+  };
+
+  const displayMessage = getErrorMessage(errorCode, errorMessage);
+
   const copyToClipboard = async () => {
     const details = {
       error: {
@@ -65,9 +76,9 @@ const ErrorModal = ({
                 <div className="font-semibold text-destructive">
                   Código: {errorCode}
                 </div>
-                <div className="text-sm mt-2">
-                  {errorMessage}
-                </div>
+                 <div className="text-sm mt-2">
+                   {displayMessage}
+                 </div>
               </div>
 
               <div className="space-y-2">
