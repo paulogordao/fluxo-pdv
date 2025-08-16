@@ -57,6 +57,10 @@ const ConfirmacaoPagamentoScreen = () => {
   const [documentationSlug, setDocumentationSlug] = useState("RLIWAITRLIPAYS");
   const [rliauthData, setRliauthData] = useState<any>(null);
 
+  // State for technical data
+  const [technicalRequestData, setTechnicalRequestData] = useState<string | undefined>();
+  const [technicalResponseData, setTechnicalResponseData] = useState<string | undefined>();
+
   // RLIPAYS button states
   const [isLoadingPayment, setIsLoadingPayment] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
@@ -233,30 +237,79 @@ const ConfirmacaoPagamentoScreen = () => {
     }
   }, [selectedPaymentOption, comingFromTokenScreen, comingFromOtpScreen, comingFromScanScreen, comingFromAppScreen, tipo_simulacao, sessionLoading, rliauthData, totalAmount]);
 
-  // Prepare technical documentation data
+  // Load technical data from localStorage based on flow
+  useEffect(() => {
+    let previousServiceResponse = null;
+    
+    if (comingFromScanScreen) {
+      // Fluxo FUND → RLIPAYS
+      previousServiceResponse = localStorage.getItem('rlifundResponse');
+      console.log('[ConfirmacaoPagamento] Loading RLIFUND response for technical data');
+    } else if (!comingFromTokenScreen && !comingFromOtpScreen && !comingFromAppScreen) {
+      // Fluxo RLIDEAL → RLIPAYS (vindo de meios de pagamento)
+      previousServiceResponse = localStorage.getItem('rlidealResponse');
+      console.log('[ConfirmacaoPagamento] Loading RLIDEAL response for technical data');
+    } else if (comingFromTokenScreen || comingFromOtpScreen) {
+      // Para token/OTP, usar rliauthData se disponível
+      if (rliauthData?.length > 0) {
+        previousServiceResponse = JSON.stringify(rliauthData[0]?.response, null, 2);
+        console.log('[ConfirmacaoPagamento] Using RLIAUTH response for technical data');
+      }
+    } else if (comingFromAppScreen) {
+      // Fluxo RLIWAIT → RLIPAYS
+      const rliwaitResponse = localStorage.getItem('rliwaitResponse');
+      if (rliwaitResponse) {
+        previousServiceResponse = rliwaitResponse;
+        console.log('[ConfirmacaoPagamento] Loading RLIWAIT response for technical data');
+      }
+    }
+    
+    if (previousServiceResponse) {
+      setTechnicalResponseData(previousServiceResponse);
+    }
+    
+    // Generate RLIPAYS request data based on current transaction
+    const transactionId = localStorage.getItem('transactionId');
+    if (transactionId) {
+      const remainingAmount = calculateRemainingAmount();
+      let payments = undefined;
+      
+      if (remainingAmount > 0) {
+        payments = [{
+          type: 1,
+          bin: "",
+          amount: remainingAmount,
+          description: "Pagamento em Dinheiro"
+        }];
+      }
+      
+      const requestData = {
+        route: "RLIPAYS",
+        version: 1,
+        input: {
+          transaction_id: transactionId,
+          payments: payments
+        }
+      };
+      
+      setTechnicalRequestData(JSON.stringify(requestData, null, 2));
+      console.log('[ConfirmacaoPagamento] Generated dynamic RLIPAYS request data');
+    }
+  }, [comingFromScanScreen, comingFromTokenScreen, comingFromOtpScreen, comingFromAppScreen, rliauthData]);
+
+  // Prepare technical documentation data (fallback for API call)
   useEffect(() => {
     const prepareApiData = async () => {
       try {
-        // For non-OFFLINE companies with RLIAUTH data, use that instead of API call
-        if (tipo_simulacao !== "OFFLINE" && rliauthData?.length > 0 && (comingFromTokenScreen || comingFromOtpScreen)) {
-          const requestData = JSON.stringify(rliauthData[0]?.request || null, null, 2);
-          const responseData = JSON.stringify(rliauthData[0]?.response || null, null, 2);
-          
-          setApiData({
-            request_servico: requestData,
-            response_servico_anterior: responseData
-          });
-          
-          console.log('[ConfirmacaoPagamento] Using RLIAUTH data for technical docs');
-          setIsLoading(false);
-          return;
+        // Only call API if we don't have dynamic data and need fallback
+        if (!technicalRequestData && !technicalResponseData) {
+          console.log(`[ConfirmacaoPagamento] Loading technical docs for ${documentationSlug}`);
+          const data = await consultaFluxoService.consultarFluxoDetalhe(documentationSlug);
+          setApiData(data);
+          console.log('[ConfirmacaoPagamento] API data loaded:', data);
+        } else {
+          console.log('[ConfirmacaoPagamento] Using dynamic technical data, skipping API call');
         }
-
-        // Fallback to API call for other cases
-        console.log(`[ConfirmacaoPagamento] Loading technical docs for ${documentationSlug}`);
-        const data = await consultaFluxoService.consultarFluxoDetalhe(documentationSlug);
-        setApiData(data);
-        console.log('[ConfirmacaoPagamento] API data loaded:', data);
       } catch (error) {
         console.error('[ConfirmacaoPagamento] Error fetching API data:', error);
         toast.error("Erro ao carregar detalhes técnicos");
@@ -268,7 +321,7 @@ const ConfirmacaoPagamentoScreen = () => {
     if (!sessionLoading) {
       prepareApiData();
     }
-  }, [documentationSlug, tipo_simulacao, sessionLoading, rliauthData, comingFromTokenScreen, comingFromOtpScreen]);
+  }, [documentationSlug, tipo_simulacao, sessionLoading, technicalRequestData, technicalResponseData]);
 
   // Calculate remaining amount for non-OFFLINE companies
   const calculateRemainingAmount = (): number => {
@@ -458,7 +511,7 @@ const ConfirmacaoPagamentoScreen = () => {
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
             {/* Header */}
             <div className="bg-red-600 text-white p-4">
-              <h2 className="text-xl font-medium">Manoel, R$3 à R$1000 em opções de pagamento</h2>
+              <h2 className="text-xl font-medium">Confirmação de Pagamento</h2>
             </div>
             
             {/* Receipt Details */}
@@ -592,12 +645,12 @@ const ConfirmacaoPagamentoScreen = () => {
       
       {/* Technical Footer Component */}
       <TechnicalFooter
+        requestData={technicalRequestData || apiData.request_servico}
+        responseData={technicalResponseData || apiData.response_servico_anterior}
+        isLoading={isLoading}
         slug={documentationSlug}
         loadOnMount={false}
         sourceScreen="confirmacao_pagamento"
-        requestData={apiData.request_servico}
-        responseData={apiData.response_servico_anterior}
-        isLoading={isLoading}
       />
 
       {/* Error Modal */}
