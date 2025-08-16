@@ -102,7 +102,9 @@ const MeiosDePagamentoScreen = () => {
 
       // Navigate based on payment option and token requirements
       const tokenInfo = response[0]?.response?.data?.token;
-      if (tokenInfo?.required === true && tokenInfo?.type === 'birthdate') {
+      console.log('[MeiosDePagamentoScreen] Token info:', tokenInfo);
+      if (tokenInfo?.required === true && tokenInfo?.type?.toLowerCase() === 'birthdate') {
+        console.log('[MeiosDePagamentoScreen] Redirecting to /otp_data_nascimento for birthdate token');
         navigate('/otp_data_nascimento');
       } else if (option === "app") {
         console.log('[MeiosDePagamentoScreen] Redirecting to /confirmacao_pagamento_app for app option');
