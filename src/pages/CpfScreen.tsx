@@ -15,6 +15,7 @@ import { AlertTriangle, Loader2, Clock, AlertCircle, Shuffle } from "lucide-reac
 import TechnicalFooter from "@/components/TechnicalFooter";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
 import { comandoService } from "@/services/comandoService";
+import { empresaService } from "@/services/empresaService";
 
 const CpfScreen = () => {
   const [cpf, setCpf] = useState("");
@@ -23,8 +24,9 @@ const CpfScreen = () => {
   const [loadingMessage, setLoadingMessage] = useState("");
   const [apiDebugInfo, setApiDebugInfo] = useState<any>(null);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [rliinfoRequest, setRliinfoRequest] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { userName, companyName, tipo_simulacao, isLoading: sessionLoading } = useUserSession();
+  const { userName, companyName, tipo_simulacao, userId, isLoading: sessionLoading } = useUserSession();
 
   const handleKeyPress = (value: string) => {
     if (value === "CLEAR") {
@@ -124,6 +126,11 @@ const CpfScreen = () => {
     try {
       // Store the CPF in localStorage for future use
       localStorage.setItem('cpfDigitado', cpf);
+      
+      // Generate RLIINFO request for ONLINE mode
+      if (tipo_simulacao && tipo_simulacao !== "OFFLINE") {
+        await generateRliinfoRequest(cpf);
+      }
       
       // Check if simulation type is OFFLINE or ONLINE
       if (tipo_simulacao && tipo_simulacao !== "OFFLINE") {
@@ -316,6 +323,53 @@ const CpfScreen = () => {
     handleSubmit();
   };
 
+  const generateRliinfoRequest = async (cpfValue: string) => {
+    try {
+      if (!userId) {
+        console.warn("User ID not available for RLIINFO generation");
+        return;
+      }
+
+      // Get cached user session data first
+      const cachedData = localStorage.getItem("user_session_cache");
+      let cnpj = "";
+      
+      if (cachedData) {
+        try {
+          const parsed = JSON.parse(cachedData);
+          const empresaData = await empresaService.getEmpresaById(parsed.userId, userId);
+          cnpj = empresaData.cnpj || "";
+        } catch (error) {
+          console.warn("Error getting company data for RLIINFO:", error);
+        }
+      }
+
+      // Generate RLIINFO CURL command
+      const rliinfoRequestText = `RLIINFO
+curl --location 'https://uat-loyalty.dotznext.com/integration-router/api/default/v1/command' \\
+--header 'id: ${cnpj}' \\
+--header 'Authorization: [BASIC]' \\
+--header 'Content-Type: application/json' \\
+--data '{
+  "data": {
+    "route": "RLIINFO",
+    "version": 2,
+    "input": {
+      "customer_info_id": "${cpfValue}",
+      "customer_info_id_type": 1,
+      "employee_id": "284538",
+      "pos_id": "228",
+      "order_id": "11957"
+    }
+  }
+}'`;
+
+      setRliinfoRequest(rliinfoRequestText);
+    } catch (error) {
+      console.error("Error generating RLIINFO request:", error);
+    }
+  };
+
   const formatCPF = (value: string) => {
     if (!value) return "";
     
@@ -473,7 +527,7 @@ const CpfScreen = () => {
       
       {/* Technical Footer Component */}
       <TechnicalFooter
-        requestData={apiDebugInfo ? JSON.stringify(apiDebugInfo, null, 2) : undefined}
+        requestData={tipo_simulacao !== "OFFLINE" && rliinfoRequest ? rliinfoRequest : (apiDebugInfo ? JSON.stringify(apiDebugInfo, null, 2) : undefined)}
         responseData={apiDebugInfo?.response ? JSON.stringify(apiDebugInfo.response, null, 2) : undefined}
         isLoading={isLoading}
         slug="RLIINFO"
