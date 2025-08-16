@@ -5,6 +5,7 @@ import TechnicalDocumentation from "@/components/technical/TechnicalDocumentatio
 interface TechnicalFooterProps {
   requestData?: string;
   responseData?: string;
+  previousRequestData?: string;
   isLoading?: boolean;
   slug?: string;
   loadOnMount?: boolean;
@@ -14,6 +15,7 @@ interface TechnicalFooterProps {
 const TechnicalFooter = ({
   requestData,
   responseData,
+  previousRequestData,
   isLoading = false,
   slug,
   loadOnMount = true,
@@ -51,6 +53,7 @@ const TechnicalFooter = ({
           <TechnicalDocumentation
             requestData={requestData}
             responseData={responseData}
+            previousRequestData={previousRequestData}
             isLoading={isLoading}
             slug={slug}
             loadOnMount={loadOnMount}

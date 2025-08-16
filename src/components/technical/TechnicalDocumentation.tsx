@@ -10,6 +10,7 @@ interface TechnicalDocumentationProps {
   slug?: string;
   requestData?: string | null;
   responseData?: string | null;
+  previousRequestData?: string | null;
   isLoading?: boolean;
   loadOnMount?: boolean;
   sourceScreen?: string;
@@ -20,18 +21,21 @@ interface ApiResponse {
   nome_response_servico: string;
   request_servico: string;
   response_servico_anterior: string;
+  request_servico_anterior?: string;
 }
 
 const TechnicalDocumentation = ({
   slug,
   requestData: initialRequestData,
   responseData: initialResponseData,
+  previousRequestData: initialPreviousRequestData,
   isLoading: externalIsLoading,
   loadOnMount = true,
   sourceScreen
 }: TechnicalDocumentationProps) => {
   const [isRequestOpen, setIsRequestOpen] = useState(false);
   const [isResponseOpen, setIsResponseOpen] = useState(false);
+  const [isPreviousRequestOpen, setIsPreviousRequestOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(externalIsLoading ?? true);
   const [apiData, setApiData] = useState<ApiResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -51,12 +55,13 @@ const TechnicalDocumentation = ({
   // Fetch technical documentation from the API
   useEffect(() => {
     // If external data is provided, use that instead of fetching
-    if (initialRequestData || initialResponseData) {
+    if (initialRequestData || initialResponseData || initialPreviousRequestData) {
       setApiData({
         nome_request_servico: "Serviço Atual",
         nome_response_servico: "Serviço Anterior",
         request_servico: initialRequestData || "",
-        response_servico_anterior: initialResponseData || ""
+        response_servico_anterior: initialResponseData || "",
+        request_servico_anterior: initialPreviousRequestData || ""
       });
       setIsLoading(false);
       return;
@@ -96,7 +101,7 @@ const TechnicalDocumentation = ({
     };
     
     fetchDocumentation();
-  }, [slug, initialRequestData, initialResponseData, loadOnMount]);
+  }, [slug, initialRequestData, initialResponseData, initialPreviousRequestData, loadOnMount]);
   if (isLoading) {
     return <div className="mt-8 text-center">Carregando documentação técnica...</div>;
   }
@@ -114,6 +119,12 @@ const TechnicalDocumentation = ({
     apiData.response_servico_anterior.trim() !== "" && 
     apiData.response_servico_anterior !== "null" && 
     apiData.response_servico_anterior !== "undefined";
+
+  // Check if previous request has valid data
+  const hasValidPreviousRequest = apiData.request_servico_anterior && 
+    apiData.request_servico_anterior.trim() !== "" && 
+    apiData.request_servico_anterior !== "null" && 
+    apiData.request_servico_anterior !== "undefined";
 
   return <div className="mt-8 space-y-4">
       {/* Request Collapsible */}
@@ -138,6 +149,31 @@ const TechnicalDocumentation = ({
           </div>
         </CollapsibleContent>
       </Collapsible>
+
+      {/* Previous Request Collapsible - Only show if there's valid previous request data */}
+      {hasValidPreviousRequest && (
+        <Collapsible open={isPreviousRequestOpen} onOpenChange={setIsPreviousRequestOpen} className="border border-gray-200 rounded-md shadow overflow-hidden">
+          <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
+            <div className="flex items-center gap-2">
+              <span>🔻 Request do serviço anterior (RLIFUND)</span>
+            </div>
+            {isPreviousRequestOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="p-4 bg-white">
+              <div className="flex justify-end mb-2">
+                <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs" onClick={() => handleCopy(apiData.request_servico_anterior || "", "Previous Request")} title="Copiar para área de transferência">
+                  <Copy className="h-3 w-3" />
+                  Copiar JSON
+                </Button>
+              </div>
+              <pre className="text-sm font-mono bg-gray-100 p-4 rounded overflow-x-auto whitespace-pre-wrap">
+                {formatText(apiData.request_servico_anterior || "")}
+              </pre>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
 
       {/* Response Collapsible - Only show if there's valid response data */}
       {hasValidResponse && (

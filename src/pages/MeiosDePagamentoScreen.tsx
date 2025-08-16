@@ -51,6 +51,7 @@ const MeiosDePagamentoScreen = () => {
   // State for technical data
   const [technicalRequestData, setTechnicalRequestData] = useState<string | undefined>();
   const [technicalResponseData, setTechnicalResponseData] = useState<string | undefined>();
+  const [technicalPreviousRequestData, setTechnicalPreviousRequestData] = useState<string | undefined>();
   
   // Always call hooks in the same order (Rules of Hooks)
   const { paymentOptions: fundPaymentOptions, loading: fundLoading, isOnlineMode } = useFundPaymentOptions();
@@ -65,7 +66,23 @@ const MeiosDePagamentoScreen = () => {
     // Load RLFUND response from localStorage (from previous screen)
     const rlifundResponse = localStorage.getItem('rlifundResponse');
     if (rlifundResponse) {
-      setTechnicalResponseData(rlifundResponse);
+      try {
+        const parsedData = JSON.parse(rlifundResponse);
+        if (Array.isArray(parsedData) && parsedData[0]) {
+          // Request do serviço anterior (RLIFUND)
+          if (parsedData[0].request) {
+            setTechnicalPreviousRequestData(JSON.stringify(parsedData[0].request, null, 2));
+          }
+          // Response do serviço anterior (RLIFUND)
+          if (parsedData[0].response) {
+            setTechnicalResponseData(JSON.stringify(parsedData[0].response, null, 2));
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao parsear rlifundResponse:', error);
+        // Fallback to raw data if parsing fails
+        setTechnicalResponseData(rlifundResponse);
+      }
     }
 
     // Generate RLIDEAL request data based on current state
@@ -88,7 +105,23 @@ const MeiosDePagamentoScreen = () => {
     const handleStorageChange = () => {
       const rlifundResponse = localStorage.getItem('rlifundResponse');
       if (rlifundResponse) {
-        setTechnicalResponseData(rlifundResponse);
+        try {
+          const parsedData = JSON.parse(rlifundResponse);
+          if (Array.isArray(parsedData) && parsedData[0]) {
+            // Request do serviço anterior (RLIFUND)
+            if (parsedData[0].request) {
+              setTechnicalPreviousRequestData(JSON.stringify(parsedData[0].request, null, 2));
+            }
+            // Response do serviço anterior (RLIFUND)
+            if (parsedData[0].response) {
+              setTechnicalResponseData(JSON.stringify(parsedData[0].response, null, 2));
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao parsear rlifundResponse:', error);
+          // Fallback to raw data if parsing fails
+          setTechnicalResponseData(rlifundResponse);
+        }
       }
     };
 
@@ -441,6 +474,7 @@ const MeiosDePagamentoScreen = () => {
       <TechnicalFooter
         requestData={technicalRequestData}
         responseData={technicalResponseData}
+        previousRequestData={technicalPreviousRequestData}
         isLoading={isLoadingRlideal}
         slug={documentationSlug}
         loadOnMount={false}
