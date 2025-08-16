@@ -47,6 +47,10 @@ const MeiosDePagamentoScreen = () => {
   const [isLoadingRlideal, setIsLoadingRlideal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorDetails, setErrorDetails] = useState<any>(null);
+
+  // State for technical data
+  const [technicalRequestData, setTechnicalRequestData] = useState<string | undefined>();
+  const [technicalResponseData, setTechnicalResponseData] = useState<string | undefined>();
   
   // Always call hooks in the same order (Rules of Hooks)
   const { paymentOptions: fundPaymentOptions, loading: fundLoading, isOnlineMode } = useFundPaymentOptions();
@@ -55,6 +59,42 @@ const MeiosDePagamentoScreen = () => {
   // Determine which data source to use based on mode
   const paymentOptionsLoading = isOnlineMode ? fundLoading : legacyLoading;
   const currentPaymentOptions = isOnlineMode ? fundPaymentOptions : null;
+
+  // Load technical data from localStorage and generate dynamic request data
+  useEffect(() => {
+    // Load RLFUND response from localStorage (from previous screen)
+    const rlifundResponse = localStorage.getItem('rlifundResponse');
+    if (rlifundResponse) {
+      setTechnicalResponseData(rlifundResponse);
+    }
+
+    // Generate RLIDEAL request data based on current state
+    const transactionId = localStorage.getItem('transactionId');
+    if (transactionId) {
+      const requestData = {
+        route: "RLIDEAL",
+        version: 1,
+        input: {
+          transaction_id: transactionId,
+          payment_option_type: selectedOption || "default"
+        }
+      };
+      setTechnicalRequestData(JSON.stringify(requestData, null, 2));
+    }
+  }, [selectedOption]);
+
+  // Monitor localStorage changes for RLFUND response
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const rlifundResponse = localStorage.getItem('rlifundResponse');
+      if (rlifundResponse) {
+        setTechnicalResponseData(rlifundResponse);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
   
   // Handle option selection
   const handleOptionSelect = async (option: string) => {
@@ -399,8 +439,11 @@ const MeiosDePagamentoScreen = () => {
       />
 
       <TechnicalFooter
+        requestData={technicalRequestData}
+        responseData={technicalResponseData}
         isLoading={isLoadingRlideal}
         slug={documentationSlug}
+        loadOnMount={false}
         sourceScreen="meios_de_pagamento"
       />
     </PdvLayout>
