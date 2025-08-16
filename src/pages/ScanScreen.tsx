@@ -394,13 +394,23 @@ const ScanScreen = () => {
         });
         setShowErrorModal(true);
       } else {
-        // Use ErrorModal for other types of errors (including timeout)
-        setErrorDetails({
-          code: 'ERRO_GENERICO',
-          message: error instanceof Error ? error.message : "Erro desconhecido",
-          fullRequest: null,
-          fullResponse: null
-        });
+        // Check for timeout errors specifically
+        if (error.name === 'AbortError' || error.message?.toLowerCase().includes('timeout') || error.message?.toLowerCase().includes('tempo limite')) {
+          setErrorDetails({
+            code: 'TIMEOUT_ERROR',
+            message: "Tempo limite da operação excedido. Tente novamente.",
+            fullRequest: null,
+            fullResponse: null
+          });
+        } else {
+          // Generic error for other types
+          setErrorDetails({
+            code: 'ERRO_GENERICO',
+            message: error instanceof Error ? error.message : "Erro desconhecido",
+            fullRequest: null,
+            fullResponse: null
+          });
+        }
         setShowErrorModal(true);
       }
     } finally {
@@ -733,6 +743,7 @@ const ScanScreen = () => {
         slug={detailSlug}
         loadOnMount={false}
         sourceScreen="scan"
+        previousServiceName={from === 'cpf' ? 'RLIINFO' : 'RLICELL'}
       />
 
       {/* Modal de erro para desenvolvedores */}

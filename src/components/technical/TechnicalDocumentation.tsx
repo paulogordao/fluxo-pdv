@@ -14,6 +14,7 @@ interface TechnicalDocumentationProps {
   isLoading?: boolean;
   loadOnMount?: boolean;
   sourceScreen?: string;
+  previousServiceName?: string;
 }
 
 interface ApiResponse {
@@ -31,7 +32,8 @@ const TechnicalDocumentation = ({
   previousRequestData: initialPreviousRequestData,
   isLoading: externalIsLoading,
   loadOnMount = true,
-  sourceScreen
+  sourceScreen,
+  previousServiceName
 }: TechnicalDocumentationProps) => {
   const [isRequestOpen, setIsRequestOpen] = useState(false);
   const [isResponseOpen, setIsResponseOpen] = useState(false);
@@ -155,7 +157,7 @@ const TechnicalDocumentation = ({
         <Collapsible open={isPreviousRequestOpen} onOpenChange={setIsPreviousRequestOpen} className="border border-gray-200 rounded-md shadow overflow-hidden">
           <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
             <div className="flex items-center gap-2">
-              <span>🔻 Request do serviço anterior (RLIFUND)</span>
+              <span>🔻 Request do serviço anterior ({previousServiceName || "RLIFUND"})</span>
             </div>
             {isPreviousRequestOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </CollapsibleTrigger>

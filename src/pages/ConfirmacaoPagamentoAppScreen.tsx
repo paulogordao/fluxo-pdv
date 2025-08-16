@@ -653,15 +653,16 @@ const ConfirmacaoPagamentoAppScreen = () => {
       <GuiaDeNavegacaoAPI />
       
       {/* Technical Footer Component */}
-        <TechnicalFooter
-          requestData={technicalRequestData}
-          responseData={technicalResponseData}
-          previousRequestData={technicalPreviousRequestData}
-          isLoading={isLoading}
-          slug="RLIDEALRLIWAIT"
-          loadOnMount={false}
-          sourceScreen="confirmacao_pagamento_app"
-        />
+      <TechnicalFooter
+        requestData={technicalRequestData}
+        responseData={technicalResponseData}
+        previousRequestData={technicalPreviousRequestData}
+        isLoading={isLoading}
+        slug="RLIDEALRLIWAIT"
+        loadOnMount={false}
+        sourceScreen="confirmacao_pagamento_app"
+        previousServiceName="RLIDEAL"
+      />
       
       {/* First Alert Dialog - RLIFUND Break Step */}
       <AlertDialog open={alertDialogOpen} onOpenChange={setAlertDialogOpen}>

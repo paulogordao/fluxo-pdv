@@ -10,6 +10,7 @@ interface TechnicalFooterProps {
   slug?: string;
   loadOnMount?: boolean;
   sourceScreen?: string;
+  previousServiceName?: string;
 }
 
 const TechnicalFooter = ({
@@ -19,7 +20,8 @@ const TechnicalFooter = ({
   isLoading = false,
   slug,
   loadOnMount = true,
-  sourceScreen
+  sourceScreen,
+  previousServiceName
 }: TechnicalFooterProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -58,6 +60,7 @@ const TechnicalFooter = ({
             slug={slug}
             loadOnMount={loadOnMount}
             sourceScreen={sourceScreen}
+            previousServiceName={previousServiceName}
           />
         </div>
       </div>
