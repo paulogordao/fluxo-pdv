@@ -28,6 +28,22 @@ const CpfScreen = () => {
   const navigate = useNavigate();
   const { userName, companyName, tipo_simulacao, userId, isLoading: sessionLoading } = useUserSession();
 
+  // Auto-generate RLIINFO request when page loads in ONLINE mode
+  useEffect(() => {
+    if (tipo_simulacao && tipo_simulacao !== "OFFLINE" && userId && !sessionLoading) {
+      // Use sample CPF or current CPF value
+      const cpfToUse = cpf || "12345678901";
+      generateRliinfoRequest(cpfToUse);
+    }
+  }, [tipo_simulacao, userId, sessionLoading]);
+
+  // Update RLIINFO request when CPF changes in ONLINE mode
+  useEffect(() => {
+    if (tipo_simulacao && tipo_simulacao !== "OFFLINE" && userId && cpf.length >= 11) {
+      generateRliinfoRequest(cpf);
+    }
+  }, [cpf, tipo_simulacao, userId]);
+
   const handleKeyPress = (value: string) => {
     if (value === "CLEAR") {
       setCpf("");
@@ -531,7 +547,7 @@ curl --location 'https://uat-loyalty.dotznext.com/integration-router/api/default
         responseData={apiDebugInfo?.response ? JSON.stringify(apiDebugInfo.response, null, 2) : undefined}
         isLoading={isLoading}
         slug="RLIINFO"
-        loadOnMount={!!apiDebugInfo}
+        loadOnMount={!!(rliinfoRequest || apiDebugInfo)}
         sourceScreen="cpf"
       />
     </div>
