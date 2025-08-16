@@ -109,10 +109,13 @@ const TechnicalDocumentation = ({
     }
     return <div className="mt-8 text-center">Documentação técnica indisponível no momento.</div>;
   }
+  // Check if response has valid data
+  const hasValidResponse = apiData.response_servico_anterior && 
+    apiData.response_servico_anterior.trim() !== "" && 
+    apiData.response_servico_anterior !== "null" && 
+    apiData.response_servico_anterior !== "undefined";
+
   return <div className="mt-8 space-y-4">
-      {/* Optional source indicator */}
-      {sourceScreen}
-      
       {/* Request Collapsible */}
       <Collapsible open={isRequestOpen} onOpenChange={setIsRequestOpen} className="border border-gray-200 rounded-md shadow overflow-hidden">
         <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
@@ -136,28 +139,30 @@ const TechnicalDocumentation = ({
         </CollapsibleContent>
       </Collapsible>
 
-      {/* Response Collapsible */}
-      <Collapsible open={isResponseOpen} onOpenChange={setIsResponseOpen} className="border border-gray-200 rounded-md shadow overflow-hidden">
-        <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
-          <div className="flex items-center gap-2">
-            <span>🔻 Response do serviço anterior ({apiData.nome_response_servico})</span>
-          </div>
-          {isResponseOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="p-4 bg-white">
-            <div className="flex justify-end mb-2">
-              <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs" onClick={() => handleCopy(apiData.response_servico_anterior, "Response")} title="Copiar para área de transferência">
-                <Copy className="h-3 w-3" />
-                Copiar JSON
-              </Button>
+      {/* Response Collapsible - Only show if there's valid response data */}
+      {hasValidResponse && (
+        <Collapsible open={isResponseOpen} onOpenChange={setIsResponseOpen} className="border border-gray-200 rounded-md shadow overflow-hidden">
+          <CollapsibleTrigger className="flex items-center justify-between w-full bg-white px-4 py-3 font-medium text-left">
+            <div className="flex items-center gap-2">
+              <span>🔻 Response do serviço anterior ({apiData.nome_response_servico})</span>
             </div>
-            <pre className="text-sm font-mono bg-gray-100 p-4 rounded overflow-x-auto whitespace-pre-wrap">
-              {formatText(apiData.response_servico_anterior)}
-            </pre>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+            {isResponseOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="p-4 bg-white">
+              <div className="flex justify-end mb-2">
+                <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs" onClick={() => handleCopy(apiData.response_servico_anterior, "Response")} title="Copiar para área de transferência">
+                  <Copy className="h-3 w-3" />
+                  Copiar JSON
+                </Button>
+              </div>
+              <pre className="text-sm font-mono bg-gray-100 p-4 rounded overflow-x-auto whitespace-pre-wrap">
+                {formatText(apiData.response_servico_anterior)}
+              </pre>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
     </div>;
 };
 
