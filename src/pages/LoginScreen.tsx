@@ -10,6 +10,8 @@ import { toast } from "@/components/ui/sonner";
 import { Loader2 } from "lucide-react";
 import { authService } from "@/services/authService";
 import { brasilApiService } from "@/services/brasilApiService";
+import { userService } from "@/services/userService";
+import { empresaService } from "@/services/empresaService";
 
 const LoginScreen = () => {
   const navigate = useNavigate();
@@ -174,6 +176,52 @@ const LoginScreen = () => {
     }
   };
 
+  const cacheUserSessionData = async (userId: string) => {
+    try {
+      console.log('[LoginScreen] Caching user session data for userId:', userId);
+      
+      // 1. Fetch user data
+      const userData = await userService.getUserById(userId, userId);
+      const userName = userData.nome || "Usuário";
+      const empresaId = userData.empresa_id;
+      
+      let companyName = userData.empresa || "Empresa";
+      let tipoSimulacao = null;
+      
+      // 2. Fetch company data if available
+      if (empresaId) {
+        try {
+          const empresaData = await empresaService.getEmpresaById(empresaId, userId);
+          companyName = empresaData.nome || companyName;
+          tipoSimulacao = empresaData.tipo_simulacao || null;
+        } catch (error) {
+          console.warn('[LoginScreen] Error fetching company data:', error);
+        }
+      }
+      
+      // 3. Create cache object with timestamp
+      const cacheData = {
+        userName,
+        companyName,
+        userId,
+        tipo_simulacao: tipoSimulacao,
+        timestamp: Date.now(),
+        expires_in: 60 * 60 * 1000 // 1 hour in milliseconds
+      };
+      
+      // 4. Save to storage
+      localStorage.setItem("user_session_cache", JSON.stringify(cacheData));
+      sessionStorage.setItem("user_name", userName);
+      sessionStorage.setItem("company_name", companyName);
+      
+      console.log('[LoginScreen] User session data cached successfully:', cacheData);
+      
+    } catch (error) {
+      console.error('[LoginScreen] Error caching user session data:', error);
+      // Don't throw error to avoid breaking login flow
+    }
+  };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setRequestSuccess(false);
@@ -228,15 +276,18 @@ const LoginScreen = () => {
           localStorage.setItem("loginResponse", JSON.stringify(data));
           // Save user data object
           localStorage.setItem("userData", JSON.stringify({ id_usuario: data.id_usuario }));
-        }
-        
-        // Check if this is first access
-        if (data.primeiro_acesso === true) {
-          // Store user ID for password reset page
-          sessionStorage.setItem("primeiro_acesso_user_id", data.id_usuario);
-          // Navigate to first access password setup
-          navigate("/primeiro_acesso");
-          return;
+          
+          // Check if this is first access
+          if (data.primeiro_acesso === true) {
+            // Store user ID for password reset page
+            sessionStorage.setItem("primeiro_acesso_user_id", data.id_usuario);
+            // Navigate to first access password setup
+            navigate("/primeiro_acesso");
+            return;
+          }
+          
+          // Fetch and cache user session data
+          await cacheUserSessionData(data.id_usuario);
         }
         
         // Display success toast

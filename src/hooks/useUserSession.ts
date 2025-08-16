@@ -27,10 +27,10 @@ export const useUserSession = () => {
       try {
         setSessionData(prev => ({ ...prev, isLoading: true, error: null }));
 
-        // 1. Obter id_usuario do localStorage (já salvo no login)
+        // 1. Get user ID from localStorage
         const userId = localStorage.getItem("userId");
         if (!userId) {
-          console.warn("No user ID found in localStorage");
+          console.warn("[useUserSession] No user ID found in localStorage");
           setSessionData(prev => ({ 
             ...prev, 
             userId: null,
@@ -40,52 +40,100 @@ export const useUserSession = () => {
           return;
         }
 
-        console.log("Loading user session for userId:", userId);
+        // 2. Check for valid cached data first
+        const cachedData = localStorage.getItem("user_session_cache");
+        if (cachedData) {
+          try {
+            const parsed = JSON.parse(cachedData);
+            const isExpired = Date.now() - parsed.timestamp > parsed.expires_in;
+            
+            if (!isExpired && parsed.userId === userId) {
+              console.log("[useUserSession] Using cached data:", parsed);
+              setSessionData({
+                userName: parsed.userName,
+                companyName: parsed.companyName,
+                userId: parsed.userId,
+                tipo_simulacao: parsed.tipo_simulacao,
+                isLoading: false,
+                error: null
+              });
+              return;
+            } else {
+              console.log("[useUserSession] Cache expired or invalid, fetching fresh data");
+              localStorage.removeItem("user_session_cache");
+            }
+          } catch (error) {
+            console.warn("[useUserSession] Error parsing cached data:", error);
+            localStorage.removeItem("user_session_cache");
+          }
+        }
 
-        // 2. Buscar detalhes do usuário
+        console.log("[useUserSession] Loading fresh user session for userId:", userId);
+
+        // 3. Fetch fresh data from API
         const userData = await userService.getUserById(userId, userId);
-        console.log("User data received:", userData);
+        console.log("[useUserSession] User data received:", userData);
 
         const userName = userData.nome || "Usuário";
         const empresaId = userData.empresa_id;
 
-        // Se não tiver empresa_id, usar dados parciais
+        // If no company ID, use partial data
         if (!empresaId) {
-          setSessionData({
+          const sessionData = {
             userName,
             companyName: userData.empresa || "Empresa",
             userId,
             tipo_simulacao: null,
             isLoading: false,
             error: null
-          });
+          };
+          
+          // Cache the data
+          const cacheData = {
+            ...sessionData,
+            timestamp: Date.now(),
+            expires_in: 60 * 60 * 1000 // 1 hour
+          };
+          localStorage.setItem("user_session_cache", JSON.stringify(cacheData));
+          sessionStorage.setItem("user_name", sessionData.userName);
+          sessionStorage.setItem("company_name", sessionData.companyName);
+          
+          setSessionData(sessionData);
           return;
         }
 
-        // 3. Buscar detalhes da empresa
+        // 4. Fetch company details
         const empresaData = await empresaService.getEmpresaById(empresaId, userId);
-        console.log("Company data received:", empresaData);
+        console.log("[useUserSession] Company data received:", empresaData);
 
         const companyName = empresaData.nome || "Empresa";
         const tipoSimulacao = empresaData.tipo_simulacao || null;
 
-        // 4. Salvar no sessionStorage para próximas sessões
-        sessionStorage.setItem("user_name", userName);
-        sessionStorage.setItem("company_name", companyName);
-
-        setSessionData({
+        const sessionData = {
           userName,
           companyName,
           userId,
           tipo_simulacao: tipoSimulacao,
           isLoading: false,
           error: null
-        });
+        };
+
+        // 5. Cache the fresh data
+        const cacheData = {
+          ...sessionData,
+          timestamp: Date.now(),
+          expires_in: 60 * 60 * 1000 // 1 hour
+        };
+        localStorage.setItem("user_session_cache", JSON.stringify(cacheData));
+        sessionStorage.setItem("user_name", userName);
+        sessionStorage.setItem("company_name", companyName);
+
+        setSessionData(sessionData);
 
       } catch (error) {
-        console.error("Error loading user session:", error);
+        console.error("[useUserSession] Error loading user session:", error);
         
-        // Fallback: tentar usar dados do sessionStorage se houver erro na API
+        // Fallback: try to use data from sessionStorage if there's an API error
         const fallbackUserName = sessionStorage.getItem("user_name");
         const fallbackCompanyName = sessionStorage.getItem("company_name");
         const userId = localStorage.getItem("userId");
