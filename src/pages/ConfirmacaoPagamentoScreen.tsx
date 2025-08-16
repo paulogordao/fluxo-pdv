@@ -60,6 +60,7 @@ const ConfirmacaoPagamentoScreen = () => {
   // State for technical data
   const [technicalRequestData, setTechnicalRequestData] = useState<string | undefined>();
   const [technicalResponseData, setTechnicalResponseData] = useState<string | undefined>();
+  const [technicalPreviousRequestData, setTechnicalPreviousRequestData] = useState<string | undefined>();
 
   // RLIPAYS button states
   const [isLoadingPayment, setIsLoadingPayment] = useState(false);
@@ -265,36 +266,53 @@ const ConfirmacaoPagamentoScreen = () => {
     }
     
     if (previousServiceResponse) {
-      setTechnicalResponseData(previousServiceResponse);
+      try {
+        const parsedData = JSON.parse(previousServiceResponse);
+        if (Array.isArray(parsedData) && parsedData[0]) {
+          // Extract request and response separately from previous service
+          if (parsedData[0].request) {
+            setTechnicalPreviousRequestData(JSON.stringify(parsedData[0].request, null, 2));
+          }
+          if (parsedData[0].response) {
+            setTechnicalResponseData(JSON.stringify(parsedData[0].response, null, 2));
+          }
+        } else {
+          // For cases where the response is not in array format
+          setTechnicalResponseData(JSON.stringify(parsedData, null, 2));
+        }
+      } catch (error) {
+        console.error('Error parsing previous service response:', error);
+        setTechnicalResponseData(previousServiceResponse);
+      }
     }
     
-    // Generate RLIPAYS request data based on current transaction
-    const transactionId = localStorage.getItem('transactionId');
-    if (transactionId) {
-      const remainingAmount = calculateRemainingAmount();
-      let payments = undefined;
-      
-      if (remainingAmount > 0) {
-        payments = [{
-          type: 1,
-          bin: "",
-          amount: remainingAmount,
-          description: "Pagamento em Dinheiro"
-        }];
-      }
-      
-      const requestData = {
-        route: "RLIPAYS",
-        version: 1,
-        input: {
-          transaction_id: transactionId,
-          payments: payments
+      // Generate RLIPAYS request data based on current transaction
+      const transactionId = localStorage.getItem('transactionId');
+      if (transactionId) {
+        const remainingAmount = calculateRemainingAmount();
+        let payments = undefined;
+        
+        if (remainingAmount > 0) {
+          payments = [{
+            type: 1,
+            bin: "",
+            amount: parseFloat(remainingAmount.toFixed(2)), // Ensure exactly 2 decimal places
+            description: "Pagamento em Dinheiro"
+          }];
         }
-      };
-      
-      setTechnicalRequestData(JSON.stringify(requestData, null, 2));
-      console.log('[ConfirmacaoPagamento] Generated dynamic RLIPAYS request data');
-    }
+        
+        const requestData = {
+          route: "RLIPAYS",
+          version: 1,
+          input: {
+            transaction_id: transactionId,
+            payments: payments
+          }
+        };
+        
+        setTechnicalRequestData(JSON.stringify(requestData, null, 2));
+        console.log('[ConfirmacaoPagamento] Generated dynamic RLIPAYS request data');
+      }
   }, [comingFromScanScreen, comingFromTokenScreen, comingFromOtpScreen, comingFromAppScreen, rliauthData]);
 
   // Prepare technical documentation data (fallback for API call)
@@ -335,7 +353,7 @@ const ConfirmacaoPagamentoScreen = () => {
           const orderData = JSON.parse(orderDataStr);
           const order = orderData.order;
           if (order) {
-            const remainingAmount = order.value - order.paid_out;
+            const remainingAmount = parseFloat((order.value - order.paid_out).toFixed(2));
             console.log('[ConfirmacaoPagamento] Using RLIWAIT remaining amount for RLIPAYS:', remainingAmount);
             return remainingAmount;
           }
@@ -347,8 +365,9 @@ const ConfirmacaoPagamentoScreen = () => {
     
     // If coming directly from ScanScreen (FUND -> RLIPAYS flow), return the real cart total
     if (comingFromScanScreen && totalAmount > 0) {
-      console.log('[ConfirmacaoPagamento] Using real cart total for RLIPAYS:', totalAmount);
-      return totalAmount;
+      const result = parseFloat(totalAmount.toFixed(2));
+      console.log('[ConfirmacaoPagamento] Using real cart total for RLIPAYS:', result);
+      return result;
     }
     
     const subtotalValue = parseFloat(displayValues.subtotal.replace('R$ ', '').replace('.', '').replace(',', '.'));
@@ -409,7 +428,7 @@ const ConfirmacaoPagamentoScreen = () => {
         payments = [{
           type: 1,
           bin: "",
-          amount: remainingAmount,
+          amount: parseFloat(remainingAmount.toFixed(2)), // Ensure exactly 2 decimal places
           description: "Pagamento em Dinheiro"
         }];
         console.log('[ConfirmacaoPagamento] Created payments array:', payments);
@@ -644,14 +663,15 @@ const ConfirmacaoPagamentoScreen = () => {
       <GuiaDeNavegacaoAPI />
       
       {/* Technical Footer Component */}
-      <TechnicalFooter
-        requestData={technicalRequestData || apiData.request_servico}
-        responseData={technicalResponseData || apiData.response_servico_anterior}
-        isLoading={isLoading}
-        slug={documentationSlug}
-        loadOnMount={false}
-        sourceScreen="confirmacao_pagamento"
-      />
+        <TechnicalFooter
+          requestData={technicalRequestData || apiData.request_servico}
+          responseData={technicalResponseData || apiData.response_servico_anterior}
+          previousRequestData={technicalPreviousRequestData}
+          isLoading={isLoading}
+          slug={documentationSlug}
+          loadOnMount={false}
+          sourceScreen="confirmacao_pagamento"
+        />
 
       {/* Error Modal */}
       <ErrorModal

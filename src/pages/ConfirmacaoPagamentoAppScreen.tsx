@@ -42,6 +42,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
   // State for technical data
   const [technicalRequestData, setTechnicalRequestData] = useState<string | undefined>();
   const [technicalResponseData, setTechnicalResponseData] = useState<string | undefined>();
+  const [technicalPreviousRequestData, setTechnicalPreviousRequestData] = useState<string | undefined>();
   
   // Use the custom hook for token payment eligibility
   const { showTokenPaymentButton, tokenButtonLoading } = useTokenPaymentEligibility();
@@ -106,7 +107,25 @@ const ConfirmacaoPagamentoAppScreen = () => {
     // Load RLIDEAL response from localStorage (from previous screen)
     const rlidealResponse = localStorage.getItem('rlidealResponse');
     if (rlidealResponse) {
-      setTechnicalResponseData(rlidealResponse);
+      try {
+        const parsedData = JSON.parse(rlidealResponse);
+        if (Array.isArray(parsedData) && parsedData[0]) {
+          // Extract request from previous service
+          if (parsedData[0].request) {
+            setTechnicalPreviousRequestData(JSON.stringify(parsedData[0].request, null, 2));
+          }
+          // Extract response from previous service
+          if (parsedData[0].response) {
+            setTechnicalResponseData(JSON.stringify(parsedData[0].response, null, 2));
+          }
+        } else {
+          // For cases where response is not in array format
+          setTechnicalResponseData(JSON.stringify(parsedData, null, 2));
+        }
+      } catch (error) {
+        console.error('Error parsing rlidealResponse:', error);
+        setTechnicalResponseData(rlidealResponse);
+      }
     }
 
     // Generate RLIWAIT request data based on current transaction
@@ -634,14 +653,15 @@ const ConfirmacaoPagamentoAppScreen = () => {
       <GuiaDeNavegacaoAPI />
       
       {/* Technical Footer Component */}
-      <TechnicalFooter
-        requestData={technicalRequestData}
-        responseData={technicalResponseData}
-        isLoading={isLoading}
-        slug="RLIDEALRLIWAIT"
-        loadOnMount={false}
-        sourceScreen="confirmacao_pagamento_app"
-      />
+        <TechnicalFooter
+          requestData={technicalRequestData}
+          responseData={technicalResponseData}
+          previousRequestData={technicalPreviousRequestData}
+          isLoading={isLoading}
+          slug="RLIDEALRLIWAIT"
+          loadOnMount={false}
+          sourceScreen="confirmacao_pagamento_app"
+        />
       
       {/* First Alert Dialog - RLIFUND Break Step */}
       <AlertDialog open={alertDialogOpen} onOpenChange={setAlertDialogOpen}>
