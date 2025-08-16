@@ -38,6 +38,10 @@ const ConfirmacaoPagamentoAppScreen = () => {
     response_servico_anterior?: string | null;
   }>({});
   const [isLoading, setIsLoading] = useState(true);
+
+  // State for technical data
+  const [technicalRequestData, setTechnicalRequestData] = useState<string | undefined>();
+  const [technicalResponseData, setTechnicalResponseData] = useState<string | undefined>();
   
   // Use the custom hook for token payment eligibility
   const { showTokenPaymentButton, tokenButtonLoading } = useTokenPaymentEligibility();
@@ -95,6 +99,40 @@ const ConfirmacaoPagamentoAppScreen = () => {
     };
     
     fetchApiData();
+  }, []);
+
+  // Load technical data from localStorage and generate dynamic request data
+  useEffect(() => {
+    // Load RLIDEAL response from localStorage (from previous screen)
+    const rlidealResponse = localStorage.getItem('rlidealResponse');
+    if (rlidealResponse) {
+      setTechnicalResponseData(rlidealResponse);
+    }
+
+    // Generate RLIWAIT request data based on current transaction
+    if (transactionId) {
+      const requestData = {
+        route: "RLIWAIT",
+        version: 1,
+        input: {
+          transaction_id: transactionId
+        }
+      };
+      setTechnicalRequestData(JSON.stringify(requestData, null, 2));
+    }
+  }, [transactionId]);
+
+  // Monitor localStorage changes for RLIDEAL response
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const rlidealResponse = localStorage.getItem('rlidealResponse');
+      if (rlidealResponse) {
+        setTechnicalResponseData(rlidealResponse);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // Start polling when component mounts (ONLINE flow only)
@@ -597,10 +635,11 @@ const ConfirmacaoPagamentoAppScreen = () => {
       
       {/* Technical Footer Component */}
       <TechnicalFooter
-        requestData={apiData.request_servico} 
-        responseData={apiData.response_servico_anterior}
+        requestData={technicalRequestData}
+        responseData={technicalResponseData}
         isLoading={isLoading}
         slug="RLIDEALRLIWAIT"
+        loadOnMount={false}
         sourceScreen="confirmacao_pagamento_app"
       />
       
