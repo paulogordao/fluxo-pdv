@@ -9,6 +9,7 @@ import { comandoService, RlifundApiError } from "@/services/comandoService";
 import ErrorModal from "@/components/ErrorModal";
 import ValidationModal from "@/components/ValidationModal";
 import { toast } from "sonner";
+import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
 
 const OtpDataNascimentoScreen = () => {
   const [digits, setDigits] = useState<string[]>([]);
@@ -250,9 +251,10 @@ const OtpDataNascimentoScreen = () => {
     <PdvLayout className="pb-16">
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="bg-dotz-laranja text-white">
-          <CardTitle className="text-center">
-            Pagamento Cliente A
-          </CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>Pagamento Cliente A</CardTitle>
+            <EncerrarAtendimentoButton />
+          </div>
         </CardHeader>
         <CardContent className="pt-6">
           <div className="text-center mb-6">

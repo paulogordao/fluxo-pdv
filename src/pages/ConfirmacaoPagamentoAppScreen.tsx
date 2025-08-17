@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { buildApiUrl } from "@/config/api";
 import { useTokenPaymentEligibility } from "@/hooks/useTokenPaymentEligibility";
+import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
 import { comandoService } from "@/services/comandoService";
 
 const ConfirmacaoPagamentoAppScreen = () => {
@@ -394,8 +395,9 @@ const ConfirmacaoPagamentoAppScreen = () => {
       <div className="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Left Panel - PDV Modal */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="bg-dotz-laranja text-white p-4 text-center">
+          <div className="bg-dotz-laranja text-white p-4 flex justify-between items-center">
             <h2 className="text-xl font-semibold">Pagamento Cliente A</h2>
+            <EncerrarAtendimentoButton />
           </div>
           <div className="p-6 text-center">
             <p className="text-lg mb-6">Aguardando pagamento no APP Cliente A.</p>

@@ -29,6 +29,7 @@ import { usePaymentOption } from "@/context/PaymentOptionContext";
 import ErrorModal from "@/components/ErrorModal";
 import { comandoService, RlifundApiError } from "@/services/comandoService";
 import { Loader2 } from "lucide-react";
+import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
 
 const MeiosDePagamentoScreen = () => {
   const [selectedOption, setSelectedOption] = useState("app");
@@ -302,9 +303,12 @@ const MeiosDePagamentoScreen = () => {
           )}
 
           <div className="flex flex-col items-center space-y-6">
-            <h1 className="text-2xl font-bold text-center text-gray-900">
-              Escolha a forma de pagamento
-            </h1>
+            <div className="flex items-center justify-between w-full mb-4">
+              <h1 className="text-2xl font-bold text-gray-900">
+                Escolha a forma de pagamento
+              </h1>
+              <EncerrarAtendimentoButton />
+            </div>
             <p className="text-center text-gray-600 mb-6">
               Como você gostaria de pagar?
             </p>

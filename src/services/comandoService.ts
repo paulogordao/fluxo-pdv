@@ -42,6 +42,11 @@ export interface ComandoRliwaitRequest {
   id_transaction: string;
 }
 
+export interface ComandoRliquitRequest {
+  comando: string;
+  id_transaction: string;
+}
+
 export interface RlifundItem {
   ean: string;
   sku: string;
@@ -878,6 +883,107 @@ export const comandoService = {
     } catch (error) {
       clearTimeout(timeoutId);
       console.error('[comandoService] Erro ao enviar comando RLIWAIT:', error);
+      
+      if (error.name === 'AbortError') {
+        throw new Error('TIMEOUT');
+      }
+      
+      throw error;
+    }
+  },
+
+  // RLIQUIT command method
+  async enviarComandoRliquit(transactionId: string): Promise<ComandoResponse> {
+    const requestBody: ComandoRliquitRequest = {
+      comando: 'RLIQUIT',
+      id_transaction: transactionId
+    };
+
+    console.log(`[comandoService] Enviando comando RLIQUIT:`, requestBody);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
+
+    try {
+      const url = 'https://umbrelosn8n.plsm.com.br/webhook-test/simuladorPDV/comando?=';
+      console.log(`[comandoService] RLIQUIT URL: ${url}`);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: API_CONFIG.defaultHeaders,
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+      console.log(`[comandoService] RLIQUIT Response status:`, response.status);
+      console.log(`[comandoService] RLIQUIT Response headers:`, Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const responseText = await response.text();
+      console.log(`[comandoService] RLIQUIT Raw response:`, responseText);
+
+      let parsedData;
+      try {
+        parsedData = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error(`[comandoService] RLIQUIT JSON parse error:`, parseError);
+        throw new Error(`Invalid JSON response: ${responseText}`);
+      }
+
+      // Adaptive parsing: handle both object and array responses
+      let data: ComandoResponse;
+      if (Array.isArray(parsedData)) {
+        console.log(`[comandoService] RLIQUIT Response is already an array`);
+        data = parsedData;
+      } else if (parsedData && typeof parsedData === 'object') {
+        console.log(`[comandoService] RLIQUIT Response is an object, converting to array`);
+        data = [parsedData];
+      } else {
+        console.error(`[comandoService] RLIQUIT Unexpected response format:`, parsedData);
+        throw new Error(`Formato de resposta inesperado: esperado objeto ou array`);
+      }
+
+      console.log(`[comandoService] RLIQUIT Final data:`, data);
+
+      if (!Array.isArray(data)) {
+        throw new Error('Resposta não é um array');
+      }
+
+      if (!data[0]) {
+        throw new Error('Array de resposta está vazio');
+      }
+
+      if (!data[0].response) {
+        throw new Error('Resposta não contém campo response');
+      }
+
+      // Check if response is a string (possible error format)
+      if (typeof data[0].response === 'string') {
+        console.log(`[comandoService] RLIQUIT Response is string, checking for errors:`, data[0].response);
+        
+        // Try to parse RLIQUIT error from string response
+        const errorResponse = parseRlifundError(data[0].response);
+        if (errorResponse && !errorResponse.success && errorResponse.errors?.length > 0) {
+          const error = errorResponse.errors[0];
+          throw new RlifundApiError(error.code, error.message, requestBody, data[0]);
+        }
+        
+        // If it's a string but not a structured error, throw generic error
+        throw new Error(`Resposta em formato string inesperado: ${data[0].response}`);
+      }
+
+      if (data[0].response.success !== true) {
+        throw new Error(`Resposta indica falha: success=${data[0].response.success}`);
+      }
+
+      return data;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.error('[comandoService] Erro ao enviar comando RLIQUIT:', error);
       
       if (error.name === 'AbortError') {
         throw new Error('TIMEOUT');

@@ -9,6 +9,7 @@ import TechnicalFooter from "@/components/TechnicalFooter";
 import { useUserSession } from "@/hooks/useUserSession";
 import { comandoService } from "@/services/comandoService";
 import { toast } from "sonner";
+import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
 
 const ConfirmacaoPagamentoTokenScreen = () => {
   const [tokenDigits, setTokenDigits] = useState<string[]>([]);
@@ -173,9 +174,10 @@ const ConfirmacaoPagamentoTokenScreen = () => {
         {/* Left Panel - PDV Token Input */}
         <Card className="w-full shadow-lg overflow-hidden">
           <CardHeader className="bg-dotz-laranja text-white">
-            <CardTitle className="text-center">
-              Pagamento Cliente A
-            </CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle>Pagamento Cliente A</CardTitle>
+              <EncerrarAtendimentoButton />
+            </div>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="text-center mb-6">

@@ -14,6 +14,7 @@ import ErrorModal from "@/components/ErrorModal";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
 import { buscarProdutosFakes, FakeProduct } from "@/services/produtoService";
 import { useToast } from "@/hooks/use-toast";
+import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
 
 const ScanScreen = () => {
   const [barcode, setBarcode] = useState("");
@@ -572,11 +573,14 @@ const ScanScreen = () => {
       {/* Header com nome do cliente e promoção */}
       <div className="bg-dotz-laranja text-white p-4 flex justify-between items-center">
         <div className="font-medium">{headerContent}</div>
-        <div className="flex gap-2">
-          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black">A</div>
-          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black">B</div>
-          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black">C</div>
-          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black">D</div>
+        <div className="flex items-center gap-4">
+          <div className="flex gap-2">
+            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black">A</div>
+            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black">B</div>
+            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black">C</div>
+            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black">D</div>
+          </div>
+          <EncerrarAtendimentoButton />
         </div>
       </div>
 

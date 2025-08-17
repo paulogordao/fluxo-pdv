@@ -9,6 +9,7 @@ import { consultaFluxoService } from "@/services/consultaFluxoService";
 import { comandoService } from "@/services/comandoService";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
 
 const TelefoneScreen = () => {
   const [telefone, setTelefone] = useState("");
@@ -246,9 +247,12 @@ const TelefoneScreen = () => {
         </div>
       )}
 
-      <Card className="w-full max-w-md p-6 flex flex-col items-center">
+        <Card className="w-full max-w-md p-6 flex flex-col items-center">
         <div className="w-full mb-8">
-          <h2 className="text-2xl font-bold text-center mb-6">Informe seu Celular</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold">Informe seu Celular</h2>
+            <EncerrarAtendimentoButton />
+          </div>
           
           {lastError && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">

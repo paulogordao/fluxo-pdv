@@ -21,6 +21,7 @@ import {
   QrCode as Pix,
   Utensils as ValeRefeicao
 } from "lucide-react";
+import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
 
 const ConfirmacaoPagamentoScreen = () => {
   const navigate = useNavigate();
@@ -542,8 +543,9 @@ const ConfirmacaoPagamentoScreen = () => {
           {/* Left Panel - Receipt */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
             {/* Header */}
-            <div className="bg-red-600 text-white p-4">
+            <div className="bg-red-600 text-white p-4 flex justify-between items-center">
               <h2 className="text-xl font-medium">Confirmação de Pagamento</h2>
+              <EncerrarAtendimentoButton />
             </div>
             
             {/* Receipt Details */}
