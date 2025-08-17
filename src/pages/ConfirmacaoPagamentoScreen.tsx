@@ -503,6 +503,19 @@ const ConfirmacaoPagamentoScreen = () => {
     handleFinalizarPagamento();
   };
 
+  // Determine the previous service name based on the flow
+  const getPreviousServiceName = () => {
+    if (comingFromScanScreen) {
+      return 'RLIFUND';
+    } else if (comingFromTokenScreen || comingFromOtpScreen) {
+      return 'RLIAUTH';
+    } else if (comingFromAppScreen) {
+      return 'RLIWAIT';
+    } else {
+      return 'RLIDEAL'; // Default flow (from payment methods)
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-4 pb-16">
       {/* Success Message Overlay */}
@@ -663,15 +676,16 @@ const ConfirmacaoPagamentoScreen = () => {
       <GuiaDeNavegacaoAPI />
       
       {/* Technical Footer Component */}
-        <TechnicalFooter
-          requestData={technicalRequestData || apiData.request_servico}
-          responseData={technicalResponseData || apiData.response_servico_anterior}
-          previousRequestData={technicalPreviousRequestData}
-          isLoading={isLoading}
-          slug={documentationSlug}
-          loadOnMount={false}
-          sourceScreen="confirmacao_pagamento"
-        />
+      <TechnicalFooter
+        requestData={technicalRequestData || apiData.request_servico}
+        responseData={technicalResponseData || apiData.response_servico_anterior}
+        previousRequestData={technicalPreviousRequestData}
+        isLoading={isLoading}
+        slug={documentationSlug}
+        loadOnMount={false}
+        sourceScreen="confirmacao_pagamento"
+        previousServiceName={getPreviousServiceName()}
+      />
 
       {/* Error Modal */}
       <ErrorModal
