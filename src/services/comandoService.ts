@@ -905,7 +905,7 @@ export const comandoService = {
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
 
     try {
-      const url = 'https://umbrelosn8n.plsm.com.br/webhook-test/simuladorPDV/comando?=';
+      const url = buildApiUrl('comando?=');
       console.log(`[comandoService] RLIQUIT URL: ${url}`);
 
       const response = await fetch(url, {
