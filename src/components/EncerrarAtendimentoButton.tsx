@@ -18,7 +18,7 @@ const EncerrarAtendimentoButton = () => {
   return (
     <>
       <Button
-        variant="destructive"
+        variant="exit"
         size="sm"
         onClick={openModal}
         disabled={isLoading}

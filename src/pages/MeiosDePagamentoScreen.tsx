@@ -302,12 +302,16 @@ const MeiosDePagamentoScreen = () => {
             </div>
           )}
 
+          {/* Fixed position button */}
+          <div className="absolute top-4 right-4 z-20">
+            <EncerrarAtendimentoButton />
+          </div>
+          
           <div className="flex flex-col items-center space-y-6">
-            <div className="flex items-center justify-between w-full mb-4">
+            <div className="text-center mb-4">
               <h1 className="text-2xl font-bold text-gray-900">
                 Escolha a forma de pagamento
               </h1>
-              <EncerrarAtendimentoButton />
             </div>
             <p className="text-center text-gray-600 mb-6">
               Como você gostaria de pagar?

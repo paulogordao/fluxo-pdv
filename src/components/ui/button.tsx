@@ -22,6 +22,7 @@ const buttonVariants = cva(
         dotz: "bg-dotz-laranja text-white hover:bg-dotz-laranja/90",
         token: "bg-gray-800 text-white hover:bg-gray-700",
         cancel: "bg-gray-300 text-gray-900 hover:bg-gray-400",
+        exit: "bg-green-600 text-white hover:bg-green-700 border border-green-600",
       },
       size: {
         default: "h-10 px-4 py-2",
