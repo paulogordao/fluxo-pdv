@@ -1,4 +1,5 @@
 import { buildApiUrl, API_CONFIG } from '@/config/api';
+import { getUserId } from '@/utils/userUtils';
 
 export interface ComandoRequest {
   comando: string;
@@ -175,6 +176,12 @@ export const comandoService = {
   async enviarComando(comando: string, cpf: string): Promise<ComandoResponse> {
     console.log(`[comandoService] Enviando comando: ${comando}, CPF: ${cpf}`);
     
+    // Get user ID for header
+    const userId = getUserId();
+    if (!userId) {
+      throw new Error('ID do usuário não encontrado no localStorage. Faça login novamente.');
+    }
+    
     const url = buildApiUrl('comando?=');
     const requestBody: ComandoRequest = {
       comando,
@@ -183,6 +190,7 @@ export const comandoService = {
     
     console.log(`[comandoService] URL: ${url}`);
     console.log(`[comandoService] Request body:`, requestBody);
+    console.log(`[comandoService] User ID sendo usado: ${userId}`);
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
@@ -190,7 +198,10 @@ export const comandoService = {
     try {
       const response = await fetch(url, {
         method: 'POST',
-        headers: API_CONFIG.defaultHeaders,
+        headers: {
+          ...API_CONFIG.defaultHeaders,
+          'id_usuario': userId
+        },
         body: JSON.stringify(requestBody),
         signal: controller.signal
       });
@@ -269,6 +280,12 @@ export const comandoService = {
   async enviarComandoRlicell(telefone: string, transactionId: string): Promise<ComandoResponse> {
     console.log(`[comandoService] Enviando comando RLICELL: telefone=${telefone}, transaction_id=${transactionId}`);
     
+    // Get user ID for header
+    const userId = getUserId();
+    if (!userId) {
+      throw new Error('ID do usuário não encontrado no localStorage. Faça login novamente.');
+    }
+    
     const url = buildApiUrl('comando?=');
     const requestBody: ComandoRlicellRequest = {
       comando: "RLICELL",
@@ -278,6 +295,7 @@ export const comandoService = {
     
     console.log(`[comandoService] URL: ${url}`);
     console.log(`[comandoService] Request body:`, requestBody);
+    console.log(`[comandoService] User ID sendo usado: ${userId}`);
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
@@ -285,7 +303,10 @@ export const comandoService = {
     try {
       const response = await fetch(url, {
         method: 'POST',
-        headers: API_CONFIG.defaultHeaders,
+        headers: {
+          ...API_CONFIG.defaultHeaders,
+          'id_usuario': userId
+        },
         body: JSON.stringify(requestBody),
         signal: controller.signal
       });
@@ -365,6 +386,12 @@ export const comandoService = {
     console.log(`[comandoService] Enviando comando RLIFUND: transaction_id=${transactionId}, payment_option_type=${paymentOptionType}, value_total=${valueTotal}`);
     console.log(`[comandoService] Items:`, items);
     
+    // Get user ID for header
+    const userId = getUserId();
+    if (!userId) {
+      throw new Error('ID do usuário não encontrado no localStorage. Faça login novamente.');
+    }
+    
     const url = buildApiUrl('comando?=');
     const requestBody: ComandoRlifundRequest = {
       comando: "RLIFUND",
@@ -376,6 +403,7 @@ export const comandoService = {
     
     console.log(`[comandoService] URL: ${url}`);
     console.log(`[comandoService] Request body:`, requestBody);
+    console.log(`[comandoService] User ID sendo usado: ${userId}`);
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
@@ -383,7 +411,10 @@ export const comandoService = {
     try {
       const response = await fetch(url, {
         method: 'POST',
-        headers: API_CONFIG.defaultHeaders,
+        headers: {
+          ...API_CONFIG.defaultHeaders,
+          'id_usuario': userId
+        },
         body: JSON.stringify(requestBody),
         signal: controller.signal
       });
@@ -489,6 +520,12 @@ export const comandoService = {
 
   // RLIDEAL command method
   async enviarComandoRlideal(transactionId: string, paymentOption: string): Promise<ComandoResponse> {
+    // Get user ID for header
+    const userId = getUserId();
+    if (!userId) {
+      throw new Error('ID do usuário não encontrado no localStorage. Faça login novamente.');
+    }
+
     const requestBody: ComandoRlidealRequest = {
       comando: 'RLIDEAL',
       payment_option: paymentOption,
@@ -496,6 +533,7 @@ export const comandoService = {
     };
 
     console.log(`[comandoService] Enviando comando RLIDEAL:`, requestBody);
+    console.log(`[comandoService] User ID sendo usado: ${userId}`);
 
     const timeoutId = setTimeout(() => {
       throw new Error('TIMEOUT');
@@ -507,7 +545,10 @@ export const comandoService = {
 
       const response = await fetch(url, {
         method: 'POST',
-        headers: API_CONFIG.defaultHeaders,
+        headers: {
+          ...API_CONFIG.defaultHeaders,
+          'id_usuario': userId
+        },
         body: JSON.stringify(requestBody),
       });
 
@@ -587,6 +628,12 @@ export const comandoService = {
 
   // RLIAUTH command method
   async enviarComandoRliauth(transactionId: string, token: string): Promise<ComandoResponse> {
+    // Get user ID for header
+    const userId = getUserId();
+    if (!userId) {
+      throw new Error('ID do usuário não encontrado no localStorage. Faça login novamente.');
+    }
+
     const requestBody: ComandoRliauthRequest = {
       comando: 'RLIAUTH',
       id_transaction: transactionId,
@@ -595,6 +642,7 @@ export const comandoService = {
     };
 
     console.log(`[comandoService] Enviando comando RLIAUTH:`, requestBody);
+    console.log(`[comandoService] User ID sendo usado: ${userId}`);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
@@ -605,7 +653,10 @@ export const comandoService = {
 
       const response = await fetch(url, {
         method: 'POST',
-        headers: API_CONFIG.defaultHeaders,
+        headers: {
+          ...API_CONFIG.defaultHeaders,
+          'id_usuario': userId
+        },
         body: JSON.stringify(requestBody),
         signal: controller.signal
       });
@@ -690,6 +741,12 @@ export const comandoService = {
 
   // RLIPAYS command method
   async enviarComandoRlipays(transactionId: string, payments?: PaymentItem[]): Promise<ComandoResponse> {
+    // Get user ID for header
+    const userId = getUserId();
+    if (!userId) {
+      throw new Error('ID do usuário não encontrado no localStorage. Faça login novamente.');
+    }
+
     const requestBody: ComandoRlipaysRequest = {
       comando: 'RLIPAYS',
       id_transaction: transactionId,
@@ -698,6 +755,7 @@ export const comandoService = {
 
     console.log(`[comandoService] Enviando comando RLIPAYS:`, requestBody);
     console.log(`[comandoService] Payments array:`, payments);
+    console.log(`[comandoService] User ID sendo usado: ${userId}`);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
@@ -708,7 +766,10 @@ export const comandoService = {
 
       const response = await fetch(url, {
         method: 'POST',
-        headers: API_CONFIG.defaultHeaders,
+        headers: {
+          ...API_CONFIG.defaultHeaders,
+          'id_usuario': userId
+        },
         body: JSON.stringify(requestBody),
         signal: controller.signal
       });
@@ -793,12 +854,19 @@ export const comandoService = {
 
   // RLIWAIT command method
   async enviarComandoRliwait(transactionId: string): Promise<ComandoResponse> {
+    // Get user ID for header
+    const userId = getUserId();
+    if (!userId) {
+      throw new Error('ID do usuário não encontrado no localStorage. Faça login novamente.');
+    }
+
     const requestBody: ComandoRliwaitRequest = {
       comando: 'RLIWAIT',
       id_transaction: transactionId
     };
 
     console.log(`[comandoService] Enviando comando RLIWAIT:`, requestBody);
+    console.log(`[comandoService] User ID sendo usado: ${userId}`);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
@@ -809,7 +877,10 @@ export const comandoService = {
 
       const response = await fetch(url, {
         method: 'POST',
-        headers: API_CONFIG.defaultHeaders,
+        headers: {
+          ...API_CONFIG.defaultHeaders,
+          'id_usuario': userId
+        },
         body: JSON.stringify(requestBody),
         signal: controller.signal
       });
@@ -894,12 +965,19 @@ export const comandoService = {
 
   // RLIQUIT command method
   async enviarComandoRliquit(transactionId: string): Promise<ComandoResponse> {
+    // Get user ID for header
+    const userId = getUserId();
+    if (!userId) {
+      throw new Error('ID do usuário não encontrado no localStorage. Faça login novamente.');
+    }
+
     const requestBody: ComandoRliquitRequest = {
       comando: 'RLIQUIT',
       id_transaction: transactionId
     };
 
     console.log(`[comandoService] Enviando comando RLIQUIT:`, requestBody);
+    console.log(`[comandoService] User ID sendo usado: ${userId}`);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
@@ -910,7 +988,10 @@ export const comandoService = {
 
       const response = await fetch(url, {
         method: 'POST',
-        headers: API_CONFIG.defaultHeaders,
+        headers: {
+          ...API_CONFIG.defaultHeaders,
+          'id_usuario': userId
+        },
         body: JSON.stringify(requestBody),
         signal: controller.signal
       });
