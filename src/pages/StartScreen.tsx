@@ -51,7 +51,7 @@ const StartScreen = () => {
                   <span className="text-white text-xl font-bold">A+</span>
                 </div>
               </div>
-              <span className="text-xl">Deseja participar do<br />Cliente A + Dotz?</span>
+              <span className="text-xl">Deseja participar da<br />Dotz?</span>
             </DialogTitle>
           </DialogHeader>
           <DialogFooter className="sm:justify-center gap-4">
