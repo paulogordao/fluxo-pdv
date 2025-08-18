@@ -292,6 +292,11 @@ const MeiosDePagamentoScreen = () => {
 
   return (
     <PdvLayout>
+      {/* Fixed position button outside the Card */}
+      <div className="fixed top-4 right-4 z-50">
+        <EncerrarAtendimentoButton />
+      </div>
+
       <div className="flex items-center justify-center min-h-[80vh]">
         <Card className="w-full max-w-md p-8 relative">
           {/* Loading Overlay for RLIDEAL call */}
@@ -301,11 +306,6 @@ const MeiosDePagamentoScreen = () => {
               <p className="text-sm font-medium text-gray-600">Processando opção de pagamento...</p>
             </div>
           )}
-
-          {/* Fixed position button */}
-          <div className="absolute top-4 right-4 z-20">
-            <EncerrarAtendimentoButton />
-          </div>
           
           <div className="flex flex-col items-center space-y-6">
             <div className="text-center mb-4">
