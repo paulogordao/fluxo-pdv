@@ -1,5 +1,5 @@
 
-import { Building2, Plus, Edit, Settings, User, FlaskConical, Home } from "lucide-react";
+import { Building2, Plus, Edit, Settings, User, FlaskConical, Home, BarChart3, FileText } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -64,6 +64,18 @@ const menuItems = [
         url: "/config_usuarios_teste",
         icon: User,
         permission: "menu_usuario_teste",
+      },
+    ],
+  },
+  {
+    title: "Relatórios",
+    icon: BarChart3,
+    items: [
+      {
+        title: "Transações",
+        url: "/relatorio_transacoes",
+        icon: FileText,
+        permission: "menu_relatorio_transacao",
       },
     ],
   },
