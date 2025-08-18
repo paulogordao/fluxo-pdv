@@ -249,12 +249,14 @@ const OtpDataNascimentoScreen = () => {
 
   return (
     <PdvLayout className="pb-16">
+      {/* Fixed position button outside the Card */}
+      <div className="fixed top-4 right-4 z-50">
+        <EncerrarAtendimentoButton />
+      </div>
+
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="bg-dotz-laranja text-white">
-          <div className="flex justify-between items-center">
-            <CardTitle>Pagamento Cliente A</CardTitle>
-            <EncerrarAtendimentoButton />
-          </div>
+          <CardTitle>Pagamento Cliente A</CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
           <div className="text-center mb-6">
@@ -410,6 +412,7 @@ const OtpDataNascimentoScreen = () => {
         slug="RLIDEALRLIAUTH"
         loadOnMount={false}
         sourceScreen="otp_data_nascimento"
+        previousServiceName="RLIDEAL"
       />
     </PdvLayout>
   );
