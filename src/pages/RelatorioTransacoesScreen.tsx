@@ -93,7 +93,10 @@ const RelatorioTransacoesScreen = () => {
     }
   };
 
-  const truncateTransactionId = (id: string, maxLength: number = 20) => {
+  const truncateTransactionId = (id: string | null | undefined, maxLength: number = 20) => {
+    if (!id || typeof id !== 'string') {
+      return 'N/A';
+    }
     return id.length > maxLength ? `${id.substring(0, maxLength)}...` : id;
   };
 
@@ -119,7 +122,16 @@ const RelatorioTransacoesScreen = () => {
     
     const groupMap = new Map<string, TransacaoGrouped>();
     
-    transacoesData.data.forEach((transacao) => {
+    // Filter out transactions with invalid transaction_id
+    const validTransactions = transacoesData.data.filter((transacao) => {
+      if (!transacao.transaction_id || typeof transacao.transaction_id !== 'string') {
+        console.warn('Invalid transaction found:', transacao);
+        return false;
+      }
+      return true;
+    });
+    
+    validTransactions.forEach((transacao) => {
       const { transaction_id } = transacao;
       
       if (groupMap.has(transaction_id)) {
