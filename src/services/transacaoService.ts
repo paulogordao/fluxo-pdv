@@ -14,7 +14,7 @@ export const transacaoService = {
       const url = buildApiUrl('transacoes');
       
       const response = await fetch(url, {
-        method: 'POST',
+        method: 'GET',
         headers: {
           ...API_CONFIG.defaultHeaders,
           'id_usuario': userId,
