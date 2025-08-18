@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, FileText, Download, Filter, Eye, RefreshCw, Hash, Calendar } from "lucide-react";
+import { ArrowLeft, FileText, Download, Filter, Eye, RefreshCw, Hash, Calendar, ChevronDown, ChevronRight, Expand, Minimize } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -23,12 +23,22 @@ import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { useTransacoes } from "@/hooks/useTransacoes";
 import { Transacao } from "@/types/transacao";
 
+interface TransacaoGrouped {
+  transaction_id: string;
+  transacoes: Transacao[];
+  firstCreatedAt: string;
+  totalCount: number;
+  services: string[];
+}
+
 const RelatorioTransacoesScreen = () => {
   const navigate = useNavigate();
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [permissionMessage, setPermissionMessage] = useState("");
   const [selectedTransacao, setSelectedTransacao] = useState<Transacao | null>(null);
   const [showDetalhesModal, setShowDetalhesModal] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [expandAll, setExpandAll] = useState(false);
 
   const { hasPermission, isLoading: isCheckingPermission, error } = useUserPermissions();
   const { data: transacoesData, isLoading: isLoadingTransacoes, error: transacoesError, refetch } = useTransacoes();
@@ -103,6 +113,61 @@ const RelatorioTransacoesScreen = () => {
     toast.success("Dados atualizados com sucesso!");
   };
 
+  // Group transactions by transaction_id
+  const groupedTransactions = useMemo(() => {
+    if (!transacoesData?.data) return [];
+    
+    const groupMap = new Map<string, TransacaoGrouped>();
+    
+    transacoesData.data.forEach((transacao) => {
+      const { transaction_id } = transacao;
+      
+      if (groupMap.has(transaction_id)) {
+        const existing = groupMap.get(transaction_id)!;
+        existing.transacoes.push(transacao);
+        existing.totalCount++;
+        if (!existing.services.includes(transacao.servico)) {
+          existing.services.push(transacao.servico);
+        }
+        // Keep the earliest created_at
+        if (new Date(transacao.created_at) < new Date(existing.firstCreatedAt)) {
+          existing.firstCreatedAt = transacao.created_at;
+        }
+      } else {
+        groupMap.set(transaction_id, {
+          transaction_id,
+          transacoes: [transacao],
+          firstCreatedAt: transacao.created_at,
+          totalCount: 1,
+          services: [transacao.servico],
+        });
+      }
+    });
+    
+    return Array.from(groupMap.values()).sort((a, b) => 
+      new Date(b.firstCreatedAt).getTime() - new Date(a.firstCreatedAt).getTime()
+    );
+  }, [transacoesData?.data]);
+
+  const toggleGroup = (transactionId: string) => {
+    const newExpandedGroups = new Set(expandedGroups);
+    if (newExpandedGroups.has(transactionId)) {
+      newExpandedGroups.delete(transactionId);
+    } else {
+      newExpandedGroups.add(transactionId);
+    }
+    setExpandedGroups(newExpandedGroups);
+  };
+
+  const toggleExpandAll = () => {
+    if (expandAll) {
+      setExpandedGroups(new Set());
+    } else {
+      setExpandedGroups(new Set(groupedTransactions.map(g => g.transaction_id)));
+    }
+    setExpandAll(!expandAll);
+  };
+
   if (isCheckingPermission) {
     return (
       <ConfigLayoutWithSidebar>
@@ -164,15 +229,26 @@ const RelatorioTransacoesScreen = () => {
                     <span>Exportar Excel</span>
                   </Button>
                 </div>
-                <Button 
-                  variant="outline" 
-                  onClick={handleRefresh}
-                  disabled={isLoadingTransacoes}
-                  className="flex items-center space-x-2"
-                >
-                  <RefreshCw className={`h-4 w-4 ${isLoadingTransacoes ? 'animate-spin' : ''}`} />
-                  <span>Atualizar</span>
-                </Button>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={toggleExpandAll}
+                    disabled={isLoadingTransacoes || !groupedTransactions.length}
+                    className="flex items-center space-x-2"
+                  >
+                    {expandAll ? <Minimize className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
+                    <span>{expandAll ? 'Colapsar Todos' : 'Expandir Todos'}</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleRefresh}
+                    disabled={isLoadingTransacoes}
+                    className="flex items-center space-x-2"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isLoadingTransacoes ? 'animate-spin' : ''}`} />
+                    <span>Atualizar</span>
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -210,7 +286,7 @@ const RelatorioTransacoesScreen = () => {
                     Tentar Novamente
                   </Button>
                 </div>
-              ) : !transacoesData?.data || transacoesData.data.length === 0 ? (
+              ) : !groupedTransactions.length ? (
                 <div className="text-center py-8">
                   <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                   <p className="text-lg mb-2">Nenhuma transação encontrada</p>
@@ -223,12 +299,7 @@ const RelatorioTransacoesScreen = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-16">
-                          <div className="flex items-center space-x-2">
-                            <Hash className="h-4 w-4" />
-                            <span>ID</span>
-                          </div>
-                        </TableHead>
+                        <TableHead className="w-12"></TableHead>
                         <TableHead>
                           <div className="flex items-center space-x-2">
                             <Calendar className="h-4 w-4" />
@@ -236,41 +307,96 @@ const RelatorioTransacoesScreen = () => {
                           </div>
                         </TableHead>
                         <TableHead>Transaction ID</TableHead>
-                        <TableHead>Serviço</TableHead>
+                        <TableHead>Serviços</TableHead>
+                        <TableHead className="text-center">Qtd</TableHead>
                         <TableHead className="text-center">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {transacoesData.data.map((transacao) => (
-                        <TableRow key={transacao.id}>
-                          <TableCell className="font-mono text-sm">
-                            {transacao.id}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {formatarData(transacao.created_at)}
-                          </TableCell>
-                          <TableCell className="font-mono text-sm">
-                            <span title={transacao.transaction_id}>
-                              {truncateTransactionId(transacao.transaction_id)}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={getServicoColor(transacao.servico)}>
-                              {transacao.servico}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleVerDetalhes(transacao)}
-                              className="flex items-center space-x-1"
-                            >
-                              <Eye className="h-4 w-4" />
-                              <span>Ver Detalhes</span>
-                            </Button>
-                          </TableCell>
-                        </TableRow>
+                      {groupedTransactions.map((group) => (
+                        <>
+                          {/* Main Group Row */}
+                          <TableRow 
+                            key={group.transaction_id}
+                            className="bg-muted/30 hover:bg-muted/50 cursor-pointer"
+                            onClick={() => toggleGroup(group.transaction_id)}
+                          >
+                            <TableCell>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                {expandedGroups.has(group.transaction_id) ? (
+                                  <ChevronDown className="h-4 w-4" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </TableCell>
+                            <TableCell className="text-sm font-medium">
+                              {formatarData(group.firstCreatedAt)}
+                            </TableCell>
+                            <TableCell className="font-mono text-sm">
+                              <span title={group.transaction_id}>
+                                {truncateTransactionId(group.transaction_id, 30)}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-1">
+                                {group.services.map((servico, index) => (
+                                  <Badge 
+                                    key={index}
+                                    className={`text-xs ${getServicoColor(servico)}`}
+                                  >
+                                    {servico}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center font-medium">
+                              {group.totalCount}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <span className="text-xs text-muted-foreground">
+                                {expandedGroups.has(group.transaction_id) ? 'Ocultar' : 'Expandir'}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                          
+                          {/* Expanded Individual Transactions */}
+                          {expandedGroups.has(group.transaction_id) && 
+                            group.transacoes.map((transacao) => (
+                              <TableRow 
+                                key={`${group.transaction_id}-${transacao.id}`}
+                                className="bg-background border-l-4 border-l-muted"
+                              >
+                                <TableCell className="pl-8">
+                                  <div className="w-2 h-2 bg-muted rounded-full"></div>
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground">
+                                  {formatarData(transacao.created_at)}
+                                </TableCell>
+                                <TableCell className="font-mono text-xs text-muted-foreground">
+                                  ID: {transacao.id}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={getServicoColor(transacao.servico)}>
+                                    {transacao.servico}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell></TableCell>
+                                <TableCell className="text-center">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleVerDetalhes(transacao)}
+                                    className="flex items-center space-x-1"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                    <span>Ver Detalhes</span>
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          }
+                        </>
                       ))}
                     </TableBody>
                   </Table>
