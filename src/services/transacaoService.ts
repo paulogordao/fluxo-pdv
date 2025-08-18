@@ -1,13 +1,14 @@
 import { buildApiUrl, API_CONFIG } from '@/config/api';
 import { TransacaoResponse } from '@/types/transacao';
+import { getUserId } from '@/utils/userUtils';
 
 export const transacaoService = {
   async buscarTransacoes(): Promise<TransacaoResponse> {
     try {
-      const userUuid = sessionStorage.getItem("user.uuid");
+      const userId = getUserId();
       
-      if (!userUuid) {
-        throw new Error("UUID do usuário não encontrado");
+      if (!userId) {
+        throw new Error("ID do usuário não encontrado");
       }
 
       const url = buildApiUrl('transacoes');
@@ -16,7 +17,7 @@ export const transacaoService = {
         method: 'POST',
         headers: {
           ...API_CONFIG.defaultHeaders,
-          'id_usuario': userUuid,
+          'id_usuario': userId,
         },
       });
 
