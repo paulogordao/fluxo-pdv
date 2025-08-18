@@ -59,12 +59,23 @@ const OtpDataNascimentoScreen = () => {
       const transactionId = localStorage.getItem('transactionId');
       if (!transactionId) return;
 
+      let token = digits.join('');
+      // If we have 8 digits, show the formatted version
+      if (digits.length === 8) {
+        try {
+          token = formatDateForService(digits);
+        } catch (error) {
+          // If formatting fails, keep the original
+          token = digits.join('');
+        }
+      }
+
       const currentRequest = {
         route: "RLIAUTH",
         version: 1,
         input: {
           transaction_id: transactionId,
-          token: digits.join('')
+          token: token
         }
       };
 
@@ -88,6 +99,35 @@ const OtpDataNascimentoScreen = () => {
     }
   };
 
+  // Format date from DDMMYYYY to YYYY-MM-DD for service
+  const formatDateForService = (digits: string[]): string => {
+    const dateString = digits.join('');
+    if (dateString.length !== 8) {
+      throw new Error('Data deve ter exatamente 8 dígitos');
+    }
+    
+    const day = dateString.substring(0, 2);
+    const month = dateString.substring(2, 4);
+    const year = dateString.substring(4, 8);
+    
+    // Basic validation
+    const dayNum = parseInt(day, 10);
+    const monthNum = parseInt(month, 10);
+    const yearNum = parseInt(year, 10);
+    
+    if (dayNum < 1 || dayNum > 31) {
+      throw new Error('Dia inválido');
+    }
+    if (monthNum < 1 || monthNum > 12) {
+      throw new Error('Mês inválido');
+    }
+    if (yearNum < 1900 || yearNum > new Date().getFullYear()) {
+      throw new Error('Ano inválido');
+    }
+    
+    return `${year}-${month}-${day}`;
+  };
+
   // Handle enter button
   const handleEnter = async () => {
     if (digits.length === 8 && !isLoadingAuth) {
@@ -102,11 +142,12 @@ const OtpDataNascimentoScreen = () => {
           return;
         }
 
-        // Send RLIAUTH command with the numeric token (no formatting)
-        const numericToken = digits.join('');
-        console.log('[OtpDataNascimentoScreen] Sending RLIAUTH with token:', numericToken);
+        // Format date for service (DDMMYYYY -> YYYY-MM-DD)
+        const formattedDate = formatDateForService(digits);
+        console.log('[OtpDataNascimentoScreen] Original digits:', digits.join(''));
+        console.log('[OtpDataNascimentoScreen] Formatted date for service:', formattedDate);
         
-        const response = await comandoService.enviarComandoRliauth(transactionId, numericToken);
+        const response = await comandoService.enviarComandoRliauth(transactionId, formattedDate);
         console.log('[OtpDataNascimentoScreen] RLIAUTH Response:', response);
 
         // Check if there's a system message to show the user
@@ -139,7 +180,13 @@ const OtpDataNascimentoScreen = () => {
         let fullRequest = {
           method: 'RLIAUTH',
           transactionId: localStorage.getItem('transactionId'),
-          token: digits.join('')
+          token: (() => {
+            try {
+              return formatDateForService(digits);
+            } catch {
+              return digits.join('');
+            }
+          })()
         };
         let fullResponse = error;
         
