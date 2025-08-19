@@ -4,23 +4,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import ScanScreen from "./ScanScreen";
 import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
-
 const InteressePagamentoScreen = () => {
   const [open, setOpen] = useState(true);
   const navigate = useNavigate();
-
   const handleClose = () => {
     setOpen(false);
     navigate("/scan");
   };
-  
   const handleUsePoints = () => {
     setOpen(false);
     navigate("/meios_de_pagamento");
   };
-
-  return (
-    <>
+  return <>
       {/* Display the ScanScreen component as background */}
       <div className="pointer-events-none opacity-70">
         <ScanScreen />
@@ -30,9 +25,7 @@ const InteressePagamentoScreen = () => {
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="max-w-md mx-auto">
           <DialogHeader>
-            <DialogTitle className="text-white bg-dotz-laranja p-4 -m-6 mb-4 text-center">
-              Benefícios cliente A
-            </DialogTitle>
+            <DialogTitle className="text-white bg-dotz-laranja p-4 -m-6 mb-4 text-center">Benefícios</DialogTitle>
           </DialogHeader>
           
           <div className="py-4 text-center">
@@ -44,18 +37,11 @@ const InteressePagamentoScreen = () => {
             </p>
             
             <div className="flex gap-4 justify-center">
-              <Button
-                variant="outline"
-                className="min-w-[120px] bg-gray-300 hover:bg-gray-400"
-                onClick={handleClose}
-              >
+              <Button variant="outline" className="min-w-[120px] bg-gray-300 hover:bg-gray-400" onClick={handleClose}>
                 Nenhum
               </Button>
               
-              <Button
-                className="min-w-[120px] bg-dotz-laranja hover:bg-dotz-laranja/90"
-                onClick={handleUsePoints}
-              >
+              <Button className="min-w-[120px] bg-dotz-laranja hover:bg-dotz-laranja/90" onClick={handleUsePoints}>
                 Sim, quero usar!
               </Button>
             </div>
@@ -65,8 +51,6 @@ const InteressePagamentoScreen = () => {
 
       {/* Navigation Guide Component */}
       <GuiaDeNavegacaoAPI />
-    </>
-  );
+    </>;
 };
-
 export default InteressePagamentoScreen;
