@@ -57,6 +57,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
   // Alert dialogs state
   const [alertDialogOpen, setAlertDialogOpen] = useState(false);
   const [rlidealAlertOpen, setRlidealAlertOpen] = useState(false);
+  const [timeoutModalOpen, setTimeoutModalOpen] = useState(false);
   
   // Token loading state
   const [isTokenLoading, setIsTokenLoading] = useState(false);
@@ -162,6 +163,14 @@ const ConfirmacaoPagamentoAppScreen = () => {
       startPolling();
     }
   }, [isOnlineFlow, transactionId]);
+
+  // Monitor polling timeout
+  useEffect(() => {
+    if (pollingStatus.status === 'timeout') {
+      console.log('[ConfirmacaoPagamentoAppScreen] Polling timeout detected - showing modal');
+      setTimeoutModalOpen(true);
+    }
+  }, [pollingStatus.status]);
 
   // Handle finalizar pagamento button click
   const handleFinalizarPagamento = () => {
@@ -390,6 +399,19 @@ const ConfirmacaoPagamentoAppScreen = () => {
     navigate("/confirmacao_pagamento_token");
   };
 
+  // Handler for timeout modal actions
+  const handleTimeoutRestart = () => {
+    console.log('[ConfirmacaoPagamentoAppScreen] Restarting polling after timeout');
+    setTimeoutModalOpen(false);
+    startPolling();
+  };
+
+  const handleTimeoutCancel = () => {
+    console.log('[ConfirmacaoPagamentoAppScreen] User cancelled after timeout');
+    setTimeoutModalOpen(false);
+    navigate('/meios_de_pagamento');
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-4 pb-16">
       <div className="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -519,9 +541,9 @@ const ConfirmacaoPagamentoAppScreen = () => {
                           <strong>Última verificação:</strong> {pollingStatus.lastAttemptTime.toLocaleTimeString()}
                         </p>
                       )}
-                      <p className="text-xs text-blue-600 mt-2">
-                        ⏱️ Verificação automática a cada 30 segundos
-                      </p>
+                       <p className="text-xs text-blue-600 mt-2">
+                         ⏱️ Verificação automática a cada 10 segundos
+                       </p>
                     </div>
                   </div>
                 )}
@@ -744,6 +766,37 @@ const ConfirmacaoPagamentoAppScreen = () => {
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Timeout Modal */}
+      <AlertDialog open={timeoutModalOpen} onOpenChange={setTimeoutModalOpen}>
+        <AlertDialogContent className="p-0 overflow-hidden max-w-md">
+          <AlertDialogHeader className="bg-red-600 text-white px-6 py-4">
+            <div className="flex items-center justify-center space-x-2">
+              <Clock className="h-5 w-5" />
+              <AlertDialogTitle className="text-lg font-semibold">Tempo Esgotado</AlertDialogTitle>
+            </div>
+          </AlertDialogHeader>
+          <div className="p-6">
+            <p className="text-center mb-6">
+              Não foi possível detectar o pagamento em 5 minutos. Deseja tentar novamente?
+            </p>
+            <div className="flex justify-center space-x-3">
+              <AlertDialogAction 
+                className="bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
+                onClick={handleTimeoutRestart}
+              >
+                Tentar Novamente
+              </AlertDialogAction>
+              <Button 
+                variant="outline"
+                onClick={handleTimeoutCancel}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

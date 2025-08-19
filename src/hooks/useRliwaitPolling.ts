@@ -6,7 +6,8 @@ export interface PollingStatus {
   isPolling: boolean;
   attempts: number;
   lastAttemptTime: Date | null;
-  status: 'waiting' | 'polling' | 'completed' | 'cancelled' | 'error';
+  startTime: Date | null;
+  status: 'waiting' | 'polling' | 'completed' | 'cancelled' | 'error' | 'timeout';
   nextStepData: any | null;
   orderData: any | null;
   error: string | null;
@@ -17,6 +18,7 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
     isPolling: false,
     attempts: 0,
     lastAttemptTime: null,
+    startTime: null,
     status: 'waiting',
     nextStepData: null,
     orderData: null,
@@ -36,6 +38,21 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
   const performPolling = async (): Promise<boolean> => {
     if (!transactionId || !isMountedRef.current) {
       return false;
+    }
+
+    // Verificar timeout de 5 minutos (300 segundos)
+    const currentTime = new Date();
+    if (pollingStatus.startTime) {
+      const elapsedSeconds = (currentTime.getTime() - pollingStatus.startTime.getTime()) / 1000;
+      if (elapsedSeconds >= 300) { // 5 minutos
+        console.log(`[useRliwaitPolling] Timeout de 5 minutos atingido - parando polling`);
+        setPollingStatus(prev => ({
+          ...prev,
+          isPolling: false,
+          status: 'timeout'
+        }));
+        return false; // Parar polling
+      }
     }
 
     try {
@@ -104,20 +121,21 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
       isPolling: true,
       status: 'polling',
       attempts: 0,
+      startTime: new Date(),
       error: null
     }));
 
     // Primeira chamada imediata
     performPolling().then(shouldContinue => {
       if (shouldContinue && isMountedRef.current) {
-        // Iniciar intervalos de 30 segundos
+        // Iniciar intervalos de 10 segundos
         intervalRef.current = setInterval(async () => {
           const continuePolling = await performPolling();
           if (!continuePolling && intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
           }
-        }, 30000); // 30 segundos
+        }, 10000); // 10 segundos
       }
     });
   };
