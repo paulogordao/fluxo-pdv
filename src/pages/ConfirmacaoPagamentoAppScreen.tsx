@@ -7,30 +7,13 @@ import { useNavigate } from "react-router-dom";
 import TechnicalFooter from "@/components/TechnicalFooter";
 import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
 import { useRliwaitPolling } from "@/hooks/useRliwaitPolling";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { buildApiUrl } from "@/config/api";
 import { useTokenPaymentEligibility } from "@/hooks/useTokenPaymentEligibility";
 import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
 import { comandoService } from "@/services/comandoService";
-
 const ConfirmacaoPagamentoAppScreen = () => {
   const navigate = useNavigate();
   // Technical documentation states
@@ -44,52 +27,60 @@ const ConfirmacaoPagamentoAppScreen = () => {
   const [technicalRequestData, setTechnicalRequestData] = useState<string | undefined>();
   const [technicalResponseData, setTechnicalResponseData] = useState<string | undefined>();
   const [technicalPreviousRequestData, setTechnicalPreviousRequestData] = useState<string | undefined>();
-  
+
   // Use the custom hook for token payment eligibility
-  const { showTokenPaymentButton, tokenButtonLoading } = useTokenPaymentEligibility();
-  
+  const {
+    showTokenPaymentButton,
+    tokenButtonLoading
+  } = useTokenPaymentEligibility();
+
   // Token payment modal state
   const [tokenModalOpen, setTokenModalOpen] = useState(false);
-  
+
   // Available payment options from OTP response
-  const [availablePaymentOptions, setAvailablePaymentOptions] = useState<Array<{option: string, message: string}>>([]);
-  
+  const [availablePaymentOptions, setAvailablePaymentOptions] = useState<Array<{
+    option: string;
+    message: string;
+  }>>([]);
+
   // Alert dialogs state
   const [alertDialogOpen, setAlertDialogOpen] = useState(false);
   const [rlidealAlertOpen, setRlidealAlertOpen] = useState(false);
   const [timeoutModalOpen, setTimeoutModalOpen] = useState(false);
-  
+
   // Token loading state
   const [isTokenLoading, setIsTokenLoading] = useState(false);
-  
+
   // Dynamic token amount state
   const [tokenAmount, setTokenAmount] = useState<string>("R$ 30,00");
-  
+
   // Get client name from localStorage (fallback to empty string if not available)
   const clientName = localStorage.getItem('nomeCliente') || '';
-  
+
   // Detect flow type and get transaction ID
   const isOnlineFlow = localStorage.getItem('tipo_simulacao') !== 'OFFLINE';
   const transactionId = localStorage.getItem('transactionId');
-  
+
   // RLIWAIT polling for ONLINE flow
-  const { pollingStatus, startPolling, stopPolling } = useRliwaitPolling(
-    isOnlineFlow ? transactionId : null, 
-    false // Don't auto start
+  const {
+    pollingStatus,
+    startPolling,
+    stopPolling
+  } = useRliwaitPolling(isOnlineFlow ? transactionId : null, false // Don't auto start
   );
 
   // Fetch API data for technical documentation
   useEffect(() => {
     const fetchApiData = async () => {
       try {
-        const url = buildApiUrl('/consultaFluxoDetalhe', { SLUG: 'RLIDEALRLIWAIT' });
+        const url = buildApiUrl('/consultaFluxoDetalhe', {
+          SLUG: 'RLIDEALRLIWAIT'
+        });
         console.log("Fetching API details:", url);
-        
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`Error in request: ${response.status}`);
         }
-        
         const data = await response.json();
         setApiData(data);
         console.log("API data:", data);
@@ -100,7 +91,6 @@ const ConfirmacaoPagamentoAppScreen = () => {
         setIsLoading(false);
       }
     };
-    
     fetchApiData();
   }, []);
 
@@ -151,7 +141,6 @@ const ConfirmacaoPagamentoAppScreen = () => {
         setTechnicalResponseData(rlidealResponse);
       }
     };
-
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
@@ -183,35 +172,35 @@ const ConfirmacaoPagamentoAppScreen = () => {
         customer_info_id: pollingStatus.orderData.customer_info_id,
         next_step: pollingStatus.nextStepData
       }));
-      
       console.log('[ConfirmacaoPagamentoAppScreen] Order data stored, navigating to confirmacao_pagamento');
-      navigate('/confirmacao_pagamento', { state: { fromAppScreen: true } });
+      navigate('/confirmacao_pagamento', {
+        state: {
+          fromAppScreen: true
+        }
+      });
     }
   };
-
   const handlePaymentConfirmation = () => {
     navigate("/confirmacao_pagamento");
   };
-  
   const handleCancel = () => {
     if (isOnlineFlow && pollingStatus.isPolling) {
       stopPolling();
     }
     navigate("/meios_de_pagamento");
   };
-  
+
   // Show alert dialog first
   const handleTokenPaymentClick = () => {
     console.log("Alerta exibido: necessário executar break step via RLIFUND antes do token.");
     setAlertDialogOpen(true);
   };
-  
+
   // Handler for when alert OK button is clicked
   const handleAlertConfirm = async () => {
     console.log("[Token] Iniciando refazer checkout com payment_option_type: otp");
     setIsTokenLoading(true);
     setAlertDialogOpen(false);
-    
     try {
       // Recuperar dados da compra original do localStorage
       const rlifundResponseStr = localStorage.getItem('rlifundResponse');
@@ -221,7 +210,6 @@ const ConfirmacaoPagamentoAppScreen = () => {
         navigate('/meios_de_pagamento');
         return;
       }
-      
       let originalRlifundData;
       try {
         originalRlifundData = JSON.parse(rlifundResponseStr);
@@ -232,11 +220,10 @@ const ConfirmacaoPagamentoAppScreen = () => {
         navigate('/meios_de_pagamento');
         return;
       }
-      
+
       // Extrair informações necessárias da estrutura RLIFUND correta
       const originalRequest = originalRlifundData[0]?.request?.data?.input?.order;
       const originalResponse = originalRlifundData[0]?.response?.data;
-      
       if (!originalRequest || !originalResponse) {
         console.error('[Token] Estrutura RLIFUND inválida - request.data.input.order ou response.data não encontrados');
         console.log('[Token] originalRequest:', originalRequest);
@@ -245,11 +232,10 @@ const ConfirmacaoPagamentoAppScreen = () => {
         navigate('/meios_de_pagamento');
         return;
       }
-      
+
       // Extrair value_total e items da estrutura correta
       const valueTotal = originalRequest.value;
       const items = originalRequest.items;
-      
       if (!valueTotal || !items || !Array.isArray(items)) {
         console.error('[Token] Dados da compra inválidos - order.value ou order.items não encontrados');
         console.log('[Token] valueTotal:', valueTotal);
@@ -258,10 +244,10 @@ const ConfirmacaoPagamentoAppScreen = () => {
         navigate('/meios_de_pagamento');
         return;
       }
-      
+
       // Usar o transactionId existente para manter a sessão no backend
       console.log('[Token] Reutilizando transactionId existente para token:', transactionId);
-      
+
       // Preparar dados para nova chamada RLIFUND com OTP (mesmo transactionId)
       const rlifundPayload = {
         transactionId: transactionId,
@@ -269,51 +255,41 @@ const ConfirmacaoPagamentoAppScreen = () => {
         valueTotal: valueTotal,
         items: items
       };
-      
       console.log('[Token] Preparando chamada RLIFUND com OTP:', rlifundPayload);
       console.log('[Token] Value total original:', valueTotal);
       console.log('[Token] Items originais (quantidade):', items?.length);
-      
+
       // Chamar RLIFUND com payment_option_type: "otp" usando o mesmo transactionId
-      const rlifundResponse = await comandoService.enviarComandoRlifund(
-        transactionId,
-        "otp",
-        valueTotal,
-        items
-      );
-      
+      const rlifundResponse = await comandoService.enviarComandoRlifund(transactionId, "otp", valueTotal, items);
       console.log('[Token] Resposta RLIFUND com OTP recebida:', rlifundResponse);
-      
+
       // Verificar se a resposta é válida
       if (!rlifundResponse || !rlifundResponse[0]?.response?.data) {
         console.error('[Token] Resposta RLIFUND com OTP inválida:', rlifundResponse);
         toast.error("Erro ao processar checkout com token. Tente novamente.");
         return;
       }
-      
+
       // Armazenar nova resposta RLIFUND no localStorage
       localStorage.setItem('rlifundResponse', JSON.stringify(rlifundResponse));
       // Não precisa atualizar o transactionId pois está usando o mesmo
-      
+
       console.log('[Token] Nova resposta RLIFUND armazenada com sucesso');
       console.log('[Token] Usando o mesmo transactionId:', transactionId);
-      
+
       // Extrair payment_options da resposta OTP
       const otpData = rlifundResponse[0]?.response?.data as any;
       const paymentOptions = otpData?.payment_options || [];
-      
       console.log('[Token] payment_options na nova resposta:', paymentOptions);
-      
       if (Array.isArray(paymentOptions) && paymentOptions.length > 0) {
         // Armazenar opções disponíveis para renderização dinâmica
         setAvailablePaymentOptions(paymentOptions);
-        
+
         // Extrair valor dinâmico do primeiro item (ou usar lógica específica)
         const firstOption = paymentOptions[0];
         const dynamicValue = otpData?.otp_max_amount || otpData?.value_total || "30,00";
         const formattedAmount = `R$ ${dynamicValue}`;
         setTokenAmount(formattedAmount);
-        
         console.log('[Token] Opções de pagamento encontradas:', paymentOptions.length);
         console.log('[Token] Valor dinâmico extraído:', formattedAmount);
         toast.success("Checkout refeito com sucesso!");
@@ -323,7 +299,6 @@ const ConfirmacaoPagamentoAppScreen = () => {
         console.log('[Token] payment_options array:', paymentOptions);
         toast.error("Não foi encontrado pagamento do tipo OTP para esta transação.");
       }
-      
     } catch (error) {
       console.error('[Token] Erro durante refazer checkout:', error);
       toast.error("Erro ao processar pagamento com token. Tente novamente.");
@@ -331,7 +306,6 @@ const ConfirmacaoPagamentoAppScreen = () => {
       setIsTokenLoading(false);
     }
   };
-  
   const handleNoneOption = () => {
     console.log("Usuário retornou para meios de pagamento a partir do modal de token.");
     setTokenModalOpen(false);
@@ -341,7 +315,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
   // Handle payment option selection in token modal
   const handlePaymentOptionSelect = async (option: string) => {
     console.log(`[Token] Opção selecionada: ${option}`);
-    
+
     // Get transaction ID from localStorage
     const transactionId = localStorage.getItem('transactionId');
     if (!transactionId) {
@@ -349,22 +323,19 @@ const ConfirmacaoPagamentoAppScreen = () => {
       toast.error("Erro: ID da transação não encontrado");
       return;
     }
-
     try {
       setIsTokenLoading(true);
       console.log(`[Token] Chamando RLIDEAL com payment_option: ${option}, transactionId: ${transactionId}`);
-      
+
       // Call RLIDEAL service with selected payment option
       const rlidealResponse = await comandoService.enviarComandoRlideal(transactionId, option);
-      
       console.log('[Token] Resposta RLIDEAL recebida:', rlidealResponse);
-      
+
       // Store RLIDEAL response in localStorage
       localStorage.setItem('rlidealResponse', JSON.stringify(rlidealResponse));
-      
       setTokenModalOpen(false);
       toast.success("Opção de pagamento processada com sucesso!");
-      
+
       // Navigate based on payment option type
       switch (option) {
         case 'dotz':
@@ -384,7 +355,6 @@ const ConfirmacaoPagamentoAppScreen = () => {
           navigate("/confirmacao_pagamento_token");
           break;
       }
-      
     } catch (error) {
       console.error('[Token] Erro ao processar opção de pagamento:', error);
       toast.error("Erro ao processar opção de pagamento. Tente novamente.");
@@ -392,7 +362,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
       setIsTokenLoading(false);
     }
   };
-  
+
   // Handler for the RLIDEAL alert OK button
   const handleRlidealAlertConfirm = () => {
     setRlidealAlertOpen(false);
@@ -405,111 +375,70 @@ const ConfirmacaoPagamentoAppScreen = () => {
     setTimeoutModalOpen(false);
     startPolling();
   };
-
   const handleTimeoutCancel = () => {
     console.log('[ConfirmacaoPagamentoAppScreen] User cancelled after timeout');
     setTimeoutModalOpen(false);
     navigate('/meios_de_pagamento');
   };
-
-  return (
-    <div className="min-h-screen bg-gray-100 p-4 pb-16">
+  return <div className="min-h-screen bg-gray-100 p-4 pb-16">
       <div className="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Left Panel - PDV Modal */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="bg-dotz-laranja text-white p-4 flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Pagamento Cliente A</h2>
+            <h2 className="text-xl font-semibold">Pagamento</h2>
             <EncerrarAtendimentoButton />
           </div>
           <div className="p-6 text-center">
             <p className="text-lg mb-6">Aguardando pagamento no APP Cliente A.</p>
-            {!isOnlineFlow && (
-              <div className="flex justify-center my-6">
+            {!isOnlineFlow && <div className="flex justify-center my-6">
                 <Loader2 className="h-10 w-10 animate-spin text-dotz-laranja" />
-              </div>
-            )}
+              </div>}
             <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
               {/* Show different buttons based on polling status */}
-              {pollingStatus.status === 'completed' ? (
-                /* Payment completed - show only finalizar pagamento button */
-                <Button 
-                  variant="dotz"
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={handleFinalizarPagamento}
-                >
+              {pollingStatus.status === 'completed' ? (/* Payment completed - show only finalizar pagamento button */
+            <Button variant="dotz" className="bg-green-600 hover:bg-green-700" onClick={handleFinalizarPagamento}>
                   Finalizar Pagamento
-                </Button>
-              ) : (
-                /* Normal state - show token and cancel buttons */
-                <>
+                </Button>) : (/* Normal state - show token and cancel buttons */
+            <>
                   {/* Token Payment Button - Conditionally rendered */}
-                  {tokenButtonLoading ? (
-                    <div className="h-10 w-36 flex items-center justify-center">
+                  {tokenButtonLoading ? <div className="h-10 w-36 flex items-center justify-center">
                       <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
-                    </div>
-                  ) : (
-                    showTokenPaymentButton && (
-                      <TooltipProvider>
+                    </div> : showTokenPaymentButton && <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                             <Button 
-                               variant="token"
-                               className="bg-gray-800 hover:bg-gray-700"
-                               onClick={handleTokenPaymentClick}
-                               disabled={isTokenLoading}
-                             >
-                               {isTokenLoading ? (
-                                 <>
+                             <Button variant="token" className="bg-gray-800 hover:bg-gray-700" onClick={handleTokenPaymentClick} disabled={isTokenLoading}>
+                               {isTokenLoading ? <>
                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                    Processando...
-                                 </>
-                               ) : (
-                                 "Pagar com Token"
-                               )}
+                                 </> : "Pagar com Token"}
                              </Button>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>Este meio de pagamento requer autenticação por token.</p>
                           </TooltipContent>
                         </Tooltip>
-                      </TooltipProvider>
-                    )
-                  )}
-                  <Button 
-                    variant="outline" 
-                    className="bg-gray-300 hover:bg-gray-400 text-gray-900"
-                    onClick={handleCancel}
-                  >
+                      </TooltipProvider>}
+                  <Button variant="outline" className="bg-gray-300 hover:bg-gray-400 text-gray-900" onClick={handleCancel}>
                     Cancelar
                   </Button>
-                </>
-              )}
+                </>)}
             </div>
           </div>
         </div>
 
         {/* Right Panel - App Simulator or Polling Status */}
         <div className="flex justify-center">
-          {isOnlineFlow ? (
-            /* ONLINE Flow - Polling Status Interface */
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden max-w-md w-full">
+          {isOnlineFlow ? (/* ONLINE Flow - Polling Status Interface */
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden max-w-md w-full">
               <div className="bg-blue-600 text-white p-4 text-center">
                 <h3 className="text-lg font-semibold">Status do Pagamento</h3>
               </div>
               <div className="p-6">
                 <div className="text-center mb-6">
                   <div className="flex justify-center mb-4">
-                    {pollingStatus.isPolling ? (
-                      <RefreshCw className="h-12 w-12 animate-spin text-blue-600" />
-                    ) : pollingStatus.status === 'completed' ? (
-                      <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
+                    {pollingStatus.isPolling ? <RefreshCw className="h-12 w-12 animate-spin text-blue-600" /> : pollingStatus.status === 'completed' ? <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
                         <span className="text-green-600 text-xl">✓</span>
-                      </div>
-                    ) : pollingStatus.status === 'error' ? (
-                      <AlertTriangle className="h-12 w-12 text-red-500" />
-                    ) : (
-                      <Clock className="h-12 w-12 text-gray-400" />
-                    )}
+                      </div> : pollingStatus.status === 'error' ? <AlertTriangle className="h-12 w-12 text-red-500" /> : <Clock className="h-12 w-12 text-gray-400" />}
                   </div>
                   
                   <h4 className="text-xl font-semibold mb-2">
@@ -530,58 +459,42 @@ const ConfirmacaoPagamentoAppScreen = () => {
                 </div>
 
                 {/* Polling Information */}
-                {pollingStatus.isPolling && (
-                  <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                {pollingStatus.isPolling && <div className="bg-blue-50 p-4 rounded-lg mb-4">
                     <div className="text-sm text-blue-800">
                       <p className="mb-1">
                         <strong>Tentativa:</strong> {pollingStatus.attempts}
                       </p>
-                      {pollingStatus.lastAttemptTime && (
-                        <p className="mb-1">
+                      {pollingStatus.lastAttemptTime && <p className="mb-1">
                           <strong>Última verificação:</strong> {pollingStatus.lastAttemptTime.toLocaleTimeString()}
-                        </p>
-                      )}
+                        </p>}
                        <p className="text-xs text-blue-600 mt-2">
                          ⏱️ Verificação automática a cada 10 segundos
                        </p>
                     </div>
-                  </div>
-                )}
+                  </div>}
 
                 {/* Error Information */}
-                {pollingStatus.status === 'error' && pollingStatus.error && (
-                  <div className="bg-red-50 p-4 rounded-lg mb-4">
+                {pollingStatus.status === 'error' && pollingStatus.error && <div className="bg-red-50 p-4 rounded-lg mb-4">
                     <div className="text-sm text-red-800">
                       <p><strong>Erro:</strong> {pollingStatus.error}</p>
                     </div>
-                  </div>
-                )}
+                  </div>}
 
                 {/* Next Step Information */}
-                {pollingStatus.nextStepData && (
-                  <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                {pollingStatus.nextStepData && <div className="bg-gray-50 p-4 rounded-lg mb-4">
                     <div className="text-sm text-gray-800">
                       <p><strong>Status atual:</strong> {pollingStatus.nextStepData.description}</p>
                       <p><strong>Código:</strong> {pollingStatus.nextStepData.code}</p>
                     </div>
-                  </div>
-                )}
+                  </div>}
 
                 {/* Cancel Button */}
-                {pollingStatus.isPolling && (
-                  <Button 
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleCancel}
-                  >
+                {pollingStatus.isPolling && <Button variant="outline" className="w-full" onClick={handleCancel}>
                     Cancelar Verificação
-                  </Button>
-                )}
+                  </Button>}
               </div>
-            </div>
-          ) : (
-            /* OFFLINE Flow - Original App Simulator */
-            <div className="bg-white rounded-3xl border-2 border-gray-300 shadow-xl overflow-hidden max-w-xs w-full">
+            </div>) : (/* OFFLINE Flow - Original App Simulator */
+        <div className="bg-white rounded-3xl border-2 border-gray-300 shadow-xl overflow-hidden max-w-xs w-full">
               <div className="aspect-w-9 aspect-h-16">
                 <div className="p-4">
                   {/* App Header */}
@@ -659,16 +572,12 @@ const ConfirmacaoPagamentoAppScreen = () => {
                   </p>
 
                   {/* Pay Button */}
-                  <Button 
-                    className="w-full bg-dotz-laranja hover:bg-dotz-laranja/90 text-white font-medium rounded-full py-6"
-                    onClick={handlePaymentConfirmation}
-                  >
+                  <Button className="w-full bg-dotz-laranja hover:bg-dotz-laranja/90 text-white font-medium rounded-full py-6" onClick={handlePaymentConfirmation}>
                     Pagar
                   </Button>
                 </div>
               </div>
-            </div>
-          )}
+            </div>)}
         </div>
       </div>
 
@@ -677,16 +586,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
       <GuiaDeNavegacaoAPI />
       
       {/* Technical Footer Component */}
-      <TechnicalFooter
-        requestData={technicalRequestData}
-        responseData={technicalResponseData}
-        previousRequestData={technicalPreviousRequestData}
-        isLoading={isLoading}
-        slug="RLIDEALRLIWAIT"
-        loadOnMount={false}
-        sourceScreen="confirmacao_pagamento_app"
-        previousServiceName="RLIDEAL"
-      />
+      <TechnicalFooter requestData={technicalRequestData} responseData={technicalResponseData} previousRequestData={technicalPreviousRequestData} isLoading={isLoading} slug="RLIDEALRLIWAIT" loadOnMount={false} sourceScreen="confirmacao_pagamento_app" previousServiceName="RLIDEAL" />
       
       {/* First Alert Dialog - RLIFUND Break Step */}
       <AlertDialog open={alertDialogOpen} onOpenChange={setAlertDialogOpen}>
@@ -699,10 +599,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
               Nesta etapa já há um checkout esperando pagamento, portanto, é necessário fazer uso de um break step, neste caso chamar o serviço RLIFUND novamente.
             </p>
             <div className="flex justify-center">
-              <AlertDialogAction 
-                className="bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
-                onClick={handleAlertConfirm}
-              >
+              <AlertDialogAction className="bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" onClick={handleAlertConfirm}>
                 OK
               </AlertDialogAction>
             </div>
@@ -724,10 +621,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
               Nesta etapa é necessário fazer uma nova chamada ao serviço RLIDEAL para enviar novamente a cesta de produtos e verificar se é necessário solicitação de autenticação.
             </p>
             <div className="flex justify-center">
-              <AlertDialogAction 
-                className="bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
-                onClick={handleRlidealAlertConfirm}
-              >
+              <AlertDialogAction className="bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" onClick={handleRlidealAlertConfirm}>
                 OK
               </AlertDialogAction>
             </div>
@@ -745,22 +639,12 @@ const ConfirmacaoPagamentoAppScreen = () => {
           </DialogHeader>
           <div className="space-y-3">
             {/* Dynamic buttons based on available payment options */}
-            {availablePaymentOptions.map((option, index) => (
-              <Button 
-                key={option.option}
-                onClick={() => handlePaymentOptionSelect(option.option)}
-                className="w-full bg-dotz-laranja hover:bg-dotz-laranja/90 text-white py-3 text-base text-left"
-              >
+            {availablePaymentOptions.map((option, index) => <Button key={option.option} onClick={() => handlePaymentOptionSelect(option.option)} className="w-full bg-dotz-laranja hover:bg-dotz-laranja/90 text-white py-3 text-base text-left">
                 {index + 1}. {option.message}
-              </Button>
-            ))}
+              </Button>)}
             
             {/* Always show "Nenhum" option */}
-            <Button 
-              onClick={handleNoneOption}
-              variant="outline" 
-              className="w-full py-3 text-base border-gray-300 hover:bg-gray-50"
-            >
+            <Button onClick={handleNoneOption} variant="outline" className="w-full py-3 text-base border-gray-300 hover:bg-gray-50">
               {availablePaymentOptions.length + 1}. Nenhum
             </Button>
           </div>
@@ -781,24 +665,16 @@ const ConfirmacaoPagamentoAppScreen = () => {
               Não foi possível detectar o pagamento em 5 minutos. Deseja tentar novamente?
             </p>
             <div className="flex justify-center space-x-3">
-              <AlertDialogAction 
-                className="bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
-                onClick={handleTimeoutRestart}
-              >
+              <AlertDialogAction className="bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" onClick={handleTimeoutRestart}>
                 Tentar Novamente
               </AlertDialogAction>
-              <Button 
-                variant="outline"
-                onClick={handleTimeoutCancel}
-              >
+              <Button variant="outline" onClick={handleTimeoutCancel}>
                 Cancelar
               </Button>
             </div>
           </div>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
+    </div>;
 };
-
 export default ConfirmacaoPagamentoAppScreen;
