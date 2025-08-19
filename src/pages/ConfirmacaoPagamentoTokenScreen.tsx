@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,28 +9,28 @@ import { useUserSession } from "@/hooks/useUserSession";
 import { comandoService } from "@/services/comandoService";
 import { toast } from "sonner";
 import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
-
 const ConfirmacaoPagamentoTokenScreen = () => {
   const [tokenDigits, setTokenDigits] = useState<string[]>([]);
   const [remainingTime, setRemainingTime] = useState(16); // Initial time in seconds
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  
-  const { tipo_simulacao, isLoading: sessionLoading } = useUserSession();
+  const {
+    tipo_simulacao,
+    isLoading: sessionLoading
+  } = useUserSession();
 
   // Technical documentation states
   const [technicalRequestData, setTechnicalRequestData] = useState<string | undefined>();
   const [technicalResponseData, setTechnicalResponseData] = useState<string | undefined>();
   const [technicalPreviousRequestData, setTechnicalPreviousRequestData] = useState<string | undefined>();
-  
+
   // Debug log to see the actual value
   console.log('[TokenScreen] tipo_simulacao:', tipo_simulacao);
-  
+
   // Determine if this is an ONLINE company (UAT or any non-OFFLINE company)
   const isOnlineCompany = tipo_simulacao && !tipo_simulacao.includes('OFFLINE');
-  
   console.log('[TokenScreen] isOnlineCompany:', isOnlineCompany);
-  
+
   // Mock token for the app emulator
   const mockToken = "128456";
 
@@ -66,7 +65,6 @@ const ConfirmacaoPagamentoTokenScreen = () => {
     try {
       const transactionId = localStorage.getItem('transactionId');
       if (!transactionId) return;
-
       const currentRequest = {
         route: "RLIAUTH",
         version: 1,
@@ -75,7 +73,6 @@ const ConfirmacaoPagamentoTokenScreen = () => {
           token: tokenDigits.join('')
         }
       };
-
       setTechnicalRequestData(JSON.stringify(currentRequest, null, 2));
     } catch (error) {
       console.error('Error generating current request:', error);
@@ -85,11 +82,9 @@ const ConfirmacaoPagamentoTokenScreen = () => {
   // Simulated timer for token expiration
   useEffect(() => {
     if (remainingTime <= 0) return;
-    
     const timer = setTimeout(() => {
       setRemainingTime(prev => prev - 1);
     }, 1000);
-    
     return () => clearTimeout(timer);
   }, [remainingTime]);
 
@@ -101,14 +96,14 @@ const ConfirmacaoPagamentoTokenScreen = () => {
   // Handle number input
   const handleNumberClick = (num: string) => {
     if (tokenDigits.length < 6) {
-      setTokenDigits((prev) => [...prev, num]);
+      setTokenDigits(prev => [...prev, num]);
     }
   };
 
   // Handle backspace
   const handleBackspace = () => {
     if (tokenDigits.length > 0) {
-      setTokenDigits((prev) => prev.slice(0, -1));
+      setTokenDigits(prev => prev.slice(0, -1));
     }
   };
 
@@ -116,11 +111,10 @@ const ConfirmacaoPagamentoTokenScreen = () => {
   const handleEnter = async () => {
     if (tokenDigits.length === 6) {
       const token = tokenDigits.join('');
-      
+
       // For ONLINE companies, make RLIAUTH call
       if (isOnlineCompany) {
         setIsLoading(true);
-        
         try {
           // Get transaction ID from localStorage
           const transactionId = localStorage.getItem('transactionId');
@@ -129,19 +123,20 @@ const ConfirmacaoPagamentoTokenScreen = () => {
             setIsLoading(false);
             return;
           }
-          
           console.log('[TokenScreen] Calling RLIAUTH with token:', token);
           const response = await comandoService.enviarComandoRliauth(transactionId, token);
           console.log('[TokenScreen] RLIAUTH Response:', response);
-          
+
           // Store the RLIAUTH response in localStorage
           localStorage.setItem('rliauthResponse', JSON.stringify(response));
-          
+
           // Navigate to confirmation page
-          navigate("/confirmacao_pagamento", { 
-            state: { fromTokenScreen: true, isOnline: true } 
+          navigate("/confirmacao_pagamento", {
+            state: {
+              fromTokenScreen: true,
+              isOnline: true
+            }
           });
-          
         } catch (error) {
           console.error('[TokenScreen] Error calling RLIAUTH:', error);
           toast.error("Erro ao validar token. Tente novamente.");
@@ -150,8 +145,11 @@ const ConfirmacaoPagamentoTokenScreen = () => {
         }
       } else {
         // For OFFLINE companies, keep current behavior
-        navigate("/confirmacao_pagamento", { 
-          state: { fromTokenScreen: true, isOnline: false } 
+        navigate("/confirmacao_pagamento", {
+          state: {
+            fromTokenScreen: true,
+            isOnline: false
+          }
         });
       }
     }
@@ -167,15 +165,13 @@ const ConfirmacaoPagamentoTokenScreen = () => {
 
   // Get client name from localStorage (fallback to empty string if not available)
   const clientName = localStorage.getItem('nomeCliente') || 'Cliente';
-
-  return (
-    <div className="min-h-screen bg-gray-100 p-4 pb-16">
+  return <div className="min-h-screen bg-gray-100 p-4 pb-16">
       <div className="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Left Panel - PDV Token Input */}
         <Card className="w-full shadow-lg overflow-hidden">
           <CardHeader className="bg-dotz-laranja text-white">
             <div className="flex justify-between items-center">
-              <CardTitle>Pagamento Cliente A</CardTitle>
+              <CardTitle>Pagamento</CardTitle>
               <EncerrarAtendimentoButton />
             </div>
           </CardHeader>
@@ -187,90 +183,43 @@ const ConfirmacaoPagamentoTokenScreen = () => {
               
               {/* Display the entered token digits */}
               <div className="flex justify-center gap-2 mb-6">
-                {Array(6).fill(0).map((_, index) => (
-                  <div 
-                    key={index}
-                    className={`w-10 h-12 border-2 ${
-                      index < tokenDigits.length 
-                        ? "border-dotz-laranja bg-orange-50" 
-                        : "border-gray-300"
-                    } rounded flex items-center justify-center text-xl font-bold`}
-                  >
+                {Array(6).fill(0).map((_, index) => <div key={index} className={`w-10 h-12 border-2 ${index < tokenDigits.length ? "border-dotz-laranja bg-orange-50" : "border-gray-300"} rounded flex items-center justify-center text-xl font-bold`}>
                     {index < tokenDigits.length ? tokenDigits[index] : ""}
-                  </div>
-                ))}
+                  </div>)}
               </div>
               
               {/* Numeric keypad */}
               <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto">
                 {/* Row 1: 1, 2, 3 */}
-                {[1, 2, 3].map((num) => (
-                  <Button 
-                    key={num}
-                    variant="outline" 
-                    onClick={() => handleNumberClick(num.toString())} 
-                    className="h-14 text-xl shadow-sm"
-                  >
+                {[1, 2, 3].map(num => <Button key={num} variant="outline" onClick={() => handleNumberClick(num.toString())} className="h-14 text-xl shadow-sm">
                     {num}
-                  </Button>
-                ))}
+                  </Button>)}
                 
                 {/* Row 2: 4, 5, 6 */}
-                {[4, 5, 6].map((num) => (
-                  <Button 
-                    key={num}
-                    variant="outline" 
-                    onClick={() => handleNumberClick(num.toString())} 
-                    className="h-14 text-xl shadow-sm"
-                  >
+                {[4, 5, 6].map(num => <Button key={num} variant="outline" onClick={() => handleNumberClick(num.toString())} className="h-14 text-xl shadow-sm">
                     {num}
-                  </Button>
-                ))}
+                  </Button>)}
                 
                 {/* Row 3: 7, 8, 9 */}
-                {[7, 8, 9].map((num) => (
-                  <Button 
-                    key={num}
-                    variant="outline" 
-                    onClick={() => handleNumberClick(num.toString())} 
-                    className="h-14 text-xl shadow-sm"
-                  >
+                {[7, 8, 9].map(num => <Button key={num} variant="outline" onClick={() => handleNumberClick(num.toString())} className="h-14 text-xl shadow-sm">
                     {num}
-                  </Button>
-                ))}
+                  </Button>)}
                 
                 {/* Row 4: Backspace, 0, Enter */}
-                <Button 
-                  variant="outline" 
-                  onClick={handleBackspace} 
-                  className="h-14 text-xl shadow-sm"
-                >
+                <Button variant="outline" onClick={handleBackspace} className="h-14 text-xl shadow-sm">
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleNumberClick("0")} 
-                  className="h-14 text-xl shadow-sm"
-                >
+                <Button variant="outline" onClick={() => handleNumberClick("0")} className="h-14 text-xl shadow-sm">
                   0
                 </Button>
-                <Button 
-                  variant={isEnterEnabled ? "dotz" : "outline"} 
-                  onClick={handleEnter} 
-                  disabled={!isEnterEnabled || isLoading} 
-                  className="h-14 text-sm font-bold shadow-sm"
-                >
+                <Button variant={isEnterEnabled ? "dotz" : "outline"} onClick={handleEnter} disabled={!isEnterEnabled || isLoading} className="h-14 text-sm font-bold shadow-sm">
                   {isLoading ? "Validando..." : "ENTRAR"}
                 </Button>
               </div>
 
               {/* Cancel button */}
               <div className="mt-8">
-                <Button 
-                  variant="cancel"
-                  className="w-full sm:w-auto"
-                  onClick={handleCancel}
-                >
+                <Button variant="cancel" className="w-full sm:w-auto" onClick={handleCancel}>
                   Cancelar
                 </Button>
               </div>
@@ -279,9 +228,8 @@ const ConfirmacaoPagamentoTokenScreen = () => {
         </Card>
 
         {/* Right Panel - Instructions for ONLINE or App Emulator for OFFLINE */}
-        {isOnlineCompany ? (
-          /* Instructions Card for ONLINE companies */
-          <Card className="w-full shadow-lg">
+        {isOnlineCompany ? (/* Instructions Card for ONLINE companies */
+      <Card className="w-full shadow-lg">
             <CardHeader className="bg-blue-600 text-white">
               <CardTitle className="text-center">
                 Instruções para Pagamento
@@ -320,10 +268,8 @@ const ConfirmacaoPagamentoTokenScreen = () => {
                 </div>
               </div>
             </CardContent>
-          </Card>
-        ) : (
-          /* App Token Emulator for OFFLINE companies */
-          <div className="flex justify-center">
+          </Card>) : (/* App Token Emulator for OFFLINE companies */
+      <div className="flex justify-center">
             <div className="bg-white rounded-3xl border-2 border-gray-300 shadow-xl overflow-hidden max-w-xs w-full">
               <div className="aspect-w-9 aspect-h-16">
                 <div className="p-4">
@@ -383,9 +329,7 @@ const ConfirmacaoPagamentoTokenScreen = () => {
                     </p>
                     
                     {/* Close Button */}
-                    <Button 
-                      className="w-full border border-dotz-laranja text-dotz-laranja bg-white hover:bg-orange-50 rounded-full"
-                    >
+                    <Button className="w-full border border-dotz-laranja text-dotz-laranja bg-white hover:bg-orange-50 rounded-full">
                       Fechar
                     </Button>
                   </div>
@@ -404,22 +348,11 @@ const ConfirmacaoPagamentoTokenScreen = () => {
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          </div>)}
       </div>
       
       {/* Technical Footer Component */}
-      <TechnicalFooter
-        requestData={technicalRequestData}
-        responseData={technicalResponseData}
-        previousRequestData={technicalPreviousRequestData}
-        isLoading={isLoading}
-        slug="RLIDEALRLIAUTH"
-        loadOnMount={false}
-        sourceScreen="confirmacao_pagamento_token"
-      />
-    </div>
-  );
+      <TechnicalFooter requestData={technicalRequestData} responseData={technicalResponseData} previousRequestData={technicalPreviousRequestData} isLoading={isLoading} slug="RLIDEALRLIAUTH" loadOnMount={false} sourceScreen="confirmacao_pagamento_token" />
+    </div>;
 };
-
 export default ConfirmacaoPagamentoTokenScreen;
