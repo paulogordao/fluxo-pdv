@@ -10,7 +10,6 @@ import ErrorModal from "@/components/ErrorModal";
 import ValidationModal from "@/components/ValidationModal";
 import { toast } from "sonner";
 import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
-
 const OtpDataNascimentoScreen = () => {
   const [digits, setDigits] = useState<string[]>([]);
   const [isLoadingAuth, setIsLoadingAuth] = useState(false);
@@ -58,7 +57,6 @@ const OtpDataNascimentoScreen = () => {
     try {
       const transactionId = localStorage.getItem('transactionId');
       if (!transactionId) return;
-
       let token = digits.join('');
       // If we have 8 digits, show the formatted version
       if (digits.length === 8) {
@@ -69,7 +67,6 @@ const OtpDataNascimentoScreen = () => {
           token = digits.join('');
         }
       }
-
       const currentRequest = {
         route: "RLIAUTH",
         version: 1,
@@ -78,7 +75,6 @@ const OtpDataNascimentoScreen = () => {
           token: token
         }
       };
-
       setTechnicalRequestData(JSON.stringify(currentRequest, null, 2));
     } catch (error) {
       console.error('Error generating current request:', error);
@@ -105,16 +101,14 @@ const OtpDataNascimentoScreen = () => {
     if (dateString.length !== 8) {
       throw new Error('Data deve ter exatamente 8 dígitos');
     }
-    
     const day = dateString.substring(0, 2);
     const month = dateString.substring(2, 4);
     const year = dateString.substring(4, 8);
-    
+
     // Basic validation
     const dayNum = parseInt(day, 10);
     const monthNum = parseInt(month, 10);
     const yearNum = parseInt(year, 10);
-    
     if (dayNum < 1 || dayNum > 31) {
       throw new Error('Dia inválido');
     }
@@ -124,7 +118,6 @@ const OtpDataNascimentoScreen = () => {
     if (yearNum < 1900 || yearNum > new Date().getFullYear()) {
       throw new Error('Ano inválido');
     }
-    
     return `${year}-${month}-${day}`;
   };
 
@@ -132,7 +125,6 @@ const OtpDataNascimentoScreen = () => {
   const handleEnter = async () => {
     if (digits.length === 8 && !isLoadingAuth) {
       setIsLoadingAuth(true);
-      
       try {
         // Get transaction ID from localStorage
         const transactionId = localStorage.getItem('transactionId');
@@ -146,14 +138,12 @@ const OtpDataNascimentoScreen = () => {
         const formattedDate = formatDateForService(digits);
         console.log('[OtpDataNascimentoScreen] Original digits:', digits.join(''));
         console.log('[OtpDataNascimentoScreen] Formatted date for service:', formattedDate);
-        
         const response = await comandoService.enviarComandoRliauth(transactionId, formattedDate);
         console.log('[OtpDataNascimentoScreen] RLIAUTH Response:', response);
 
         // Check if there's a system message to show the user
         const systemMessage = response?.[0]?.response?.data?.message?.content;
         const nextStep = response?.[0]?.response?.data?.next_step?.[0]?.description;
-        
         if (systemMessage) {
           console.log('[OtpDataNascimentoScreen] System message found:', systemMessage);
           console.log('[OtpDataNascimentoScreen] Next step:', nextStep);
@@ -167,13 +157,15 @@ const OtpDataNascimentoScreen = () => {
 
         // Store response in localStorage for next screen
         localStorage.setItem('rliauthResponse', JSON.stringify(response));
-        
+
         // Navigate to confirmation page with state indicating where we're coming from
-        navigate("/confirmacao_pagamento", { state: { fromOtpScreen: true } });
-        
+        navigate("/confirmacao_pagamento", {
+          state: {
+            fromOtpScreen: true
+          }
+        });
       } catch (error: any) {
         console.error('[OtpDataNascimentoScreen] Erro RLIAUTH:', error);
-        
         let errorCode = 'RLIAUTH_ERROR';
         let errorMessage = "Erro ao validar token. Tente novamente.";
         let technicalError = error.message;
@@ -189,7 +181,6 @@ const OtpDataNascimentoScreen = () => {
           })()
         };
         let fullResponse = error;
-        
         if (error.message === 'TIMEOUT') {
           errorCode = 'TIMEOUT';
           errorMessage = "Timeout: O serviço não respondeu em tempo hábil (30s)";
@@ -210,7 +201,6 @@ const OtpDataNascimentoScreen = () => {
           // Don't show error modal for session expiration, just navigate
           return;
         }
-
         setErrorDetails({
           code: errorCode,
           message: errorMessage,
@@ -253,7 +243,6 @@ const OtpDataNascimentoScreen = () => {
     setShowValidationModal(false);
     setValidationMessage("");
     setValidationNextStep("");
-    
     if (validationNextStep === "RLIAUTH") {
       // Try again - clear digits for new input
       setDigits([]);
@@ -262,40 +251,39 @@ const OtpDataNascimentoScreen = () => {
       // Continue to next step - navigate based on next_step
       if (validationNextStep === "RLIPAYS") {
         console.log('[OtpDataNascimentoScreen] Navigating to confirmacao_pagamento for RLIPAYS');
-        
+
         // Save pending RLIAUTH response to localStorage before navigation
         if (pendingRliauthResponse) {
           console.log('[OtpDataNascimentoScreen] Saving pending RLIAUTH response to localStorage');
           localStorage.setItem('rliauthResponse', JSON.stringify(pendingRliauthResponse));
           setPendingRliauthResponse(null); // Clear pending response
         }
-        
-        navigate("/confirmacao_pagamento", { state: { fromOtpScreen: true } });
+        navigate("/confirmacao_pagamento", {
+          state: {
+            fromOtpScreen: true
+          }
+        });
       } else {
         // Handle other next steps as needed
         console.log('[OtpDataNascimentoScreen] Unknown next step:', validationNextStep);
-        
+
         // Save pending response for any other navigation too
         if (pendingRliauthResponse) {
           console.log('[OtpDataNascimentoScreen] Saving pending RLIAUTH response to localStorage for unknown step');
           localStorage.setItem('rliauthResponse', JSON.stringify(pendingRliauthResponse));
           setPendingRliauthResponse(null);
         }
-        
         navigate("/confirmacao_pagamento"); // Default navigation to payment confirmation
       }
     }
   };
-
   const handleValidationCancel = () => {
     setShowValidationModal(false);
     setValidationMessage("");
     setValidationNextStep("");
     navigate(-1); // Go back to previous screen
   };
-
-  return (
-    <PdvLayout className="pb-16">
+  return <PdvLayout className="pb-16">
       {/* Fixed position button outside the Card */}
       <div className="fixed top-4 right-4 z-50">
         <EncerrarAtendimentoButton />
@@ -303,7 +291,7 @@ const OtpDataNascimentoScreen = () => {
 
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="bg-dotz-laranja text-white">
-          <CardTitle>Pagamento Cliente A</CardTitle>
+          <CardTitle>Pagamento</CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
           <div className="text-center mb-6">
@@ -321,106 +309,46 @@ const OtpDataNascimentoScreen = () => {
             {/* Numeric keypad */}
             <div className="grid grid-cols-3 gap-4">
               {/* Row 1: 1, 2, 3 */}
-              <Button 
-                variant="outline" 
-                onClick={() => handleNumberClick("1")} 
-                className="h-14 text-xl shadow-sm"
-                disabled={isLoadingAuth}
-              >
+              <Button variant="outline" onClick={() => handleNumberClick("1")} className="h-14 text-xl shadow-sm" disabled={isLoadingAuth}>
                 1
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleNumberClick("2")} 
-                className="h-14 text-xl shadow-sm"
-                disabled={isLoadingAuth}
-              >
+              <Button variant="outline" onClick={() => handleNumberClick("2")} className="h-14 text-xl shadow-sm" disabled={isLoadingAuth}>
                 2
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleNumberClick("3")} 
-                className="h-14 text-xl shadow-sm"
-                disabled={isLoadingAuth}
-              >
+              <Button variant="outline" onClick={() => handleNumberClick("3")} className="h-14 text-xl shadow-sm" disabled={isLoadingAuth}>
                 3
               </Button>
               
               {/* Row 2: 4, 5, 6 */}
-              <Button 
-                variant="outline" 
-                onClick={() => handleNumberClick("4")} 
-                className="h-14 text-xl shadow-sm"
-                disabled={isLoadingAuth}
-              >
+              <Button variant="outline" onClick={() => handleNumberClick("4")} className="h-14 text-xl shadow-sm" disabled={isLoadingAuth}>
                 4
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleNumberClick("5")} 
-                className="h-14 text-xl shadow-sm"
-                disabled={isLoadingAuth}
-              >
+              <Button variant="outline" onClick={() => handleNumberClick("5")} className="h-14 text-xl shadow-sm" disabled={isLoadingAuth}>
                 5
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleNumberClick("6")} 
-                className="h-14 text-xl shadow-sm"
-                disabled={isLoadingAuth}
-              >
+              <Button variant="outline" onClick={() => handleNumberClick("6")} className="h-14 text-xl shadow-sm" disabled={isLoadingAuth}>
                 6
               </Button>
               
               {/* Row 3: 7, 8, 9 */}
-              <Button 
-                variant="outline" 
-                onClick={() => handleNumberClick("7")} 
-                className="h-14 text-xl shadow-sm"
-                disabled={isLoadingAuth}
-              >
+              <Button variant="outline" onClick={() => handleNumberClick("7")} className="h-14 text-xl shadow-sm" disabled={isLoadingAuth}>
                 7
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleNumberClick("8")} 
-                className="h-14 text-xl shadow-sm"
-                disabled={isLoadingAuth}
-              >
+              <Button variant="outline" onClick={() => handleNumberClick("8")} className="h-14 text-xl shadow-sm" disabled={isLoadingAuth}>
                 8
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleNumberClick("9")} 
-                className="h-14 text-xl shadow-sm"
-                disabled={isLoadingAuth}
-              >
+              <Button variant="outline" onClick={() => handleNumberClick("9")} className="h-14 text-xl shadow-sm" disabled={isLoadingAuth}>
                 9
               </Button>
               
               {/* Row 4: Backspace, 0, Enter */}
-              <Button 
-                variant="outline" 
-                onClick={handleBackspace} 
-                className="h-14 text-xl shadow-sm"
-                disabled={isLoadingAuth}
-              >
+              <Button variant="outline" onClick={handleBackspace} className="h-14 text-xl shadow-sm" disabled={isLoadingAuth}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleNumberClick("0")} 
-                className="h-14 text-xl shadow-sm"
-                disabled={isLoadingAuth}
-              >
+              <Button variant="outline" onClick={() => handleNumberClick("0")} className="h-14 text-xl shadow-sm" disabled={isLoadingAuth}>
                 0
               </Button>
-              <Button 
-                variant={isEnterEnabled ? "dotz" : "outline"} 
-                onClick={handleEnter} 
-                disabled={!isEnterEnabled || isLoadingAuth} 
-                className="h-14 text-sm font-bold shadow-sm"
-              >
+              <Button variant={isEnterEnabled ? "dotz" : "outline"} onClick={handleEnter} disabled={!isEnterEnabled || isLoadingAuth} className="h-14 text-sm font-bold shadow-sm">
                 {isLoadingAuth ? <Loader2 className="h-4 w-4 animate-spin" /> : "ENTRA"}
               </Button>
             </div>
@@ -429,40 +357,13 @@ const OtpDataNascimentoScreen = () => {
       </Card>
       
       {/* Error Modal */}
-      <ErrorModal
-        isOpen={showErrorModal}
-        onClose={() => setShowErrorModal(false)}
-        onRetry={handleRetry}
-        errorCode={errorDetails?.code}
-        errorMessage={errorDetails?.message}
-        fullRequest={errorDetails?.request}
-        fullResponse={errorDetails?.fullError}
-        apiType="RLIAUTH"
-      />
+      <ErrorModal isOpen={showErrorModal} onClose={() => setShowErrorModal(false)} onRetry={handleRetry} errorCode={errorDetails?.code} errorMessage={errorDetails?.message} fullRequest={errorDetails?.request} fullResponse={errorDetails?.fullError} apiType="RLIAUTH" />
 
       {/* Validation Modal */}
-      <ValidationModal
-        isOpen={showValidationModal}
-        onPrimaryAction={handleValidationPrimaryAction}
-        onCancel={handleValidationCancel}
-        message={validationMessage}
-        primaryButtonText={validationNextStep === "RLIAUTH" ? "Tentar Novamente" : "Continuar"}
-        cancelButtonText="Cancelar"
-      />
+      <ValidationModal isOpen={showValidationModal} onPrimaryAction={handleValidationPrimaryAction} onCancel={handleValidationCancel} message={validationMessage} primaryButtonText={validationNextStep === "RLIAUTH" ? "Tentar Novamente" : "Continuar"} cancelButtonText="Cancelar" />
 
       {/* Technical Footer Component */}
-      <TechnicalFooter
-        requestData={technicalRequestData}
-        responseData={technicalResponseData}
-        previousRequestData={technicalPreviousRequestData}
-        isLoading={isLoadingAuth}
-        slug="RLIDEALRLIAUTH"
-        loadOnMount={false}
-        sourceScreen="otp_data_nascimento"
-        previousServiceName="RLIDEAL"
-      />
-    </PdvLayout>
-  );
+      <TechnicalFooter requestData={technicalRequestData} responseData={technicalResponseData} previousRequestData={technicalPreviousRequestData} isLoading={isLoadingAuth} slug="RLIDEALRLIAUTH" loadOnMount={false} sourceScreen="otp_data_nascimento" previousServiceName="RLIDEAL" />
+    </PdvLayout>;
 };
-
 export default OtpDataNascimentoScreen;
