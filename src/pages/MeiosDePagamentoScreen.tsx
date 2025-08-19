@@ -54,9 +54,21 @@ const MeiosDePagamentoScreen = () => {
   const [technicalResponseData, setTechnicalResponseData] = useState<string | undefined>();
   const [technicalPreviousRequestData, setTechnicalPreviousRequestData] = useState<string | undefined>();
   
-  // Always call hooks in the same order (Rules of Hooks)
+  // Check if RLIFUND data exists to determine which hooks to use
+  const rlifundResponse = localStorage.getItem('rlifundResponse');
+  const hasRlifundData = rlifundResponse ? (() => {
+    try {
+      const parsed = JSON.parse(rlifundResponse);
+      return Array.isArray(parsed) && parsed[0]?.response?.data?.payment_options;
+    } catch {
+      return false;
+    }
+  })() : false;
+
+  // Conditionally call hooks based on data availability
   const { paymentOptions: fundPaymentOptions, loading: fundLoading, isOnlineMode } = useFundPaymentOptions();
-  const { paymentOptions: legacyPaymentOptions, paymentOptionsLoading: legacyLoading } = usePaymentOptions();
+  const { paymentOptions: legacyPaymentOptions, paymentOptionsLoading: legacyLoading } = hasRlifundData ? 
+    { paymentOptions: {}, paymentOptionsLoading: false } : usePaymentOptions();
   
   // Determine which data source to use based on mode
   const paymentOptionsLoading = isOnlineMode ? fundLoading : legacyLoading;
