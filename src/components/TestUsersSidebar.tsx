@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, User } from "lucide-react";
 import { testUserService, UsuarioTeste } from "@/services/testUserService";
 import { useUserSession } from "@/hooks/useUserSession";
 import { formatDateBR } from "@/utils/dateUtils";
+import { useQuery } from "@tanstack/react-query";
 
 interface TestUsersSidebarProps {
   onCpfSelect: (cpf: string) => void;
@@ -14,28 +15,19 @@ interface TestUsersSidebarProps {
 }
 
 const TestUsersSidebar = ({ onCpfSelect, tipoSimulacao }: TestUsersSidebarProps) => {
-  const [testUsers, setTestUsers] = useState<UsuarioTeste[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { userId } = useUserSession();
 
-  useEffect(() => {
-    const loadTestUsers = async () => {
-      if (!userId) return;
-      
-      setIsLoading(true);
-      try {
-        const users = await testUserService.getUsuariosTeste(userId);
-        setTestUsers(users);
-      } catch (error) {
-        console.error("Erro ao carregar usuários de teste:", error);
-      } finally {
-        setIsLoading(false);
+  const { data: testUsers = [], isLoading } = useQuery({
+    queryKey: ["usuarios-teste", userId],
+    queryFn: () => {
+      if (!userId) {
+        throw new Error("User ID not available");
       }
-    };
-
-    loadTestUsers();
-  }, [userId]);
+      return testUserService.getUsuariosTeste(userId);
+    },
+    enabled: !!userId, // Only run query if we have a user ID
+  });
 
   const formatCPF = (cpf: string | number) => {
     // Convert to string first to handle both string and number inputs
