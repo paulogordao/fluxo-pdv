@@ -10,7 +10,7 @@ import { formatDateBR } from "@/utils/dateUtils";
 import { useQuery } from "@tanstack/react-query";
 
 interface TestUsersSidebarProps {
-  onCpfSelect: (cpf: string) => void;
+  onCpfSelect: (cpf: string, user?: UsuarioTeste) => void;
   tipoSimulacao?: string;
 }
 
@@ -36,10 +36,10 @@ const TestUsersSidebar = ({ onCpfSelect, tipoSimulacao }: TestUsersSidebarProps)
     return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   };
 
-  const handleCpfClick = (cpf: string | number) => {
+  const handleCpfClick = (cpf: string | number, user: UsuarioTeste) => {
     // Convert to string and clean it
     const cleanedCpf = String(cpf).replace(/\D/g, "");
-    onCpfSelect(cleanedCpf);
+    onCpfSelect(cleanedCpf, user);
   };
 
   if (isCollapsed) {
@@ -127,7 +127,7 @@ const TestUsersSidebar = ({ onCpfSelect, tipoSimulacao }: TestUsersSidebarProps)
                       <Button
                         size="sm"
                         className="w-full bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
-                        onClick={() => handleCpfClick(user.identificacao_usuario)}
+                        onClick={() => handleCpfClick(user.identificacao_usuario, user)}
                       >
                         Usar este CPF
                       </Button>
@@ -173,7 +173,7 @@ const TestUsersSidebar = ({ onCpfSelect, tipoSimulacao }: TestUsersSidebarProps)
                       <Button
                         size="sm"
                         className="w-full bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
-                        onClick={() => handleCpfClick(user.identificacao_usuario)}
+                        onClick={() => handleCpfClick(user.identificacao_usuario, user)}
                       >
                         Usar este CPF
                       </Button>

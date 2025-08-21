@@ -26,7 +26,7 @@ const OtpDataNascimentoScreen = () => {
   const [technicalResponseData, setTechnicalResponseData] = useState<string | undefined>();
   const [technicalPreviousRequestData, setTechnicalPreviousRequestData] = useState<string | undefined>();
 
-  // Load technical documentation data
+  // Load technical documentation data and pre-fill birth date if available
   useEffect(() => {
     // Load previous RLIDEAL response from localStorage
     const rlidealResponse = localStorage.getItem('rlidealResponse');
@@ -48,10 +48,35 @@ const OtpDataNascimentoScreen = () => {
       }
     }
 
+    // Check for pre-filled birth date from selected user
+    const savedBirthDate = localStorage.getItem('selectedUserBirthDate');
+    if (savedBirthDate && digits.length === 0) {
+      try {
+        // Convert from YYYY-MM-DD to DDMMYYYY format
+        const [year, month, day] = savedBirthDate.split('-');
+        const ddmmyyyy = `${day}${month}${year}`;
+        
+        // Set digits array with the birth date
+        setDigits(ddmmyyyy.split(''));
+        
+        // Clear the stored birth date after use
+        localStorage.removeItem('selectedUserBirthDate');
+        
+        toast.success('Data de nascimento pré-preenchida!');
+      } catch (error) {
+        console.error('Erro ao processar data de nascimento:', error);
+        localStorage.removeItem('selectedUserBirthDate');
+      }
+    }
+
     // Generate current RLIAUTH request
     generateCurrentRequest();
-  }, [digits]);
+  }, []);
 
+  // Separate useEffect for technical documentation that depends on digits
+  useEffect(() => {
+    generateCurrentRequest();
+  }, [digits]);
   // Generate current RLIAUTH request for technical documentation
   const generateCurrentRequest = () => {
     try {

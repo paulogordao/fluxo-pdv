@@ -83,6 +83,8 @@ const CpfScreen = () => {
       setCpf(prev => prev.slice(0, -1));
     } else if (cpf.length < 11) {
       setCpf(prev => prev + value);
+      // Clear birth date when typing manually
+      localStorage.removeItem('selectedUserBirthDate');
     }
   };
 
@@ -98,6 +100,8 @@ const CpfScreen = () => {
       if (/^[0-9]$/.test(key) && cpf.length < 11) {
         event.preventDefault();
         setCpf(prev => prev + key);
+        // Clear birth date when typing manually
+        localStorage.removeItem('selectedUserBirthDate');
       }
       // Handle Backspace and Delete
       else if ((key === 'Backspace' || key === 'Delete') && cpf.length > 0) {
@@ -120,12 +124,24 @@ const CpfScreen = () => {
     const value = event.target.value.replace(/\D/g, ''); // Remove non-digits
     if (value.length <= 11) {
       setCpf(value);
+      // Clear birth date when typing manually
+      localStorage.removeItem('selectedUserBirthDate');
     }
   };
 
-  const handleCpfSelect = (selectedCpf: string) => {
+  const handleCpfSelect = (selectedCpf: string, user?: any) => {
     setCpf(selectedCpf);
-    toast.success(`CPF ${formatCPF(selectedCpf)} selecionado!`);
+    
+    // Clear any previous birth date data
+    localStorage.removeItem('selectedUserBirthDate');
+    
+    // If user has birth date, store it for potential use in OTP screen
+    if (user?.data_nascimento) {
+      localStorage.setItem('selectedUserBirthDate', user.data_nascimento);
+      toast.success(`CPF ${formatCPF(selectedCpf)} selecionado com data de nascimento!`);
+    } else {
+      toast.success(`CPF ${formatCPF(selectedCpf)} selecionado!`);
+    }
   };
 
   const generateValidCPF = (): string => {
