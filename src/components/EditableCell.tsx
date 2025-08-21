@@ -1,15 +1,20 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react";
 import TagManager from "./TagManager";
+import { formatDateBR, parseDateISO, isValidDateString } from "@/utils/dateUtils";
 
 interface EditableCellProps {
   value: string;
   onSave: (newValue: string) => void;
   className?: string;
   placeholder?: string;
-  type?: "text" | "tags";
+  type?: "text" | "tags" | "date";
   disabled?: boolean;
 }
 
@@ -80,12 +85,22 @@ const EditableCell: React.FC<EditableCellProps> = ({
             disabled={true}
             className=""
           />
+        ) : type === "date" && value ? (
+          <span className="text-sm">{formatDateBR(value)}</span>
         ) : (
           <span className="text-sm">{value || placeholder}</span>
         )}
       </div>
     );
   }
+
+  const handleDateSelect = (selectedDate: Date | undefined) => {
+    if (selectedDate) {
+      const isoDate = selectedDate.toISOString().split('T')[0]; // Convert to YYYY-MM-DD
+      onSave(isoDate);
+    }
+    setIsEditing(false);
+  };
 
   if (isEditing) {
     if (type === "tags") {
@@ -96,6 +111,39 @@ const EditableCell: React.FC<EditableCellProps> = ({
           className={cn("min-h-8", className)}
           placeholder={placeholder}
         />
+      );
+    }
+
+    if (type === "date") {
+      const currentDate = editValue ? new Date(editValue) : undefined;
+      const isValidDate = currentDate && !isNaN(currentDate.getTime());
+      
+      return (
+        <Popover open={true} onOpenChange={(open) => !open && setIsEditing(false)}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal min-h-8 text-sm",
+                !isValidDate && "text-muted-foreground",
+                className
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {isValidDate ? formatDateBR(editValue) : placeholder}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={isValidDate ? currentDate : undefined}
+              onSelect={handleDateSelect}
+              disabled={(date) => date > new Date()}
+              initialFocus
+              className="pointer-events-auto"
+            />
+          </PopoverContent>
+        </Popover>
       );
     }
 
@@ -127,6 +175,13 @@ const EditableCell: React.FC<EditableCellProps> = ({
               {tag}
             </Badge>
           ))}
+        </div>
+      ) : type === "date" ? (
+        <div className="flex items-center">
+          <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+          <span className={cn("text-sm", !value && "text-muted-foreground italic")}>
+            {value ? formatDateBR(value) : placeholder}
+          </span>
         </div>
       ) : (
         <span className={cn("text-sm", !value && "text-muted-foreground")}>

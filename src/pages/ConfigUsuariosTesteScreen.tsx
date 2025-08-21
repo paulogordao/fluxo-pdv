@@ -125,7 +125,7 @@ const ConfigUsuariosTesteScreen = () => {
     updateMutation.mutate(updatedUsuario);
   };
 
-  const handleFieldUpdate = (usuario: UsuarioTeste, field: 'nome' | 'tags', newValue: string) => {
+  const handleFieldUpdate = (usuario: UsuarioTeste, field: 'nome' | 'tags' | 'data_nascimento', newValue: string) => {
     const updatedUsuario = {
       ...usuario,
       [field]: newValue,
@@ -287,6 +287,7 @@ const ConfigUsuariosTesteScreen = () => {
                       <TableRow>
                         <TableHead className="font-semibold">CPF</TableHead>
                         <TableHead className="font-semibold">Nome</TableHead>
+                        <TableHead className="font-semibold">Data de Nascimento</TableHead>
                         <TableHead className="font-semibold">Tags</TableHead>
                         <TableHead className="font-semibold text-center">Pedir telefone?</TableHead>
                         <TableHead className="font-semibold text-center">Possui Dotz?</TableHead>
@@ -306,6 +307,15 @@ const ConfigUsuariosTesteScreen = () => {
                               value={usuario.nome || ""}
                               onSave={(newValue) => handleFieldUpdate(usuario, 'nome', newValue)}
                               placeholder="Nome não informado"
+                              disabled={updateMutation.isPending}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <EditableCell
+                              value={usuario.data_nascimento || ""}
+                              onSave={(newValue) => handleFieldUpdate(usuario, 'data_nascimento', newValue)}
+                              placeholder="Data não informada"
+                              type="date"
                               disabled={updateMutation.isPending}
                             />
                           </TableCell>
@@ -379,6 +389,7 @@ const ConfigUsuariosTesteScreen = () => {
                       <TableRow>
                         <TableHead className="font-semibold">CPF</TableHead>
                         <TableHead className="font-semibold">Nome</TableHead>
+                        <TableHead className="font-semibold">Data de Nascimento</TableHead>
                         <TableHead className="font-semibold">Tags</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -393,6 +404,15 @@ const ConfigUsuariosTesteScreen = () => {
                               value={usuario.nome || ""}
                               onSave={(newValue) => handleFieldUpdate(usuario, 'nome', newValue)}
                               placeholder="Nome não informado"
+                              disabled={updateMutation.isPending}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <EditableCell
+                              value={usuario.data_nascimento || ""}
+                              onSave={(newValue) => handleFieldUpdate(usuario, 'data_nascimento', newValue)}
+                              placeholder="Data não informada"
+                              type="date"
                               disabled={updateMutation.isPending}
                             />
                           </TableCell>

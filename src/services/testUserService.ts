@@ -5,6 +5,7 @@ export interface UsuarioTeste {
   id: string;
   identificacao_usuario: string;
   nome?: string;
+  data_nascimento?: string;
   tags?: string;
   pedir_telefone: boolean;
   possui_dotz: boolean;
