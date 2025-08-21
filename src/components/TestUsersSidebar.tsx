@@ -148,36 +148,34 @@ const TestUsersSidebar = ({ onCpfSelect, tipoSimulacao }: TestUsersSidebarProps)
                       </div>
                       
                       <div className="space-y-2 text-sm">
-                        <div>
-                          <span className="font-medium text-gray-600">Nome:</span>
+                        {user.nome && (
                           <div className="text-gray-800">
-                            {user.nome || "Nome não informado"}
+                            <span className="font-semibold text-gray-600">Nome:</span> {user.nome}
                           </div>
-                        </div>
+                        )}
                         
-                        <div>
-                          <span className="font-medium text-gray-600">Data de Nascimento:</span>
+                        {user.data_nascimento && (
                           <div className="text-gray-800">
-                            {user.data_nascimento ? formatDateBR(user.data_nascimento) : "Data não informada"}
+                            <span className="font-semibold text-gray-600">Data nascimento:</span> {formatDateBR(user.data_nascimento)}
                           </div>
-                        </div>
+                        )}
                         
-                        <div>
-                          <span className="font-medium text-gray-600">Tags:</span>
-                          <div className="text-gray-800 mt-1">
-                            {user.tags ? (
-                              <div className="flex flex-wrap gap-1">
-                                {user.tags.split(',').map((tag, tagIndex) => (
-                                  <Badge key={tagIndex} variant="outline" className="text-xs">
-                                    {tag.trim()}
-                                  </Badge>
-                                ))}
-                              </div>
-                            ) : (
-                              "Sem tags"
-                            )}
+                        {user.tags && (
+                          <div>
+                            <div className="font-semibold text-gray-600 mb-1">Tags:</div>
+                            <div className="flex flex-wrap gap-1">
+                              {user.tags.split(',').map((tag, tagIndex) => (
+                                <Badge 
+                                  key={tagIndex} 
+                                  variant="outline" 
+                                  className="text-xs bg-yellow-50 border-yellow-200 text-yellow-800"
+                                >
+                                  {tag.trim()}
+                                </Badge>
+                              ))}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                       
                       <Button
