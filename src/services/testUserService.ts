@@ -4,6 +4,8 @@ import { API_CONFIG } from "@/config/api";
 export interface UsuarioTeste {
   id: string;
   identificacao_usuario: string;
+  nome?: string;
+  tags?: string;
   pedir_telefone: boolean;
   possui_dotz: boolean;
   outros_meios_pagamento: boolean;
