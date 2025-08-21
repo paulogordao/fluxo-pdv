@@ -2,6 +2,7 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import TagManager from "./TagManager";
 
 interface EditableCellProps {
   value: string;
@@ -60,17 +61,25 @@ const EditableCell: React.FC<EditableCellProps> = ({
     return tags.split(';').map(tag => tag.trim()).filter(tag => tag.length > 0);
   };
 
+  const formatTags = (tags: string[]): string => {
+    return tags.join(';');
+  };
+
+  const handleTagsChange = (newTags: string[]) => {
+    const formattedTags = formatTags(newTags);
+    onSave(formattedTags);
+  };
+
   if (disabled) {
     return (
       <div className={cn("min-h-8 flex items-center", className)}>
         {type === "tags" && value ? (
-          <div className="flex flex-wrap gap-1">
-            {parseTags(value).map((tag, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
+          <TagManager
+            tags={parseTags(value)}
+            onTagsChange={() => {}} // Disabled, no changes allowed
+            disabled={true}
+            className=""
+          />
         ) : (
           <span className="text-sm">{value || placeholder}</span>
         )}
@@ -79,6 +88,17 @@ const EditableCell: React.FC<EditableCellProps> = ({
   }
 
   if (isEditing) {
+    if (type === "tags") {
+      return (
+        <TagManager
+          tags={parseTags(editValue)}
+          onTagsChange={handleTagsChange}
+          className={cn("min-h-8", className)}
+          placeholder={placeholder}
+        />
+      );
+    }
+
     return (
       <Input
         ref={inputRef}
@@ -95,7 +115,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
   return (
     <div
       className={cn(
-        "min-h-8 flex items-center cursor-pointer hover:bg-gray-50 px-2 py-1 rounded transition-colors",
+        "min-h-8 flex items-center cursor-pointer hover:bg-accent/50 px-2 py-1 rounded transition-colors",
         className
       )}
       onClick={() => setIsEditing(true)}
@@ -109,7 +129,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
           ))}
         </div>
       ) : (
-        <span className={cn("text-sm", !value && "text-gray-500")}>
+        <span className={cn("text-sm", !value && "text-muted-foreground")}>
           {value || placeholder}
         </span>
       )}
