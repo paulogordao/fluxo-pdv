@@ -12,7 +12,8 @@ import TechnicalFooter from "@/components/TechnicalFooter";
 import { comandoService, RlifundItem, RlifundApiError } from "@/services/comandoService";
 import ErrorModal from "@/components/ErrorModal";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
-import { buscarProdutosFakes, FakeProduct } from "@/services/produtoService";
+import { buscarProdutosFakes, type FakeProduct } from '@/services/produtoService';
+import { useFakeProducts } from '@/hooks/useFakeProducts';
 import { useToast } from "@/hooks/use-toast";
 import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
 
@@ -51,10 +52,8 @@ const ScanScreen = () => {
   // Check simulation type from localStorage
   const [isOnlineMode, setIsOnlineMode] = useState(false);
   
-  // Fake products state
-  const [fakeProducts, setFakeProducts] = useState<FakeProduct[]>([]);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
-  const [productsError, setProductsError] = useState<string | null>(null);
+  // Fake products with intelligent caching
+  const { fakeProducts, isLoadingProducts, productsError } = useFakeProducts();
   
   // Technical documentation states
   const [technicalRequestData, setTechnicalRequestData] = useState<string | undefined>();
@@ -433,8 +432,7 @@ const ScanScreen = () => {
       setInitialCart([]);
       console.log('Modo ONLINE: iniciando com dados vazios');
       
-      // Load fake products for online mode
-      loadFakeProducts();
+      // Products will be loaded automatically by useFakeProducts hook
     } else {
       // OFFLINE mode: use mock data
       const mockProducts = [{
@@ -466,48 +464,6 @@ const ScanScreen = () => {
     }
   }, []); // Removido [setInitialCart] para evitar loop infinito
 
-  // Load fake products from API  
-  const loadFakeProducts = async () => {
-    try {
-      setIsLoadingProducts(true);
-      setProductsError(null);
-      const products = await buscarProdutosFakes();
-      // Convert Product[] to FakeProduct[] by fetching original data
-      const fakeProductsData: FakeProduct[] = [];
-      
-      // For now, we'll work with the converted Product data
-      // but we need to store the original fake products data somewhere
-      // Let's store it in a way that preserves the original API data
-      const fakeProductsResponse = await fetch('https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/produtosFakes', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975'
-        },
-      });
-      
-      if (fakeProductsResponse.ok) {
-        const responseData = await fakeProductsResponse.json();
-        if (responseData.items) {
-          setFakeProducts(responseData.items);
-        }
-      } else {
-        setFakeProducts([]);
-      }
-      
-      console.log('Produtos fake carregados:', fakeProducts);
-    } catch (error) {
-      console.error('Erro ao carregar produtos fake:', error);
-      setProductsError('Erro ao carregar produtos');
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar a lista de produtos",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingProducts(false);
-    }
-  };
 
   // Add product to cart from fake products list
   const handleAddProductToCart = (fakeProduct: FakeProduct) => {
