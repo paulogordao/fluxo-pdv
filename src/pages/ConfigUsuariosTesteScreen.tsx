@@ -239,32 +239,30 @@ const ConfigUsuariosTesteScreen = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Show creation form only for OFFLINE companies */}
-            {isOfflineCompany && (
-              <div className="flex items-center space-x-4 mb-6 p-4 bg-gray-50 rounded-lg">
-                <div className="flex-1">
-                  <Input
-                    placeholder="Digite o CPF do usuário (ex: 12345678901)"
-                    value={cpfInput}
-                    onChange={handleCpfInputChange}
-                    disabled={createMutation.isPending}
-                    className={cpfInputError ? "border-red-500" : ""}
-                  />
-                  {cpfInputError && (
-                    <p className="text-red-500 text-sm mt-1">{cpfInputError}</p>
-                  )}
-                </div>
-                <Button
-                  onClick={handleCreateUser}
-                  disabled={createMutation.isPending || !cpfInput.trim() || !!cpfInputError}
-                  variant="dotz"
-                  className="flex items-center space-x-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Cadastrar</span>
-                </Button>
+            {/* Creation form available for all company types */}
+            <div className="flex items-center space-x-4 mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="flex-1">
+                <Input
+                  placeholder="Digite o CPF do usuário (ex: 12345678901)"
+                  value={cpfInput}
+                  onChange={handleCpfInputChange}
+                  disabled={createMutation.isPending}
+                  className={cpfInputError ? "border-red-500" : ""}
+                />
+                {cpfInputError && (
+                  <p className="text-red-500 text-sm mt-1">{cpfInputError}</p>
+                )}
               </div>
-            )}
+              <Button
+                onClick={handleCreateUser}
+                disabled={createMutation.isPending || !cpfInput.trim() || !!cpfInputError}
+                variant="dotz"
+                className="flex items-center space-x-2"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Cadastrar</span>
+              </Button>
+            </div>
 
             {isLoading ? (
               <div className="flex justify-center items-center py-8">
