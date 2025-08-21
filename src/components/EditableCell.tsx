@@ -2,7 +2,7 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { ImprovedCalendar } from "@/components/ui/improved-calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
@@ -134,12 +134,13 @@ const EditableCell: React.FC<EditableCellProps> = ({
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
+            <ImprovedCalendar
               mode="single"
               selected={isValidDate ? currentDate : undefined}
               onSelect={handleDateSelect}
               disabled={(date) => date > new Date()}
               initialFocus
+              defaultYear={isValidDate ? currentDate.getFullYear() : 1990}
               className="pointer-events-auto"
             />
           </PopoverContent>

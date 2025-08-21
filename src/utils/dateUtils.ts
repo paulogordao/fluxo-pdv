@@ -7,7 +7,8 @@ export const formatDateBR = (isoDate: string): string => {
   if (!isoDate) return "";
   
   try {
-    const date = new Date(isoDate);
+    // Parse explícito para evitar problemas de timezone
+    const date = parse(isoDate, "yyyy-MM-dd", new Date());
     if (!isValid(date)) return "";
     
     return format(date, "dd/MM/yyyy");
