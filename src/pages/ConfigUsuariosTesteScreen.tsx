@@ -13,12 +13,15 @@ import { useToast } from "@/hooks/use-toast";
 import { testUserService, UsuarioTeste } from "@/services/testUserService";
 import { useUserSession } from "@/hooks/useUserSession";
 import { Badge } from "@/components/ui/badge";
+import EditableCell from "@/components/EditableCell";
+import { validateCPF, normalizeCPF, formatCPF, formatCPFInput } from "@/utils/cpfUtils";
 
 const ConfigUsuariosTesteScreen = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [cpfInput, setCpfInput] = React.useState("");
+  const [cpfInputError, setCpfInputError] = React.useState("");
   
   // Use dynamic user ID from session and company type
   const { userId, isLoading: isLoadingUser, tipo_simulacao } = useUserSession();
@@ -29,10 +32,22 @@ const ConfigUsuariosTesteScreen = () => {
     return tags.split(';').map(tag => tag.trim()).filter(tag => tag.length > 0);
   };
 
-  // Helper function to format CPF
-  const formatCPF = (cpf: string) => {
-    const cleaned = cpf.replace(/\D/g, "");
-    return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+  // Handle CPF input changes with validation
+  const handleCpfInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const formatted = formatCPFInput(value);
+    setCpfInput(formatted);
+    
+    // Clear previous error
+    setCpfInputError("");
+    
+    // Validate if user has entered enough digits
+    const cleaned = value.replace(/\D/g, "");
+    if (cleaned.length > 0 && cleaned.length < 11) {
+      setCpfInputError("CPF deve ter 11 dígitos");
+    } else if (cleaned.length === 11 && !validateCPF(cleaned)) {
+      setCpfInputError("CPF inválido");
+    }
   };
 
   // Check if company is OFFLINE type
@@ -110,11 +125,31 @@ const ConfigUsuariosTesteScreen = () => {
     updateMutation.mutate(updatedUsuario);
   };
 
+  const handleFieldUpdate = (usuario: UsuarioTeste, field: 'nome' | 'tags', newValue: string) => {
+    const updatedUsuario = {
+      ...usuario,
+      [field]: newValue,
+    };
+
+    updateMutation.mutate(updatedUsuario);
+  };
+
   const handleCreateUser = () => {
-    if (!cpfInput.trim()) {
+    const cleanedCpf = cpfInput.replace(/\D/g, "");
+    
+    if (!cleanedCpf) {
       toast({
         title: "Erro",
-        description: "Por favor, digite um CPF válido",
+        description: "Por favor, digite um CPF",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!validateCPF(cleanedCpf)) {
+      toast({
+        title: "Erro",
+        description: "Por favor, digite um CPF válido com 11 dígitos",
         variant: "destructive",
       });
       return;
@@ -129,7 +164,9 @@ const ConfigUsuariosTesteScreen = () => {
       return;
     }
 
-    createMutation.mutate(cpfInput.trim());
+    // Normalize CPF (add leading zeros if needed) before sending
+    const normalizedCpf = normalizeCPF(cleanedCpf);
+    createMutation.mutate(normalizedCpf);
   };
 
   // Handle error with useEffect to show toast
@@ -207,15 +244,19 @@ const ConfigUsuariosTesteScreen = () => {
               <div className="flex items-center space-x-4 mb-6 p-4 bg-gray-50 rounded-lg">
                 <div className="flex-1">
                   <Input
-                    placeholder="Digite o CPF do usuário"
+                    placeholder="Digite o CPF do usuário (ex: 12345678901)"
                     value={cpfInput}
-                    onChange={(e) => setCpfInput(e.target.value)}
+                    onChange={handleCpfInputChange}
                     disabled={createMutation.isPending}
+                    className={cpfInputError ? "border-red-500" : ""}
                   />
+                  {cpfInputError && (
+                    <p className="text-red-500 text-sm mt-1">{cpfInputError}</p>
+                  )}
                 </div>
                 <Button
                   onClick={handleCreateUser}
-                  disabled={createMutation.isPending || !cpfInput.trim()}
+                  disabled={createMutation.isPending || !cpfInput.trim() || !!cpfInputError}
                   variant="dotz"
                   className="flex items-center space-x-2"
                 >
@@ -244,7 +285,9 @@ const ConfigUsuariosTesteScreen = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="font-semibold">Usuário</TableHead>
+                        <TableHead className="font-semibold">CPF</TableHead>
+                        <TableHead className="font-semibold">Nome</TableHead>
+                        <TableHead className="font-semibold">Tags</TableHead>
                         <TableHead className="font-semibold text-center">Pedir telefone?</TableHead>
                         <TableHead className="font-semibold text-center">Possui Dotz?</TableHead>
                         <TableHead className="font-semibold text-center">Outros meios pagamento?</TableHead>
@@ -256,7 +299,24 @@ const ConfigUsuariosTesteScreen = () => {
                       {usuariosTeste.map((usuario, index) => (
                         <TableRow key={usuario.id || index}>
                           <TableCell className="font-medium">
-                            {usuario.identificacao_usuario}
+                            {formatCPF(usuario.identificacao_usuario)}
+                          </TableCell>
+                          <TableCell>
+                            <EditableCell
+                              value={usuario.nome || ""}
+                              onSave={(newValue) => handleFieldUpdate(usuario, 'nome', newValue)}
+                              placeholder="Nome não informado"
+                              disabled={updateMutation.isPending}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <EditableCell
+                              value={usuario.tags || ""}
+                              onSave={(newValue) => handleFieldUpdate(usuario, 'tags', newValue)}
+                              placeholder="Sem tags"
+                              type="tags"
+                              disabled={updateMutation.isPending}
+                            />
                           </TableCell>
                           <TableCell className="text-center">
                             <div className="flex justify-center">
@@ -328,25 +388,22 @@ const ConfigUsuariosTesteScreen = () => {
                           <TableCell className="font-medium">
                             {formatCPF(usuario.identificacao_usuario)}
                           </TableCell>
-                          <TableCell className="font-medium">
-                            {usuario.nome || "Nome não informado"}
+                          <TableCell>
+                            <EditableCell
+                              value={usuario.nome || ""}
+                              onSave={(newValue) => handleFieldUpdate(usuario, 'nome', newValue)}
+                              placeholder="Nome não informado"
+                              disabled={updateMutation.isPending}
+                            />
                           </TableCell>
                           <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {parseTags(usuario.tags).length > 0 ? (
-                                parseTags(usuario.tags).map((tag, tagIndex) => (
-                                  <Badge 
-                                    key={tagIndex} 
-                                    variant="secondary" 
-                                    className="text-xs"
-                                  >
-                                    {tag}
-                                  </Badge>
-                                ))
-                              ) : (
-                                <span className="text-gray-500 text-sm">Sem tags</span>
-                              )}
-                            </div>
+                            <EditableCell
+                              value={usuario.tags || ""}
+                              onSave={(newValue) => handleFieldUpdate(usuario, 'tags', newValue)}
+                              placeholder="Sem tags"
+                              type="tags"
+                              disabled={updateMutation.isPending}
+                            />
                           </TableCell>
                         </TableRow>
                       ))}
