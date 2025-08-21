@@ -6,12 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, User } from "lucide-react";
 import { testUserService, UsuarioTeste } from "@/services/testUserService";
 import { useUserSession } from "@/hooks/useUserSession";
+import { formatDateBR } from "@/utils/dateUtils";
 
 interface TestUsersSidebarProps {
   onCpfSelect: (cpf: string) => void;
+  tipoSimulacao?: string;
 }
 
-const TestUsersSidebar = ({ onCpfSelect }: TestUsersSidebarProps) => {
+const TestUsersSidebar = ({ onCpfSelect, tipoSimulacao }: TestUsersSidebarProps) => {
   const [testUsers, setTestUsers] = useState<UsuarioTeste[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -95,47 +97,98 @@ const TestUsersSidebar = ({ onCpfSelect }: TestUsersSidebarProps) => {
             testUsers.map((user, index) => (
               <Card key={index} className="border border-gray-200 hover:border-dotz-laranja transition-colors">
                 <CardContent className="p-4">
-                  <div className="space-y-2">
-                    <div className="font-mono text-lg font-semibold text-gray-800">
-                      {formatCPF(user.identificacao_usuario)}
+                  {tipoSimulacao === "OFFLINE" ? (
+                    // Layout para empresas OFFLINE (mantém o formato atual com badges)
+                    <div className="space-y-2">
+                      <div className="font-mono text-lg font-semibold text-gray-800">
+                        {formatCPF(user.identificacao_usuario)}
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-1">
+                        {user.pedir_telefone && (
+                          <Badge variant="secondary" className="text-xs">
+                            Telefone ✅
+                          </Badge>
+                        )}
+                        {user.possui_dotz && (
+                          <Badge variant="secondary" className="text-xs">
+                            Dotz ✅
+                          </Badge>
+                        )}
+                        {user.outros_meios_pagamento && (
+                          <Badge variant="secondary" className="text-xs">
+                            Outros Pagamentos ✅
+                          </Badge>
+                        )}
+                        {user.dotz_sem_app && (
+                          <Badge variant="secondary" className="text-xs">
+                            Dotz sem App ✅
+                          </Badge>
+                        )}
+                        {user.permitir_pagamento_token && (
+                          <Badge variant="secondary" className="text-xs">
+                            Token ✅
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <Button
+                        size="sm"
+                        className="w-full bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
+                        onClick={() => handleCpfClick(user.identificacao_usuario)}
+                      >
+                        Usar este CPF
+                      </Button>
                     </div>
-                    
-                    <div className="flex flex-wrap gap-1">
-                      {user.pedir_telefone && (
-                        <Badge variant="secondary" className="text-xs">
-                          Telefone ✅
-                        </Badge>
-                      )}
-                      {user.possui_dotz && (
-                        <Badge variant="secondary" className="text-xs">
-                          Dotz ✅
-                        </Badge>
-                      )}
-                      {user.outros_meios_pagamento && (
-                        <Badge variant="secondary" className="text-xs">
-                          Outros Pagamentos ✅
-                        </Badge>
-                      )}
-                      {user.dotz_sem_app && (
-                        <Badge variant="secondary" className="text-xs">
-                          Dotz sem App ✅
-                        </Badge>
-                      )}
-                      {user.permitir_pagamento_token && (
-                        <Badge variant="secondary" className="text-xs">
-                          Token ✅
-                        </Badge>
-                      )}
+                  ) : (
+                    // Layout para empresas NÃO-OFFLINE (mostra CPF, Nome, Data Nascimento, Tags)
+                    <div className="space-y-3">
+                      <div className="font-mono text-lg font-semibold text-gray-800">
+                        {formatCPF(user.identificacao_usuario)}
+                      </div>
+                      
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="font-medium text-gray-600">Nome:</span>
+                          <div className="text-gray-800">
+                            {user.nome || "Nome não informado"}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <span className="font-medium text-gray-600">Data de Nascimento:</span>
+                          <div className="text-gray-800">
+                            {user.data_nascimento ? formatDateBR(user.data_nascimento) : "Data não informada"}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <span className="font-medium text-gray-600">Tags:</span>
+                          <div className="text-gray-800 mt-1">
+                            {user.tags ? (
+                              <div className="flex flex-wrap gap-1">
+                                {user.tags.split(',').map((tag, tagIndex) => (
+                                  <Badge key={tagIndex} variant="outline" className="text-xs">
+                                    {tag.trim()}
+                                  </Badge>
+                                ))}
+                              </div>
+                            ) : (
+                              "Sem tags"
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <Button
+                        size="sm"
+                        className="w-full bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
+                        onClick={() => handleCpfClick(user.identificacao_usuario)}
+                      >
+                        Usar este CPF
+                      </Button>
                     </div>
-                    
-                    <Button
-                      size="sm"
-                      className="w-full bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
-                      onClick={() => handleCpfClick(user.identificacao_usuario)}
-                    >
-                      Usar este CPF
-                    </Button>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             ))

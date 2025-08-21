@@ -530,7 +530,7 @@ curl --location 'https://uat-loyalty.dotznext.com/integration-router/api/default
   return (
     <div className="min-h-screen bg-gray-100 relative">
       {/* Test Users Sidebar */}
-      <TestUsersSidebar onCpfSelect={handleCpfSelect} />
+      <TestUsersSidebar onCpfSelect={handleCpfSelect} tipoSimulacao={tipo_simulacao} />
 
       {/* User Profile Button - fixed position at top of page */}
       <div className="fixed top-4 left-6 z-50">
