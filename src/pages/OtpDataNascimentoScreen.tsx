@@ -82,16 +82,8 @@ const OtpDataNascimentoScreen = () => {
     try {
       const transactionId = localStorage.getItem('transactionId');
       if (!transactionId) return;
-      let token = digits.join('');
-      // If we have 8 digits, show the formatted version
-      if (digits.length === 8) {
-        try {
-          token = formatDateForService(digits);
-        } catch (error) {
-          // If formatting fails, keep the original
-          token = digits.join('');
-        }
-      }
+      const token = digits.join(''); // Send date in DDMMYYYY format
+      
       const currentRequest = {
         route: "RLIAUTH",
         version: 1,
@@ -159,11 +151,10 @@ const OtpDataNascimentoScreen = () => {
           return;
         }
 
-        // Format date for service (DDMMYYYY -> YYYY-MM-DD)
-        const formattedDate = formatDateForService(digits);
-        console.log('[OtpDataNascimentoScreen] Original digits:', digits.join(''));
-        console.log('[OtpDataNascimentoScreen] Formatted date for service:', formattedDate);
-        const response = await comandoService.enviarComandoRliauth(transactionId, formattedDate);
+        // Send date in DDMMYYYY format directly
+        const birthDate = digits.join('');
+        console.log('[OtpDataNascimentoScreen] Sending birth date in DDMMYYYY format:', birthDate);
+        const response = await comandoService.enviarComandoRliauth(transactionId, birthDate);
         console.log('[OtpDataNascimentoScreen] RLIAUTH Response:', response);
 
         // Check if there's a system message to show the user
@@ -197,13 +188,7 @@ const OtpDataNascimentoScreen = () => {
         let fullRequest = {
           method: 'RLIAUTH',
           transactionId: localStorage.getItem('transactionId'),
-          token: (() => {
-            try {
-              return formatDateForService(digits);
-            } catch {
-              return digits.join('');
-            }
-          })()
+          token: digits.join('') // Send in DDMMYYYY format
         };
         let fullResponse = error;
         if (error.message === 'TIMEOUT') {
