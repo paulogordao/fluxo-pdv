@@ -4,6 +4,7 @@ import { getUserId } from '@/utils/userUtils';
 export interface ComandoRequest {
   comando: string;
   cpf: string;
+  version?: string;
 }
 
 export interface ComandoRlicellRequest {
@@ -173,8 +174,8 @@ function parseRlifundError(responseString: string): RlifundErrorResponse | null 
 }
 
 export const comandoService = {
-  async enviarComando(comando: string, cpf: string): Promise<ComandoResponse> {
-    console.log(`[comandoService] Enviando comando: ${comando}, CPF: ${cpf}`);
+  async enviarComando(comando: string, cpf: string, version?: string): Promise<ComandoResponse> {
+    console.log(`[comandoService] Enviando comando: ${comando}, CPF: ${cpf}, Version: ${version || 'não especificada'}`);
     
     // Get user ID for header
     const userId = getUserId();
@@ -185,7 +186,8 @@ export const comandoService = {
     const url = buildApiUrl('comando?=');
     const requestBody: ComandoRequest = {
       comando,
-      cpf
+      cpf,
+      ...(version && { version })
     };
     
     console.log(`[comandoService] URL: ${url}`);

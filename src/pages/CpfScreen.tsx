@@ -177,6 +177,13 @@ const CpfScreen = () => {
     toast.success(`CPF válido gerado: ${formatCPF(validCPF)}`);
   };
 
+  // Utility function to map tipo_simulacao to version string
+  const getVersionFromSimulationType = (tipoSimulacao: string): string => {
+    if (tipoSimulacao === "UAT - Versão 1") return "1";
+    if (tipoSimulacao === "UAT - Versão 2") return "2";
+    return "2"; // default para versão 2
+  };
+
   const handleSubmit = async () => {
     if (cpf.length !== 11) return;
     
@@ -200,9 +207,13 @@ const CpfScreen = () => {
       if (tipo_simulacao && tipo_simulacao !== "OFFLINE") {
         // ONLINE mode - use new comando service
         setLoadingMessage("Processando CPF no ambiente de homologação...");
-        console.log("Modo ONLINE detectado - usando serviço de comando");
+        console.log(`Modo ONLINE detectado - usando serviço de comando - Tipo: ${tipo_simulacao}`);
         
-        const requestData = { comando: 'RLIINFO', cpf };
+        // Calculate version based on tipo_simulacao
+        const version = getVersionFromSimulationType(tipo_simulacao);
+        console.log(`Versão calculada: ${version} para tipo_simulacao: ${tipo_simulacao}`);
+        
+        const requestData = { comando: 'RLIINFO', cpf, version };
         const requestTime = new Date().toISOString();
         
         // Create timeout promise
@@ -211,7 +222,7 @@ const CpfScreen = () => {
         });
         
         const response = await Promise.race([
-          comandoService.enviarComando('RLIINFO', cpf),
+          comandoService.enviarComando('RLIINFO', cpf, version),
           timeoutPromise
         ]) as any; // Type assertion needed for Promise.race with timeout
         
@@ -409,10 +420,14 @@ const CpfScreen = () => {
         }
       }
 
+      // Calculate version based on tipo_simulacao for technical documentation
+      const versionNumber = tipo_simulacao && tipo_simulacao !== "OFFLINE" ? 
+        (tipo_simulacao === "UAT - Versão 1" ? 1 : 2) : 2;
+
       // Generate RLIINFO request for technical documentation
       const technicalRequest = {
         route: "RLIINFO",
-        version: 2,
+        version: versionNumber,
         input: {
           customer_info_id: cpfValue,
           customer_info_id_type: 1,
@@ -449,6 +464,10 @@ const CpfScreen = () => {
         }
       }
 
+      // Calculate version for RLIINFO request display
+      const versionForDisplay = tipo_simulacao && tipo_simulacao !== "OFFLINE" ? 
+        (tipo_simulacao === "UAT - Versão 1" ? 1 : 2) : 2;
+
       // Generate RLIINFO CURL command
       const rliinfoRequestText = `RLIINFO
 curl --location 'https://uat-loyalty.dotznext.com/integration-router/api/default/v1/command' \\
@@ -458,7 +477,7 @@ curl --location 'https://uat-loyalty.dotznext.com/integration-router/api/default
 --data '{
   "data": {
     "route": "RLIINFO",
-    "version": 2,
+    "version": ${versionForDisplay},
     "input": {
       "customer_info_id": "${cpfValue}",
       "customer_info_id_type": 1,
