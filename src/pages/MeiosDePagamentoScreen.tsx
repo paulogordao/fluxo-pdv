@@ -26,6 +26,7 @@ import TechnicalFooter from "@/components/TechnicalFooter";
 import { usePaymentOptions } from "@/hooks/usePaymentOptions";
 import { useFundPaymentOptions } from "@/hooks/useFundPaymentOptions";
 import { usePaymentOption } from "@/context/PaymentOptionContext";
+import { useUserSession } from "@/hooks/useUserSession";
 import ErrorModal from "@/components/ErrorModal";
 import { comandoService, RlifundApiError } from "@/services/comandoService";
 import { Loader2 } from "lucide-react";
@@ -35,6 +36,14 @@ const MeiosDePagamentoScreen = () => {
   const [selectedOption, setSelectedOption] = useState("app");
   const navigate = useNavigate();
   const { setSelectedPaymentOption } = usePaymentOption();
+  const sessionData = useUserSession();
+  
+  // Função para determinar a versão baseada no tipo de simulação
+  const getVersionFromTipo = (tipo_simulacao?: string): number | undefined => {
+    if (tipo_simulacao === "UAT - Versão 1") return 1;
+    if (tipo_simulacao === "UAT - Versão 2") return 2;
+    return undefined;
+  };
   
   // Always load documentation when the component mounts
   const [documentationSlug, setDocumentationSlug] = useState("RLIFUNDRLIDEAL");
@@ -170,14 +179,19 @@ const MeiosDePagamentoScreen = () => {
 
     setIsLoadingRlideal(true);
     
+    // Determinar a versão baseada no tipo de simulação
+    const version = getVersionFromTipo(sessionData?.tipo_simulacao);
+    
     try {
       // Create timeout promise
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('TIMEOUT')), 30000);
       });
 
+      console.log(`[MeiosDePagamentoScreen] Enviando RLIDEAL com versão: ${version} (tipo_simulacao: ${sessionData?.tipo_simulacao})`);
+      
       const response = await Promise.race([
-        comandoService.enviarComandoRlideal(transactionId, option),
+        comandoService.enviarComandoRlideal(transactionId, option, version),
         timeoutPromise
       ]) as any;
 

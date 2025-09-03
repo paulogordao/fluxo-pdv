@@ -17,6 +17,7 @@ export interface ComandoRlidealRequest {
   comando: string;
   payment_option: string;
   id_transaction: string;
+  version?: number;
 }
 
 export interface RlidealOrderItem {
@@ -656,7 +657,7 @@ export const comandoService = {
   },
 
   // RLIDEAL command method
-  async enviarComandoRlideal(transactionId: string, paymentOption: string): Promise<ComandoResponse> {
+  async enviarComandoRlideal(transactionId: string, paymentOption: string, version?: number): Promise<ComandoResponse> {
     // Get user ID for header
     const userId = getUserId();
     if (!userId) {
@@ -666,7 +667,8 @@ export const comandoService = {
     const requestBody: ComandoRlidealRequest = {
       comando: 'RLIDEAL',
       payment_option: paymentOption,
-      id_transaction: transactionId
+      id_transaction: transactionId,
+      ...(version && { version })
     };
 
     console.log(`[comandoService] Enviando comando RLIDEAL:`, requestBody);
