@@ -210,6 +210,9 @@ const CpfScreen = () => {
       } else {
         navigate('/meios_de_pagamento');
       }
+    } else if (nextStep.code === 9) {
+      // RLIFUND - navigate to scan for payment options
+      navigate('/scan');
     } else {
       // Default navigation for unknown codes
       navigate('/meios_de_pagamento');
