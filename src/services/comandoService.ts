@@ -548,7 +548,7 @@ export const comandoService = {
     }
   },
 
-  async enviarComandoRlidealUatV1(transactionId: string, order: ComandoRlidealUatV1Request['order']): Promise<ComandoResponse> {
+  async enviarComandoRlidealUatV1(transactionId: string, order: ComandoRlidealUatV1Request['order'], useProductDz: number = 1): Promise<ComandoResponse> {
     console.log(`[comandoService] Enviando comando RLIDEAL UAT V1: transaction_id=${transactionId}`);
     console.log(`[comandoService] Order data:`, order);
     
@@ -562,7 +562,7 @@ export const comandoService = {
     const requestBody: ComandoRlidealUatV1Request = {
       comando: "RLIDEAL",
       id_transaction: transactionId,
-      use_product_dz: 1,
+      use_product_dz: useProductDz,
       order
     };
     

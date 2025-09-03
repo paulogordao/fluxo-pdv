@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TechnicalFooter from "@/components/TechnicalFooter";
 import { comandoService, RlifundItem, RlidealOrderItem, RlifundApiError } from "@/services/comandoService";
 import ErrorModal from "@/components/ErrorModal";
+import ValidationModal from "@/components/ValidationModal";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
 import { buscarProdutosFakes, type FakeProduct } from '@/services/produtoService';
 import { useFakeProducts } from '@/hooks/useFakeProducts';
@@ -48,6 +49,8 @@ const ScanScreen = () => {
     fullRequest?: any;
     fullResponse?: any;
   } | null>(null);
+  
+  const [showDotzPaymentModal, setShowDotzPaymentModal] = useState(false);
   
   // Check simulation type from localStorage
   const [isOnlineMode, setIsOnlineMode] = useState(false);
@@ -251,111 +254,27 @@ const ScanScreen = () => {
           // UAT VERSION 1: Use RLIDEAL command
           console.log("[ScanScreen] UAT Versão 1 - using RLIDEAL service");
           
-          // Get transaction ID from localStorage 
-          const transactionId = localStorage.getItem('transactionId');
-          if (!transactionId) {
-            console.error('Transaction ID não encontrado. Redirecionando para identificação.');
-            navigate('/cpf');
-            return;
-          }
+          // Check has_product_dz from RLIINFO response
+          const onlineResponse = localStorage.getItem('onlineResponse');
+          let hasProductDz = 0;
           
-          // Function to calculate minimum gross profit when the value is 0 or invalid
-          const calculateMinimumGrossProfit = (unitPrice: number): number => {
-            const minimumMargin = Math.max(unitPrice * 0.1, 0.01); // 10% margin or minimum 0.01
-            return parseFloat(minimumMargin.toFixed(2));
-          };
+          if (onlineResponse) {
+            try {
+              const parsedResponse = JSON.parse(onlineResponse);
+              hasProductDz = parsedResponse[0]?.response?.data?.has_product_dz || 0;
+            } catch (error) {
+              console.error("Error parsing onlineResponse:", error);
+            }
+          }
 
-          // Map cart items to RLIDEAL format
-          const rlidealItems = cart.map(product => {
-            // Check if product has complete data from fake products API
-            const fakeProduct = fakeProducts.find(fp => fp.ean === product.barcode);
-            
-            if (fakeProduct) {
-              // Ensure gross_profit_amount is never 0
-              const grossProfitAmount = fakeProduct.gross_profit_amount <= 0 
-                ? calculateMinimumGrossProfit(fakeProduct.unit_price)
-                : fakeProduct.gross_profit_amount;
-                
-              if (fakeProduct.gross_profit_amount <= 0) {
-                console.log(`[ScanScreen] Corrected gross_profit_amount for ${fakeProduct.name}: ${fakeProduct.gross_profit_amount} -> ${grossProfitAmount}`);
-              }
-              
-              // Use complete data from API
-              return {
-                ean: fakeProduct.ean,
-                sku: fakeProduct.sku,
-                unit_price: fakeProduct.unit_price,
-                discount: fakeProduct.discount,
-                quantity: product.quantity || 1,
-                name: fakeProduct.name,
-                unit_type: fakeProduct.unit_type,
-                brand: fakeProduct.brand || "Unknown",
-                manufacturer: fakeProduct.manufacturer || "Unknown",
-                categories: fakeProduct.categories,
-                gross_profit_amount: grossProfitAmount,
-                is_private_label: fakeProduct.is_private_label,
-                is_on_sale: fakeProduct.is_on_sale
-              };
-            } else {
-              // Use mock data with defaults for missing fields
-              const mockGrossProfit = calculateMinimumGrossProfit(product.price);
-              
-              return {
-                ean: product.barcode,
-                sku: product.id,
-                unit_price: product.price,
-                discount: 0,
-                quantity: product.quantity || 1,
-                name: product.name,
-                unit_type: "UN",
-                brand: "Mock",
-                manufacturer: "Test",
-                categories: ["general"],
-                gross_profit_amount: mockGrossProfit,
-                is_private_label: false,
-                is_on_sale: false
-              };
-            }
-          });
-          
-          const orderData = {
-            value_total: parseFloat(totalAmount.toFixed(2)),
-            discount: 0,
-            date: new Date().toISOString(),
-            items: rlidealItems
-          };
-          
-          console.log("[ScanScreen] Mapped RLIDEAL items:", rlidealItems);
-          console.log("[ScanScreen] Order data:", orderData);
-          
-          // Call RLIDEAL service for UAT Version 1
-          const response = await comandoService.enviarComandoRlidealUatV1(transactionId, orderData);
-          
-          console.log("[ScanScreen] RLIDEAL UAT V1 response:", response);
-          
-          // Store RLIDEAL response in localStorage for technical documentation
-          localStorage.setItem('rlidealResponse', JSON.stringify(response));
-          
-          // Handle response navigation (similar to RLIFUND logic)
-          const paymentOptions = response[0]?.response?.data?.payment_options;
-          console.log("[ScanScreen] Payment options from RLIDEAL:", paymentOptions);
-          
-          if (Array.isArray(paymentOptions)) {
-            if (paymentOptions.length === 0) {
-              console.log("[ScanScreen] payment_options is empty - redirecting to confirmacao_pagamento");
-              navigate('/confirmacao_pagamento', { state: { fromScanScreenIdeal: true } });
-            } else {
-              console.log("[ScanScreen] payment_options has content - redirecting to interesse_pagamento");
-              navigate('/interesse_pagamento');
-            }
-          } else {
-            if (response[0]?.response?.data) {
-              console.log("[ScanScreen] No payment_options array, but has data - redirecting to interesse_pagamento");
-              navigate('/interesse_pagamento');
-            } else {
-              console.log("[ScanScreen] No specific action defined for RLIDEAL response");
-            }
+          // If user has Dotz eligibility, show modal
+          if (hasProductDz === 1) {
+            setShowDotzPaymentModal(true);
+            return; // Wait for modal response
           }
+          
+          // If no Dotz eligibility, proceed with use_product_dz: 0
+          await processRlidealPayment(0);
           
         } else {
           // UAT VERSION 2 OR OTHER: Use RLIFUND service (existing logic)
@@ -531,6 +450,159 @@ const ScanScreen = () => {
     } finally {
       setIsProcessingPayment(false);
     }
+  };
+
+  // Function to process RLIDEAL payment with specified use_product_dz
+  const processRlidealPayment = async (useProductDz: number) => {
+    try {
+      // Get transaction ID from localStorage 
+      const transactionId = localStorage.getItem('transactionId');
+      if (!transactionId) {
+        console.error('Transaction ID não encontrado. Redirecionando para identificação.');
+        navigate('/cpf');
+        return;
+      }
+      
+      // Function to calculate minimum gross profit when the value is 0 or invalid
+      const calculateMinimumGrossProfit = (unitPrice: number): number => {
+        const minimumMargin = Math.max(unitPrice * 0.1, 0.01); // 10% margin or minimum 0.01
+        return parseFloat(minimumMargin.toFixed(2));
+      };
+
+      // Map cart items to RLIDEAL format
+      const rlidealItems = cart.map(product => {
+        // Check if product has complete data from fake products API
+        const fakeProduct = fakeProducts.find(fp => fp.ean === product.barcode);
+        
+        if (fakeProduct) {
+          // Ensure gross_profit_amount is never 0
+          const grossProfitAmount = fakeProduct.gross_profit_amount <= 0 
+            ? calculateMinimumGrossProfit(fakeProduct.unit_price)
+            : fakeProduct.gross_profit_amount;
+            
+          if (fakeProduct.gross_profit_amount <= 0) {
+            console.log(`[ScanScreen] Corrected gross_profit_amount for ${fakeProduct.name}: ${fakeProduct.gross_profit_amount} -> ${grossProfitAmount}`);
+          }
+          
+          // Use complete data from API
+          return {
+            ean: fakeProduct.ean,
+            sku: fakeProduct.sku,
+            unit_price: fakeProduct.unit_price,
+            discount: fakeProduct.discount,
+            quantity: product.quantity || 1,
+            name: fakeProduct.name,
+            unit_type: fakeProduct.unit_type,
+            brand: fakeProduct.brand || "Unknown",
+            manufacturer: fakeProduct.manufacturer || "Unknown",
+            categories: fakeProduct.categories,
+            gross_profit_amount: grossProfitAmount,
+            is_private_label: fakeProduct.is_private_label,
+            is_on_sale: fakeProduct.is_on_sale
+          };
+        } else {
+          // Use mock data with defaults for missing fields
+          const mockGrossProfit = calculateMinimumGrossProfit(product.price);
+          
+          return {
+            ean: product.barcode,
+            sku: product.id,
+            unit_price: product.price,
+            discount: 0,
+            quantity: product.quantity || 1,
+            name: product.name,
+            unit_type: "UN",
+            brand: "Mock",
+            manufacturer: "Test",
+            categories: ["general"],
+            gross_profit_amount: mockGrossProfit,
+            is_private_label: false,
+            is_on_sale: false
+          };
+        }
+      });
+      
+      const orderData = {
+        value_total: parseFloat(totalAmount.toFixed(2)),
+        discount: 0,
+        date: new Date().toISOString(),
+        items: rlidealItems
+      };
+      
+      console.log("[ScanScreen] Mapped RLIDEAL items:", rlidealItems);
+      console.log("[ScanScreen] Order data:", orderData);
+      console.log("[ScanScreen] Using use_product_dz:", useProductDz);
+      
+      // Call RLIDEAL service for UAT Version 1 with specified use_product_dz
+      const response = await comandoService.enviarComandoRlidealUatV1(transactionId, orderData, useProductDz);
+      
+      console.log("[ScanScreen] RLIDEAL UAT V1 response:", response);
+      
+      // Store RLIDEAL response in localStorage for technical documentation
+      localStorage.setItem('rlidealResponse', JSON.stringify(response));
+      
+      // Handle response navigation (similar to RLIFUND logic)
+      const paymentOptions = response[0]?.response?.data?.payment_options;
+      console.log("[ScanScreen] Payment options from RLIDEAL:", paymentOptions);
+      
+      if (Array.isArray(paymentOptions)) {
+        if (paymentOptions.length === 0) {
+          console.log("[ScanScreen] payment_options is empty - redirecting to confirmacao_pagamento");
+          navigate('/confirmacao_pagamento', { state: { fromScanScreenIdeal: true } });
+        } else {
+          console.log("[ScanScreen] payment_options has content - redirecting to interesse_pagamento");
+          navigate('/interesse_pagamento');
+        }
+      } else {
+        if (response[0]?.response?.data) {
+          console.log("[ScanScreen] No payment_options array, but has data - redirecting to interesse_pagamento");
+          navigate('/interesse_pagamento');
+        } else {
+          console.log("[ScanScreen] No specific action defined for RLIDEAL response");
+        }
+      }
+    } catch (error) {
+      console.error("Payment processing error:", error);
+      if (error instanceof RlifundApiError) {
+        setErrorDetails({
+          code: error.errorCode,
+          message: error.errorMessage,
+          fullRequest: error.fullRequest,
+          fullResponse: error.fullResponse
+        });
+        setShowErrorModal(true);
+      } else {
+        // Check for timeout errors specifically
+        if (error.name === 'AbortError' || error.message?.toLowerCase().includes('timeout') || error.message?.toLowerCase().includes('tempo limite')) {
+          setErrorDetails({
+            code: 'TIMEOUT_ERROR',
+            message: "Tempo limite da operação excedido. Tente novamente.",
+            fullRequest: null,
+            fullResponse: null
+          });
+        } else {
+          // Generic error for other types
+          setErrorDetails({
+            code: 'ERRO_GENERICO',
+            message: error instanceof Error ? error.message : "Erro desconhecido",
+            fullRequest: null,
+            fullResponse: null
+          });
+        }
+        setShowErrorModal(true);
+      }
+    }
+  };
+
+  // Handle Dotz payment modal responses
+  const handleDotzPaymentYes = () => {
+    setShowDotzPaymentModal(false);
+    processRlidealPayment(1); // Use Dotz payment
+  };
+
+  const handleDotzPaymentNo = () => {
+    setShowDotzPaymentModal(false);
+    processRlidealPayment(0); // Don't use Dotz payment
   };
 
   // Check simulation type and initialize cart accordingly
@@ -840,6 +912,17 @@ const ScanScreen = () => {
           fullResponse={errorDetails.fullResponse}
         />
       )}
+
+      {/* Modal de pagamento com Dotz */}
+      <ValidationModal
+        isOpen={showDotzPaymentModal}
+        onPrimaryAction={handleDotzPaymentYes}
+        onCancel={handleDotzPaymentNo}
+        message="Deseja pagar com Dotz?"
+        title="Pagamento com Dotz"
+        primaryButtonText="Sim"
+        cancelButtonText="Não"
+      />
     </PdvLayout>;
 };
 
