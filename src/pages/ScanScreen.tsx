@@ -545,7 +545,12 @@ const ScanScreen = () => {
       const nextStep = response[0]?.response?.data?.next_step?.[0];
       console.log("[ScanScreen] Next step from RLIDEAL:", nextStep);
       
-      if (nextStep?.code === 6) {
+      if (nextStep?.code === 4) {
+        // RLIWAIT - go to app payment confirmation
+        console.log("[ScanScreen] next_step is RLIWAIT (code 4) - redirecting to confirmacao_pagamento_app");
+        navigate('/confirmacao_pagamento_app', { state: { fromScanScreenIdeal: true } });
+        return;
+      } else if (nextStep?.code === 6) {
         // RLIPAYS - go directly to payment confirmation
         console.log("[ScanScreen] next_step is RLIPAYS (code 6) - redirecting to confirmacao_pagamento");
         navigate('/confirmacao_pagamento', { state: { fromScanScreenIdeal: true } });
@@ -611,9 +616,11 @@ const ScanScreen = () => {
   };
 
   // Handle Dotz payment modal responses
-  const handleDotzPaymentYes = () => {
+  const handleDotzPaymentYes = async () => {
     setShowDotzPaymentModal(false);
-    processRlidealPayment(1); // Use Dotz payment
+    setIsProcessingPayment(true); // Add loading state
+    await processRlidealPayment(1); // Use Dotz payment
+    setIsProcessingPayment(false);
   };
 
   const handleDotzPaymentNo = () => {
