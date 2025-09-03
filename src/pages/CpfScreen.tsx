@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, Loader2, Clock, AlertCircle, Shuffle } from "lucide-react";
 import TechnicalFooter from "@/components/TechnicalFooter";
+import { MessageModal } from "@/components/MessageModal";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
 import { comandoService } from "@/services/comandoService";
 import { empresaService } from "@/services/empresaService";
@@ -25,6 +26,9 @@ const CpfScreen = () => {
   const [apiDebugInfo, setApiDebugInfo] = useState<any>(null);
   const [lastError, setLastError] = useState<string | null>(null);
   const [rliinfoRequest, setRliinfoRequest] = useState<string | null>(null);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [messageContent, setMessageContent] = useState('');
+  const [pendingNavigation, setPendingNavigation] = useState<any>(null);
   
   // Technical documentation states
   const [technicalRequestData, setTechnicalRequestData] = useState<string | undefined>();
@@ -184,6 +188,38 @@ const CpfScreen = () => {
     return "2"; // default para versão 2
   };
 
+  // Handle navigation logic
+  const handleNavigation = (responseData: any) => {
+    const nextStep = responseData.response.data.next_step[0];
+    console.log("Next step encontrado:", nextStep);
+    
+    // Store relevant data in localStorage for the next screen
+    localStorage.setItem('transaction_id', responseData.response.data.transaction_id || '');
+    localStorage.setItem('customer_info_id', responseData.response.data.customer_info_id || '');
+    localStorage.setItem('version', nextStep.version?.toString() || '1');
+    
+    // Navigate based on next_step code
+    if (nextStep.code === 1) {
+      navigate('/interesse-pagamento');
+    } else if (nextStep.code === 2) {
+      navigate('/confirmacao-pagamento');  
+    } else if (nextStep.code === 3) {
+      navigate('/meios-de-pagamento');
+    } else {
+      // Default navigation for unknown codes
+      navigate('/meios-de-pagamento');
+    }
+  };
+
+  // Handle message modal confirmation
+  const handleMessageModalConfirm = () => {
+    setShowMessageModal(false);
+    if (pendingNavigation) {
+      handleNavigation(pendingNavigation);
+      setPendingNavigation(null);
+    }
+  };
+
   const handleSubmit = async () => {
     if (cpf.length !== 11) return;
     
@@ -256,20 +292,24 @@ const CpfScreen = () => {
         // Show success toast with response time
         toast.success(`CPF processado com sucesso! (${responseTime}ms)`);
         
-        // Navigate based on next_step
-        const nextStep = response[0].response.data.next_step[0];
-        if (nextStep) {
-          if (nextStep.description === "RLICELL") {
-            navigate("/telefone");
-          } else if (nextStep.description === "RLIFUND") {
-            navigate("/scan?from=cpf");
+        console.log("Response completo da API:", response);
+        console.log("Response data:", response[0]?.response?.data);
+        
+        // Check if we have the expected response structure
+        if (response && response[0] && response[0].response && response[0].response.data && response[0].response.data.next_step) {
+          // Check if UAT Version 1 and has message to show modal
+          if (tipo_simulacao === "UAT - Versão 1" && response[0].response.data.message?.content) {
+            console.log("UAT Versão 1 detectada com mensagem - mostrando modal");
+            setMessageContent(response[0].response.data.message.content);
+            setPendingNavigation(response[0]);
+            setShowMessageModal(true);
           } else {
-            console.warn(`Next step não reconhecido: ${nextStep.description}`);
-            navigate("/scan?from=cpf");
+            // Direct navigation for other cases
+            handleNavigation(response[0]);
           }
         } else {
-          console.warn("Next step não encontrado na resposta");
-          navigate("/scan?from=cpf");
+          console.error("Estrutura de resposta inesperada:", response);
+          toast.error("Resposta do servidor em formato inesperado. Verifique os logs para mais detalhes.");
         }
       } else {
         // OFFLINE mode - use existing consultaFluxo service
@@ -657,6 +697,12 @@ curl --location 'https://uat-loyalty.dotznext.com/integration-router/api/default
         slug="RLIINFO"
         loadOnMount={false}
         sourceScreen="cpf"
+      />
+      
+      <MessageModal
+        isOpen={showMessageModal}
+        message={messageContent}
+        onConfirm={handleMessageModalConfirm}
       />
     </div>
   );
