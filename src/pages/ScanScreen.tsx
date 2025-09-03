@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TechnicalFooter from "@/components/TechnicalFooter";
 import { comandoService, RlifundItem, RlidealOrderItem, RlifundApiError } from "@/services/comandoService";
 import ErrorModal from "@/components/ErrorModal";
-import ValidationModal from "@/components/ValidationModal";
+import DotzBenefitsModal from "@/components/DotzBenefitsModal";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
 import { buscarProdutosFakes, type FakeProduct } from '@/services/produtoService';
 import { useFakeProducts } from '@/hooks/useFakeProducts';
@@ -937,14 +937,10 @@ const ScanScreen = () => {
       )}
 
       {/* Modal de pagamento com Dotz */}
-      <ValidationModal
+      <DotzBenefitsModal
         isOpen={showDotzPaymentModal}
-        onPrimaryAction={handleDotzPaymentYes}
-        onCancel={handleDotzPaymentNo}
-        message="Deseja pagar com Dotz?"
-        title="Pagamento com Dotz"
-        primaryButtonText="Sim"
-        cancelButtonText="Não"
+        onUsePoints={handleDotzPaymentYes}
+        onSkipPoints={handleDotzPaymentNo}
       />
     </PdvLayout>;
 };
