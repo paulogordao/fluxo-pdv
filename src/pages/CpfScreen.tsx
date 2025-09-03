@@ -189,7 +189,7 @@ const CpfScreen = () => {
   };
 
   // Handle navigation logic
-  const handleNavigation = (responseData: any) => {
+  const handleNavigation = (responseData: any, tipoSimulacao?: string) => {
     const nextStep = responseData.response.data.next_step[0];
     console.log("Next step encontrado:", nextStep);
     
@@ -204,10 +204,15 @@ const CpfScreen = () => {
     } else if (nextStep.code === 2) {
       navigate('/confirmacao-pagamento');  
     } else if (nextStep.code === 3) {
-      navigate('/meios-de-pagamento');
+      // RLIDEAL - different behavior for UAT versions
+      if (tipoSimulacao === "UAT - Versão 1") {
+        navigate('/scan');
+      } else {
+        navigate('/meios_de_pagamento');
+      }
     } else {
       // Default navigation for unknown codes
-      navigate('/meios-de-pagamento');
+      navigate('/meios_de_pagamento');
     }
   };
 
@@ -215,7 +220,7 @@ const CpfScreen = () => {
   const handleMessageModalConfirm = () => {
     setShowMessageModal(false);
     if (pendingNavigation) {
-      handleNavigation(pendingNavigation);
+      handleNavigation(pendingNavigation, tipo_simulacao);
       setPendingNavigation(null);
     }
   };
@@ -305,7 +310,7 @@ const CpfScreen = () => {
             setShowMessageModal(true);
           } else {
             // Direct navigation for other cases
-            handleNavigation(response[0]);
+            handleNavigation(response[0], tipo_simulacao);
           }
         } else {
           console.error("Estrutura de resposta inesperada:", response);
