@@ -37,6 +37,9 @@ const ConfirmacaoPagamentoScreen = () => {
   // Check if coming directly from ScanScreen (FUND -> RLIPAYS flow)
   const comingFromScanScreen = location.state?.fromScanScreenFund || false;
   
+  // Check if coming from ScanScreen (RLIDEAL -> RLIPAYS flow)
+  const comingFromScanScreenIdeal = location.state?.fromScanScreenIdeal || false;
+  
   // Check if coming from app screen (RLIWAIT -> RLIPAYS flow)
   const comingFromAppScreen = location.state?.fromAppScreen || false;
   
@@ -97,7 +100,8 @@ const ConfirmacaoPagamentoScreen = () => {
     console.log('[ConfirmacaoPagamento] Company type check:', { 
       tipo_simulacao, 
       isOfflineCompany, 
-      comingFromScanScreen, 
+      comingFromScanScreen,
+      comingFromScanScreenIdeal,
       comingFromAppScreen,
       totalAmount 
     });
@@ -140,6 +144,31 @@ const ConfirmacaoPagamentoScreen = () => {
       } catch (error) {
         console.error('[ConfirmacaoPagamento] Error reading orderData from localStorage:', error);
       }
+    }
+
+    // Check if coming from ScanScreen (RLIDEAL -> RLIPAYS flow)
+    if (comingFromScanScreenIdeal && totalAmount > 0) {
+      const totalAmountStr = totalAmount.toFixed(2).replace('.', ',');
+      
+      setDisplayValues({
+        subtotal: totalAmountStr,
+        desconto: "0,00",
+        recebido: totalAmountStr,
+        showEncargos: true
+      });
+      
+      setPaymentAmount({ 
+        encargos: totalAmountStr, 
+        recebido: totalAmountStr 
+      });
+      
+      setDocumentationSlug("RLIDEALRLIPAYS");
+      
+      console.log('[ConfirmacaoPagamento] Using real cart value from RLIDEAL flow:', {
+        totalAmount,
+        totalAmountStr
+      });
+      return;
     }
 
     // Check if coming directly from ScanScreen (FUND -> RLIPAYS flow)
@@ -237,7 +266,7 @@ const ConfirmacaoPagamentoScreen = () => {
       });
       console.log('[ConfirmacaoPagamento] Default option selected');
     }
-  }, [selectedPaymentOption, comingFromTokenScreen, comingFromOtpScreen, comingFromScanScreen, comingFromAppScreen, tipo_simulacao, sessionLoading, rliauthData, totalAmount]);
+  }, [selectedPaymentOption, comingFromTokenScreen, comingFromOtpScreen, comingFromScanScreen, comingFromScanScreenIdeal, comingFromAppScreen, tipo_simulacao, sessionLoading, rliauthData, totalAmount]);
 
   // Load technical data from localStorage based on flow
   useEffect(() => {
@@ -247,6 +276,10 @@ const ConfirmacaoPagamentoScreen = () => {
       // Fluxo FUND → RLIPAYS
       previousServiceResponse = localStorage.getItem('rlifundResponse');
       console.log('[ConfirmacaoPagamento] Loading RLIFUND response for technical data');
+    } else if (comingFromScanScreenIdeal) {
+      // Fluxo RLIDEAL → RLIPAYS
+      previousServiceResponse = localStorage.getItem('rlidealResponse');
+      console.log('[ConfirmacaoPagamento] Loading RLIDEAL response for technical data');
     } else if (!comingFromTokenScreen && !comingFromOtpScreen && !comingFromAppScreen) {
       // Fluxo RLIDEAL → RLIPAYS (vindo de meios de pagamento)
       previousServiceResponse = localStorage.getItem('rlidealResponse');
@@ -314,7 +347,7 @@ const ConfirmacaoPagamentoScreen = () => {
         setTechnicalRequestData(JSON.stringify(requestData, null, 2));
         console.log('[ConfirmacaoPagamento] Generated dynamic RLIPAYS request data');
       }
-  }, [comingFromScanScreen, comingFromTokenScreen, comingFromOtpScreen, comingFromAppScreen, rliauthData]);
+  }, [comingFromScanScreen, comingFromScanScreenIdeal, comingFromTokenScreen, comingFromOtpScreen, comingFromAppScreen, rliauthData]);
 
   // Prepare technical documentation data (fallback for API call)
   useEffect(() => {
@@ -368,6 +401,13 @@ const ConfirmacaoPagamentoScreen = () => {
     if (comingFromScanScreen && totalAmount > 0) {
       const result = parseFloat(totalAmount.toFixed(2));
       console.log('[ConfirmacaoPagamento] Using real cart total for RLIPAYS:', result);
+      return result;
+    }
+    
+    // If coming from ScanScreen RLIDEAL flow, return the real cart total
+    if (comingFromScanScreenIdeal && totalAmount > 0) {
+      const result = parseFloat(totalAmount.toFixed(2));
+      console.log('[ConfirmacaoPagamento] Using real cart total for RLIDEAL RLIPAYS:', result);
       return result;
     }
     
