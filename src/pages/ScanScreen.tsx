@@ -541,7 +541,23 @@ const ScanScreen = () => {
       // Store RLIDEAL response in localStorage for technical documentation
       localStorage.setItem('rlidealResponse', JSON.stringify(response));
       
-      // Handle response navigation (similar to RLIFUND logic)
+      // Handle response navigation - check next_step first, then fallback to payment_options
+      const nextStep = response[0]?.response?.data?.next_step?.[0];
+      console.log("[ScanScreen] Next step from RLIDEAL:", nextStep);
+      
+      if (nextStep?.code === 6) {
+        // RLIPAYS - go directly to payment confirmation
+        console.log("[ScanScreen] next_step is RLIPAYS (code 6) - redirecting to confirmacao_pagamento");
+        navigate('/confirmacao_pagamento', { state: { fromScanScreenIdeal: true } });
+        return;
+      } else if (nextStep?.code === 3) {
+        // RLIDEAL - continue to payment interest
+        console.log("[ScanScreen] next_step is RLIDEAL (code 3) - redirecting to interesse_pagamento");
+        navigate('/interesse_pagamento');
+        return;
+      }
+      
+      // Fallback: use existing payment_options logic
       const paymentOptions = response[0]?.response?.data?.payment_options;
       console.log("[ScanScreen] Payment options from RLIDEAL:", paymentOptions);
       
