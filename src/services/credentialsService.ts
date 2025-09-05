@@ -125,7 +125,7 @@ export const credentialsService = {
         'x-api-key': '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975',
         'id_usuario': userId,
       },
-      body: JSON.stringify({ enabled }),
+      body: JSON.stringify({ enabled: enabled.toString() }),
     });
 
     if (!response.ok) {
