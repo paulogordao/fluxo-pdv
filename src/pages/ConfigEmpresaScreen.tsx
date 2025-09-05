@@ -14,6 +14,7 @@ import { Building2, ArrowLeft, Search, Loader2 } from "lucide-react";
 import PermissionModal from "@/components/PermissionModal";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { empresaService, type CreateEmpresaData } from "@/services/empresaService";
+import { credentialsService, type CredentialListItem } from "@/services/credentialsService";
 import { brasilApiService } from "@/services/brasilApiService";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 
@@ -25,6 +26,7 @@ const empresaSchema = z.object({
   endereco: z.string().optional(),
   descricao: z.string().optional(),
   tipo_simulacao: z.string().optional(),
+  id_credencial: z.string().optional(),
 });
 
 type EmpresaFormData = z.infer<typeof empresaSchema>;
@@ -35,6 +37,8 @@ const ConfigEmpresaScreen = () => {
   const [isFetchingCNPJ, setIsFetchingCNPJ] = useState(false);
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [permissionMessage, setPermissionMessage] = useState("");
+  const [credentials, setCredentials] = useState<CredentialListItem[]>([]);
+  const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
 
   const { hasPermission, isLoading: isCheckingPermission, error } = useUserPermissions();
 
@@ -48,6 +52,24 @@ const ConfigEmpresaScreen = () => {
   } = useForm<EmpresaFormData>({
     resolver: zodResolver(empresaSchema),
   });
+
+  // Load credentials when component mounts
+  useEffect(() => {
+    const loadCredentials = async () => {
+      setIsLoadingCredentials(true);
+      try {
+        const credentialsData = await credentialsService.getCredentials();
+        setCredentials(credentialsData);
+      } catch (error) {
+        console.error("Erro ao carregar credenciais:", error);
+        toast.error("Erro ao carregar credenciais");
+      } finally {
+        setIsLoadingCredentials(false);
+      }
+    };
+
+    loadCredentials();
+  }, []);
 
   // Check user permissions on component mount
   useEffect(() => {
@@ -181,6 +203,7 @@ const ConfigEmpresaScreen = () => {
         endereco: data.endereco,
         descricao: data.descricao,
         tipo_simulacao: data.tipo_simulacao,
+        id_credencial: data.id_credencial || null,
       };
 
       console.log('Payload para envio:', empresaData);
@@ -345,6 +368,30 @@ const ConfigEmpresaScreen = () => {
                         <SelectItem value="OFFLINE">OFFLINE</SelectItem>
                         <SelectItem value="UAT - Versão 1">UAT - Versão 1</SelectItem>
                         <SelectItem value="UAT - Versão 2">UAT - Versão 2</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="id_credencial">Credencial Associada</Label>
+                    <Select
+                      value={watch("id_credencial") || ""}
+                      onValueChange={(value) => setValue("id_credencial", value === "none" ? undefined : value)}
+                      disabled={isLoadingCredentials}
+                    >
+                      <SelectTrigger className="bg-background border border-border">
+                        <SelectValue placeholder={isLoadingCredentials ? "Carregando credenciais..." : "Selecione uma credencial (opcional)"} />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border border-border shadow-lg z-50">
+                        <SelectItem value="none">Nenhuma</SelectItem>
+                        {credentials
+                          .filter(cred => cred.enabled)
+                          .map((credential) => (
+                            <SelectItem key={credential.partner_id} value={credential.partner_id}>
+                              {credential.description}
+                            </SelectItem>
+                          ))
+                        }
                       </SelectContent>
                     </Select>
                   </div>
