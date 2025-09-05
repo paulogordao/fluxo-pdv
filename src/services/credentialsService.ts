@@ -19,6 +19,7 @@ export interface CredentialListItem {
   partner_id: string;
   enabled: boolean;
   description: string;
+  created_at?: string;
 }
 
 export interface CredentialListResponse {
@@ -107,5 +108,31 @@ export const credentialsService = {
 
     const result: CredentialListResponse = await response.json();
     return result.data || [];
+  },
+
+  async updateCredentialStatus(partnerId: string, enabled: boolean): Promise<CredentialResponse> {
+    const userId = getUserId();
+    if (!userId) {
+      throw new Error('User ID not found');
+    }
+
+    const url = buildApiUrl('credenciais', { id_credencial: partnerId });
+    
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975',
+        'id_usuario': userId,
+      },
+      body: JSON.stringify({ enabled }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to update credential status: ${errorText}`);
+    }
+
+    return await response.json();
   }
 };

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, Eye, EyeOff, Key } from "lucide-react";
+import { Loader2, Upload, Eye, EyeOff, Key, Calendar, Shield } from "lucide-react";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
-import { credentialsService, CredentialData } from "@/services/credentialsService";
+import { credentialsService, CredentialData, CredentialListItem } from "@/services/credentialsService";
 
 const credentialSchema = z.object({
   cnpj: z.string().min(14, "CNPJ é obrigatório e deve ter pelo menos 14 caracteres"),
@@ -29,6 +31,9 @@ const ConfigCredenciaisScreen = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showClientSecret, setShowClientSecret] = useState(false);
   const [showPfxPassword, setShowPfxPassword] = useState(false);
+  const [credentials, setCredentials] = useState<CredentialListItem[]>([]);
+  const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
+  const [updatingCredentials, setUpdatingCredentials] = useState<Set<string>>(new Set());
 
   const {
     register,
@@ -39,6 +44,28 @@ const ConfigCredenciaisScreen = () => {
   } = useForm<FormData>({
     resolver: zodResolver(credentialSchema),
   });
+
+  // Load credentials when component mounts
+  useEffect(() => {
+    loadCredentials();
+  }, []);
+
+  const loadCredentials = async () => {
+    setIsLoadingCredentials(true);
+    try {
+      const credentialsData = await credentialsService.getCredentials();
+      setCredentials(credentialsData);
+    } catch (error) {
+      console.error("Erro ao carregar credenciais:", error);
+      toast({
+        title: "Erro ao carregar credenciais",
+        description: "Não foi possível carregar a lista de credenciais",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingCredentials(false);
+    }
+  };
 
   // Convert file to base64
   const fileToBase64 = (file: File): Promise<string> => {
@@ -112,9 +139,10 @@ const ConfigCredenciaisScreen = () => {
         variant: "default",
       });
 
-      // Reset form
+      // Reset form and reload credentials
       reset();
       setSelectedFile(null);
+      loadCredentials();
     } catch (error) {
       console.error('Error creating credential:', error);
       toast({
@@ -124,6 +152,64 @@ const ConfigCredenciaisScreen = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleToggleCredential = async (partnerId: string, currentEnabled: boolean) => {
+    const newEnabled = !currentEnabled;
+    
+    // Optimistic update
+    setCredentials(prev => 
+      prev.map(cred => 
+        cred.partner_id === partnerId 
+          ? { ...cred, enabled: newEnabled }
+          : cred
+      )
+    );
+
+    // Add to updating set
+    setUpdatingCredentials(prev => new Set(prev).add(partnerId));
+
+    try {
+      await credentialsService.updateCredentialStatus(partnerId, newEnabled);
+      
+      toast({
+        title: "Status atualizado",
+        description: `Credencial ${newEnabled ? 'ativada' : 'desativada'} com sucesso`,
+        variant: "default",
+      });
+    } catch (error) {
+      // Revert optimistic update on error
+      setCredentials(prev => 
+        prev.map(cred => 
+          cred.partner_id === partnerId 
+            ? { ...cred, enabled: currentEnabled }
+            : cred
+        )
+      );
+
+      console.error('Error updating credential status:', error);
+      toast({
+        title: "Erro ao atualizar status",
+        description: error instanceof Error ? error.message : "Ocorreu um erro inesperado",
+        variant: "destructive",
+      });
+    } finally {
+      // Remove from updating set
+      setUpdatingCredentials(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(partnerId);
+        return newSet;
+      });
+    }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Data não disponível";
+    try {
+      return new Date(dateString).toLocaleDateString('pt-BR');
+    } catch {
+      return "Data inválida";
     }
   };
 
@@ -142,6 +228,73 @@ const ConfigCredenciaisScreen = () => {
           </div>
         </div>
 
+        {/* Credentials List */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Shield className="h-5 w-5" />
+              <span>Credenciais Cadastradas</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoadingCredentials ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                <span className="text-muted-foreground">Carregando credenciais...</span>
+              </div>
+            ) : credentials.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Nenhuma credencial cadastrada</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead className="hidden sm:table-cell">
+                        <Calendar className="h-4 w-4 inline mr-1" />
+                        Data de Criação
+                      </TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {credentials.map((credential) => (
+                      <TableRow key={credential.partner_id}>
+                        <TableCell className="font-medium">
+                          {credential.description}
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell text-muted-foreground">
+                          {formatDate(credential.created_at)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center space-x-2">
+                            <Switch
+                              checked={credential.enabled}
+                              disabled={updatingCredentials.has(credential.partner_id)}
+                              onCheckedChange={() => handleToggleCredential(credential.partner_id, credential.enabled)}
+                            />
+                            {updatingCredentials.has(credential.partner_id) && (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            )}
+                            <span className={`text-xs font-medium ${
+                              credential.enabled ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {credential.enabled ? 'Ativa' : 'Inativa'}
+                            </span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Create New Credential Form */}
         <Card>
           <CardHeader>
             <CardTitle>Nova Credencial</CardTitle>
