@@ -106,8 +106,19 @@ export const credentialsService = {
       throw new Error(`Failed to fetch credentials: ${errorText}`);
     }
 
-    const result: CredentialListResponse = await response.json();
-    return result.data || [];
+    const result = await response.json();
+    
+    // Handle different response structures
+    if (result && Array.isArray(result.data)) {
+      return result.data;
+    }
+    
+    if (result && Array.isArray(result)) {
+      return result;
+    }
+    
+    // Return empty array if no valid data structure found
+    return [];
   },
 
   async updateCredentialStatus(partnerId: string, enabled: boolean): Promise<CredentialResponse> {

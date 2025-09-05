@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Upload, Eye, EyeOff, Key, Calendar, Shield } from "lucide-react";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { credentialsService, CredentialData, CredentialListItem } from "@/services/credentialsService";
+import { formatCNPJInput, normalizeCNPJ } from "@/utils/cnpjUtils";
 
 const credentialSchema = z.object({
   cnpj: z.string().min(14, "CNPJ é obrigatório e deve ter pelo menos 14 caracteres"),
@@ -34,6 +35,7 @@ const ConfigCredenciaisScreen = () => {
   const [credentials, setCredentials] = useState<CredentialListItem[]>([]);
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [updatingCredentials, setUpdatingCredentials] = useState<Set<string>>(new Set());
+  const [cnpjValue, setCnpjValue] = useState("");
 
   const {
     register,
@@ -54,9 +56,10 @@ const ConfigCredenciaisScreen = () => {
     setIsLoadingCredentials(true);
     try {
       const credentialsData = await credentialsService.getCredentials();
-      setCredentials(credentialsData);
+      setCredentials(Array.isArray(credentialsData) ? credentialsData : []);
     } catch (error) {
       console.error("Erro ao carregar credenciais:", error);
+      setCredentials([]); // Ensure we always have an array
       toast({
         title: "Erro ao carregar credenciais",
         description: "Não foi possível carregar a lista de credenciais",
@@ -131,7 +134,12 @@ const ConfigCredenciaisScreen = () => {
 
     setIsLoading(true);
     try {
-      await credentialsService.createCredential(data as CredentialData);
+      // Normalize CNPJ before sending to API (remove formatting)
+      const normalizedData = {
+        ...data,
+        cnpj: normalizeCNPJ(data.cnpj)
+      };
+      await credentialsService.createCredential(normalizedData as CredentialData);
       
       toast({
         title: "Credencial criada com sucesso",
@@ -142,6 +150,7 @@ const ConfigCredenciaisScreen = () => {
       // Reset form and reload credentials
       reset();
       setSelectedFile(null);
+      setCnpjValue("");
       loadCredentials();
     } catch (error) {
       console.error('Error creating credential:', error);
@@ -306,8 +315,14 @@ const ConfigCredenciaisScreen = () => {
                   <Label htmlFor="cnpj">CNPJ *</Label>
                   <Input
                     id="cnpj"
-                    {...register("cnpj")}
+                    value={cnpjValue}
+                    onChange={(e) => {
+                      const formatted = formatCNPJInput(e.target.value);
+                      setCnpjValue(formatted);
+                      setValue("cnpj", formatted);
+                    }}
                     placeholder="00.000.000/0000-00"
+                    maxLength={18}
                     className={errors.cnpj ? "border-destructive" : ""}
                   />
                   {errors.cnpj && (
@@ -447,6 +462,7 @@ const ConfigCredenciaisScreen = () => {
                   onClick={() => {
                     reset();
                     setSelectedFile(null);
+                    setCnpjValue("");
                   }}
                   disabled={isLoading}
                 >
