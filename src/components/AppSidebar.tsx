@@ -1,5 +1,5 @@
 
-import { Building2, Plus, Edit, Settings, User, FlaskConical, Home, BarChart3, FileText } from "lucide-react";
+import { Building2, Plus, Edit, Settings, User, FlaskConical, Home, BarChart3, FileText, Key } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -34,6 +34,12 @@ const menuItems = [
         url: "/config_empresa_list",
         icon: Edit,
         permission: "menu_empresa_editar",
+      },
+      {
+        title: "Credenciais",
+        url: "/config_credenciais",
+        icon: Key,
+        permission: "criar_credencial",
       },
     ],
   },
