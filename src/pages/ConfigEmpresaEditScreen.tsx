@@ -14,6 +14,7 @@ import { Building2, ArrowLeft } from "lucide-react";
 import PermissionModal from "@/components/PermissionModal";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { empresaService, type Empresa } from "@/services/empresaService";
+import { credentialsService, type CredentialListItem } from "@/services/credentialsService";
 
 const empresaEditSchema = z.object({
   nome: z.string().min(1, "Nome da empresa é obrigatório"),
@@ -23,6 +24,7 @@ const empresaEditSchema = z.object({
   endereco: z.string().optional(),
   descricao: z.string().optional(),
   tipo_simulacao: z.string().optional(),
+  id_credencial: z.string().optional(),
 });
 
 type EmpresaEditFormData = z.infer<typeof empresaEditSchema>;
@@ -35,6 +37,8 @@ const ConfigEmpresaEditScreen = () => {
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [permissionMessage, setPermissionMessage] = useState("");
   const [empresaData, setEmpresaData] = useState<Empresa | null>(null);
+  const [credentials, setCredentials] = useState<CredentialListItem[]>([]);
+  const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
 
   const {
     register,
@@ -47,14 +51,28 @@ const ConfigEmpresaEditScreen = () => {
     resolver: zodResolver(empresaEditSchema),
   });
 
-  // Load empresa data on component mount
+  // Load empresa data and credentials on component mount
   useEffect(() => {
     if (id) {
       fetchEmpresaData(id);
+      fetchCredentials();
     } else {
       navigate("/config_empresa_list");
     }
   }, [id, navigate]);
+
+  const fetchCredentials = async () => {
+    try {
+      setIsLoadingCredentials(true);
+      const credentialsList = await credentialsService.getCredentials();
+      setCredentials(credentialsList);
+    } catch (error) {
+      console.error("Erro ao buscar credenciais:", error);
+      // Don't show error toast as credentials are optional
+    } finally {
+      setIsLoadingCredentials(false);
+    }
+  };
 
   const fetchEmpresaData = async (empresaId: string) => {
     try {
@@ -83,6 +101,7 @@ const ConfigEmpresaEditScreen = () => {
       setValue("endereco", data.endereco || "");
       setValue("descricao", data.descricao || "");
       setValue("tipo_simulacao", data.tipo_simulacao || "");
+      setValue("id_credencial", data.id_credencial || "");
       
     } catch (error) {
       console.error("Erro ao buscar dados da empresa:", error);
@@ -259,6 +278,39 @@ const ConfigEmpresaEditScreen = () => {
                       <SelectItem value="UAT - Versão 2">UAT - Versão 2</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="id_credencial">Credencial Associada</Label>
+                  <Select
+                    value={watch("id_credencial") || ""}
+                    onValueChange={(value) => setValue("id_credencial", value === "none" ? "" : value)}
+                    disabled={isLoadingCredentials}
+                  >
+                    <SelectTrigger className="bg-background border border-border">
+                      <SelectValue placeholder={
+                        isLoadingCredentials 
+                          ? "Carregando credenciais..." 
+                          : "Selecione uma credencial"
+                      } />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border border-border shadow-lg z-50">
+                      <SelectItem value="none">Nenhuma</SelectItem>
+                      {credentials
+                        .filter(credential => credential.enabled)
+                        .map((credential) => (
+                          <SelectItem 
+                            key={credential.partner_id} 
+                            value={credential.partner_id}
+                          >
+                            {credential.description}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  {credentials.length === 0 && !isLoadingCredentials && (
+                    <p className="text-xs text-gray-500">Nenhuma credencial disponível</p>
+                  )}
                 </div>
               </div>
 

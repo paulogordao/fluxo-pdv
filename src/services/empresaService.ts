@@ -9,6 +9,7 @@ export interface Empresa {
   endereco: string;
   descricao: string | null;
   tipo_simulacao?: string;
+  id_credencial?: string | null;
   created_at: string;
 }
 
@@ -20,6 +21,7 @@ export interface CreateEmpresaData {
   endereco?: string | null;
   descricao?: string | null;
   tipo_simulacao?: string;
+  id_credencial?: string | null;
 }
 
 export interface UpdateEmpresaData {
@@ -30,6 +32,7 @@ export interface UpdateEmpresaData {
   endereco?: string | null;
   descricao?: string | null;
   tipo_simulacao?: string;
+  id_credencial?: string | null;
 }
 
 export const empresaService = {
@@ -82,6 +85,7 @@ export const empresaService = {
       endereco: data.endereco || null,
       descricao: data.descricao || null,
       tipo_simulacao: data.tipo_simulacao || null,
+      id_credencial: data.id_credencial || null,
     };
 
     const response = await fetch(`${API_CONFIG.baseUrl}/empresas`, {
@@ -111,6 +115,7 @@ export const empresaService = {
       endereco: data.endereco || null,
       descricao: data.descricao || null,
       tipo_simulacao: data.tipo_simulacao || null,
+      id_credencial: data.id_credencial || null,
     };
 
     const response = await fetch(`${API_CONFIG.baseUrl}/empresas?id=${id}`, {
