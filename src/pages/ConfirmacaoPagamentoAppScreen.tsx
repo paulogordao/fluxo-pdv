@@ -260,7 +260,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
       console.log('[Token] Items originais (quantidade):', items?.length);
 
       // Chamar RLIFUND com payment_option_type: "otp" usando o mesmo transactionId
-      const rlifundResponse = await comandoService.enviarComandoRlifund(transactionId, "otp", valueTotal, items);
+      const rlifundResponse = await comandoService.enviarComandoRlifund(transactionId, "otp", valueTotal.toString(), items);
       console.log('[Token] Resposta RLIFUND com OTP recebida:', rlifundResponse);
 
       // Verificar se a resposta é válida
