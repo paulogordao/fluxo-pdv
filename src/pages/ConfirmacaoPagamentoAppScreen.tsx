@@ -328,7 +328,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
       console.log(`[Token] Chamando RLIDEAL com payment_option: ${option}, transactionId: ${transactionId}`);
 
       // Call RLIDEAL service with selected payment option
-      const rlidealResponse = await comandoService.enviarComandoRlideal(transactionId, option);
+      const rlidealResponse = await comandoService.enviarComandoRlideal(transactionId, option, "2");
       console.log('[Token] Resposta RLIDEAL recebida:', rlidealResponse);
 
       // Store RLIDEAL response in localStorage
