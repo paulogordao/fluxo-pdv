@@ -206,6 +206,9 @@ const MeiosDePagamentoScreen = () => {
       if (tokenInfo?.required === true && tokenInfo?.type?.toLowerCase() === 'birthdate') {
         console.log('[MeiosDePagamentoScreen] Redirecting to /otp_data_nascimento for birthdate token');
         navigate('/otp_data_nascimento');
+      } else if (tokenInfo?.required === true && tokenInfo?.type?.toLowerCase() === 'otp') {
+        console.log('[MeiosDePagamentoScreen] Redirecting to /confirmacao_pagamento_token for OTP token');
+        navigate('/confirmacao_pagamento_token');
       } else if (option === "app") {
         console.log('[MeiosDePagamentoScreen] Redirecting to /confirmacao_pagamento_app for app option');
         navigate('/confirmacao_pagamento_app');
