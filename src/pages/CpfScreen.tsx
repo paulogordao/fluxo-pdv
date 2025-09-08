@@ -198,24 +198,34 @@ const CpfScreen = () => {
     localStorage.setItem('customer_info_id', responseData.response.data.customer_info_id || '');
     localStorage.setItem('version', nextStep.version?.toString() || '1');
     
-    // Navigate based on next_step code
-    if (nextStep.code === 1) {
-      navigate('/interesse-pagamento');
-    } else if (nextStep.code === 2) {
-      navigate('/confirmacao-pagamento');  
-    } else if (nextStep.code === 3) {
+    // Navigate based on next_step description first, then fallback to code
+    if (nextStep.description === "RLICELL") {
+      // RLICELL - collect phone number
+      navigate('/telefone');
+    } else if (nextStep.description === "RLIFUND") {
+      // RLIFUND - navigate to scan for payment options
+      navigate('/scan');
+    } else if (nextStep.description === "RLIDEAL") {
       // RLIDEAL - different behavior for UAT versions
       if (tipoSimulacao === "UAT - Versão 1") {
         navigate('/scan');
       } else {
         navigate('/meios_de_pagamento');
       }
-    } else if (nextStep.code === 9) {
-      // RLIFUND - navigate to scan for payment options
-      navigate('/scan');
     } else {
-      // Default navigation for unknown codes
-      navigate('/meios_de_pagamento');
+      // Fallback to code-based navigation for unknown descriptions
+      if (nextStep.code === 1) {
+        navigate('/interesse-pagamento');
+      } else if (nextStep.code === 2) {
+        navigate('/confirmacao-pagamento');  
+      } else if (nextStep.code === 3) {
+        navigate('/meios_de_pagamento');
+      } else if (nextStep.code === 9) {
+        navigate('/scan');
+      } else {
+        // Default navigation for unknown codes
+        navigate('/meios_de_pagamento');
+      }
     }
   };
 
