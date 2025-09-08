@@ -427,32 +427,39 @@ const RelatorioTransacoesScreen = () => {
                                 {truncateTransactionId(group.transaction_id, 30)}
                               </span>
                             </TableCell>
-                             <TableCell>
-                               <div className="flex flex-wrap gap-1">
-                                 {group.services
-                                   .filter(s => s !== 'RLIWAIT')
-                                   .sort((a, b) => getServiceOrder(a) - getServiceOrder(b))
-                                   .map((servico, index) => (
-                                     <Badge 
-                                       key={index}
-                                       className={`text-xs ${getServicoColor(servico)}`}
-                                     >
-                                       {servico}
-                                     </Badge>
-                                   ))}
-                                 {group.rliwaitGroup && (
-                                   <Badge 
-                                     className={`text-xs ${getServicoColor('RLIWAIT')} cursor-pointer hover:opacity-80`}
-                                     onClick={(e) => {
-                                       e.stopPropagation();
-                                       toggleRliwaitGroup(group.transaction_id);
-                                     }}
-                                   >
-                                     RLIWAIT ({group.rliwaitGroup.count}x)
-                                   </Badge>
-                                 )}
-                               </div>
-                             </TableCell>
+                              <TableCell>
+                                <div className="flex flex-wrap gap-1">
+                                  {[...group.services, ...(group.rliwaitGroup ? ['RLIWAIT'] : [])]
+                                    .filter((service, index, array) => array.indexOf(service) === index) // Remove duplicatas
+                                    .sort((a, b) => getServiceOrder(a) - getServiceOrder(b))
+                                    .map((servico, index) => {
+                                      if (servico === 'RLIWAIT' && group.rliwaitGroup) {
+                                        return (
+                                          <Badge 
+                                            key={index}
+                                            className={`text-xs ${getServicoColor('RLIWAIT')} cursor-pointer hover:opacity-80`}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              toggleRliwaitGroup(group.transaction_id);
+                                            }}
+                                          >
+                                            RLIWAIT ({group.rliwaitGroup.count}x)
+                                          </Badge>
+                                        );
+                                      } else if (servico !== 'RLIWAIT') {
+                                        return (
+                                          <Badge 
+                                            key={index}
+                                            className={`text-xs ${getServicoColor(servico)}`}
+                                          >
+                                            {servico}
+                                          </Badge>
+                                        );
+                                      }
+                                      return null;
+                                    })}
+                                </div>
+                              </TableCell>
                             <TableCell className="text-center font-medium">
                               {group.totalCount}
                             </TableCell>
