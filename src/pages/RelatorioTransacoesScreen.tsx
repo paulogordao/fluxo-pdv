@@ -19,9 +19,11 @@ import { ptBR } from "date-fns/locale";
 import PermissionModal from "@/components/PermissionModal";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { TransacaoDetalhesModal } from "@/components/TransacaoDetalhesModal";
+import { ExportModal } from "@/components/ExportModal";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { useTransacoes } from "@/hooks/useTransacoes";
 import { Transacao } from "@/types/transacao";
+import { exportService } from "@/services/exportService";
 
 interface TransacaoGrouped {
   transaction_id: string;
@@ -42,6 +44,7 @@ const RelatorioTransacoesScreen = () => {
   const navigate = useNavigate();
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [permissionMessage, setPermissionMessage] = useState("");
+  const [showExportModal, setShowExportModal] = useState(false);
   const [selectedTransacao, setSelectedTransacao] = useState<Transacao | null>(null);
   const [showDetalhesModal, setShowDetalhesModal] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -257,6 +260,10 @@ const RelatorioTransacoesScreen = () => {
     setExpandAll(!expandAll);
   };
 
+  const handleExportTransactions = (selectedIds: string[]) => {
+    exportService.exportTransactions(groupedTransactions, selectedIds);
+  };
+
   if (isCheckingPermission) {
     return (
       <ConfigLayoutWithSidebar>
@@ -309,13 +316,13 @@ const RelatorioTransacoesScreen = () => {
             <CardContent className="pt-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
                 <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                  <Button variant="outline" disabled className="flex items-center space-x-2">
-                    <Download className="h-4 w-4" />
-                    <span>Exportar PDF</span>
-                  </Button>
-                  <Button variant="outline" disabled className="flex items-center space-x-2">
-                    <Download className="h-4 w-4" />
-                    <span>Exportar Excel</span>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowExportModal(true)}
+                    className="flex items-center space-x-2"
+                  >
+                    <FileText className="h-4 w-4" />
+                    <span>Exportar Log</span>
                   </Button>
                 </div>
                 <div className="flex space-x-2">
@@ -621,6 +628,13 @@ const RelatorioTransacoesScreen = () => {
         transacao={selectedTransacao}
         isOpen={showDetalhesModal}
         onClose={handleCloseDetalhesModal}
+      />
+
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        transactions={groupedTransactions}
+        onExport={handleExportTransactions}
       />
     </>
   );
