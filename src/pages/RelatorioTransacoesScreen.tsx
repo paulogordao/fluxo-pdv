@@ -25,7 +25,14 @@ import { Transacao } from "@/types/transacao";
 
 interface TransacaoGrouped {
   transaction_id: string;
-  transacoes: Transacao[];
+  rliwaitGroup: {
+    transacoes: Transacao[];
+    count: number;
+    firstCreatedAt: string;
+    lastCreatedAt: string;
+    isExpanded: boolean;
+  } | null;
+  outrasTransacoes: Transacao[];
   firstCreatedAt: string;
   totalCount: number;
   services: string[];
@@ -38,6 +45,7 @@ const RelatorioTransacoesScreen = () => {
   const [selectedTransacao, setSelectedTransacao] = useState<Transacao | null>(null);
   const [showDetalhesModal, setShowDetalhesModal] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [expandedRliwaitGroups, setExpandedRliwaitGroups] = useState<Set<string>>(new Set());
   const [expandAll, setExpandAll] = useState(false);
 
   const { hasPermission, isLoading: isCheckingPermission, error } = useUserPermissions();
@@ -107,6 +115,7 @@ const RelatorioTransacoesScreen = () => {
       RLIFUND: 'bg-orange-100 text-orange-800',
       RLIPAYS: 'bg-purple-100 text-purple-800',
       RLIUNDO: 'bg-red-100 text-red-800',
+      RLIWAIT: 'bg-yellow-100 text-yellow-800',
     };
     return colors[servico] || 'bg-gray-100 text-gray-800';
   };
@@ -116,7 +125,7 @@ const RelatorioTransacoesScreen = () => {
     toast.success("Dados atualizados com sucesso!");
   };
 
-  // Group transactions by transaction_id
+  // Group transactions by transaction_id with RLIWAIT grouping
   const groupedTransactions = useMemo(() => {
     if (!transacoesData?.data) return [];
     
@@ -136,7 +145,32 @@ const RelatorioTransacoesScreen = () => {
       
       if (groupMap.has(transaction_id)) {
         const existing = groupMap.get(transaction_id)!;
-        existing.transacoes.push(transacao);
+        
+        if (transacao.servico === 'RLIWAIT') {
+          if (existing.rliwaitGroup) {
+            existing.rliwaitGroup.transacoes.push(transacao);
+            existing.rliwaitGroup.count++;
+            // Update last created_at for RLIWAIT group
+            if (new Date(transacao.created_at) > new Date(existing.rliwaitGroup.lastCreatedAt)) {
+              existing.rliwaitGroup.lastCreatedAt = transacao.created_at;
+            }
+            // Update first created_at for RLIWAIT group
+            if (new Date(transacao.created_at) < new Date(existing.rliwaitGroup.firstCreatedAt)) {
+              existing.rliwaitGroup.firstCreatedAt = transacao.created_at;
+            }
+          } else {
+            existing.rliwaitGroup = {
+              transacoes: [transacao],
+              count: 1,
+              firstCreatedAt: transacao.created_at,
+              lastCreatedAt: transacao.created_at,
+              isExpanded: false,
+            };
+          }
+        } else {
+          existing.outrasTransacoes.push(transacao);
+        }
+        
         existing.totalCount++;
         if (!existing.services.includes(transacao.servico)) {
           existing.services.push(transacao.servico);
@@ -146,13 +180,28 @@ const RelatorioTransacoesScreen = () => {
           existing.firstCreatedAt = transacao.created_at;
         }
       } else {
-        groupMap.set(transaction_id, {
+        const group: TransacaoGrouped = {
           transaction_id,
-          transacoes: [transacao],
+          rliwaitGroup: null,
+          outrasTransacoes: [],
           firstCreatedAt: transacao.created_at,
           totalCount: 1,
           services: [transacao.servico],
-        });
+        };
+        
+        if (transacao.servico === 'RLIWAIT') {
+          group.rliwaitGroup = {
+            transacoes: [transacao],
+            count: 1,
+            firstCreatedAt: transacao.created_at,
+            lastCreatedAt: transacao.created_at,
+            isExpanded: false,
+          };
+        } else {
+          group.outrasTransacoes = [transacao];
+        }
+        
+        groupMap.set(transaction_id, group);
       }
     });
     
@@ -171,9 +220,20 @@ const RelatorioTransacoesScreen = () => {
     setExpandedGroups(newExpandedGroups);
   };
 
+  const toggleRliwaitGroup = (transactionId: string) => {
+    const newExpandedRliwaitGroups = new Set(expandedRliwaitGroups);
+    if (newExpandedRliwaitGroups.has(transactionId)) {
+      newExpandedRliwaitGroups.delete(transactionId);
+    } else {
+      newExpandedRliwaitGroups.add(transactionId);
+    }
+    setExpandedRliwaitGroups(newExpandedRliwaitGroups);
+  };
+
   const toggleExpandAll = () => {
     if (expandAll) {
       setExpandedGroups(new Set());
+      setExpandedRliwaitGroups(new Set());
     } else {
       setExpandedGroups(new Set(groupedTransactions.map(g => g.transaction_id)));
     }
@@ -352,7 +412,7 @@ const RelatorioTransacoesScreen = () => {
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-wrap gap-1">
-                                {group.services.map((servico, index) => (
+                                {group.services.filter(s => s !== 'RLIWAIT').map((servico, index) => (
                                   <Badge 
                                     key={index}
                                     className={`text-xs ${getServicoColor(servico)}`}
@@ -360,6 +420,17 @@ const RelatorioTransacoesScreen = () => {
                                     {servico}
                                   </Badge>
                                 ))}
+                                {group.rliwaitGroup && (
+                                  <Badge 
+                                    className={`text-xs ${getServicoColor('RLIWAIT')} cursor-pointer hover:opacity-80`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleRliwaitGroup(group.transaction_id);
+                                    }}
+                                  >
+                                    RLIWAIT ({group.rliwaitGroup.count}x)
+                                  </Badge>
+                                )}
                               </div>
                             </TableCell>
                             <TableCell className="text-center font-medium">
@@ -373,41 +444,124 @@ const RelatorioTransacoesScreen = () => {
                           </TableRow>
                           
                           {/* Expanded Individual Transactions */}
-                          {expandedGroups.has(group.transaction_id) && 
-                            group.transacoes.map((transacao) => (
-                              <TableRow 
-                                key={`${group.transaction_id}-${transacao.id}`}
-                                className="bg-background border-l-4 border-l-muted"
-                              >
-                                <TableCell className="pl-8">
-                                  <div className="w-2 h-2 bg-muted rounded-full"></div>
-                                </TableCell>
-                                <TableCell className="text-sm text-muted-foreground">
-                                  {formatarData(transacao.created_at)}
-                                </TableCell>
-                                <TableCell className="font-mono text-xs text-muted-foreground">
-                                  ID: {transacao.id}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge className={getServicoColor(transacao.servico)}>
-                                    {transacao.servico}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell></TableCell>
-                                <TableCell className="text-center">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleVerDetalhes(transacao)}
-                                    className="flex items-center space-x-1"
+                          {expandedGroups.has(group.transaction_id) && (
+                            <>
+                              {/* RLIWAIT Group - Collapsed by default */}
+                              {group.rliwaitGroup && (
+                                <>
+                                  <TableRow 
+                                    className="bg-background border-l-4 border-l-yellow-200 cursor-pointer hover:bg-muted/30"
+                                    onClick={() => toggleRliwaitGroup(group.transaction_id)}
                                   >
-                                    <Eye className="h-4 w-4" />
-                                    <span>Ver Detalhes</span>
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))
-                          }
+                                    <TableCell className="pl-8">
+                                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                        {expandedRliwaitGroups.has(group.transaction_id) ? (
+                                          <ChevronDown className="h-3 w-3" />
+                                        ) : (
+                                          <ChevronRight className="h-3 w-3" />
+                                        )}
+                                      </Button>
+                                    </TableCell>
+                                    <TableCell className="text-sm text-muted-foreground">
+                                      {formatarData(group.rliwaitGroup.firstCreatedAt)} - {formatarData(group.rliwaitGroup.lastCreatedAt)}
+                                    </TableCell>
+                                    <TableCell className="font-mono text-xs text-muted-foreground">
+                                      Polling ({group.rliwaitGroup.count} chamadas)
+                                    </TableCell>
+                                    <TableCell>
+                                      <Badge className={`${getServicoColor('RLIWAIT')} flex items-center gap-1`}>
+                                        <Hash className="h-3 w-3" />
+                                        RLIWAIT x{group.rliwaitGroup.count}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-center text-xs text-muted-foreground">
+                                      {group.rliwaitGroup.count}
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                      <span className="text-xs text-muted-foreground">
+                                        {expandedRliwaitGroups.has(group.transaction_id) ? 'Ocultar' : 'Ver Todas'}
+                                      </span>
+                                    </TableCell>
+                                  </TableRow>
+                                  
+                                  {/* Individual RLIWAIT transactions when expanded */}
+                                  {expandedRliwaitGroups.has(group.transaction_id) &&
+                                    group.rliwaitGroup.transacoes.map((transacao, index) => (
+                                      <TableRow 
+                                        key={`${group.transaction_id}-rliwait-${transacao.id}`}
+                                        className="bg-yellow-50/50 border-l-4 border-l-yellow-300"
+                                      >
+                                        <TableCell className="pl-12">
+                                          <div className="flex items-center space-x-1">
+                                            <div className="w-1 h-1 bg-yellow-400 rounded-full"></div>
+                                            <span className="text-xs text-muted-foreground">#{index + 1}</span>
+                                          </div>
+                                        </TableCell>
+                                        <TableCell className="text-sm text-muted-foreground">
+                                          {formatarData(transacao.created_at)}
+                                        </TableCell>
+                                        <TableCell className="font-mono text-xs text-muted-foreground">
+                                          ID: {transacao.id}
+                                        </TableCell>
+                                        <TableCell>
+                                          <Badge className={getServicoColor('RLIWAIT')}>
+                                            RLIWAIT
+                                          </Badge>
+                                        </TableCell>
+                                        <TableCell></TableCell>
+                                        <TableCell className="text-center">
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleVerDetalhes(transacao)}
+                                            className="flex items-center space-x-1"
+                                          >
+                                            <Eye className="h-4 w-4" />
+                                            <span>Ver Detalhes</span>
+                                          </Button>
+                                        </TableCell>
+                                      </TableRow>
+                                    ))
+                                  }
+                                </>
+                              )}
+
+                              {/* Other Services - Normal display */}
+                              {group.outrasTransacoes.map((transacao) => (
+                                <TableRow 
+                                  key={`${group.transaction_id}-${transacao.id}`}
+                                  className="bg-background border-l-4 border-l-muted"
+                                >
+                                  <TableCell className="pl-8">
+                                    <div className="w-2 h-2 bg-muted rounded-full"></div>
+                                  </TableCell>
+                                  <TableCell className="text-sm text-muted-foreground">
+                                    {formatarData(transacao.created_at)}
+                                  </TableCell>
+                                  <TableCell className="font-mono text-xs text-muted-foreground">
+                                    ID: {transacao.id}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge className={getServicoColor(transacao.servico)}>
+                                      {transacao.servico}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell></TableCell>
+                                  <TableCell className="text-center">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleVerDetalhes(transacao)}
+                                      className="flex items-center space-x-1"
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                      <span>Ver Detalhes</span>
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </>
+                          )}
                         </>
                       ))}
                     </TableBody>
