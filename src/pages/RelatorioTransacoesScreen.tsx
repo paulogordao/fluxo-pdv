@@ -108,14 +108,31 @@ const RelatorioTransacoesScreen = () => {
     return id.length > maxLength ? `${id.substring(0, maxLength)}...` : id;
   };
 
+  const getServiceOrder = (servico: string): number => {
+    const order: Record<string, number> = {
+      'RLIINFO': 1,
+      'RLICELL': 2,
+      'RLIFUND': 3,
+      'RLIDEAL': 4,
+      'RLIWAIT': 5,
+      'RLIAUTH': 5, // Mesmo nível que RLIWAIT
+      'RLIPAYS': 6,
+      'RLIQUIT': 999 // Pode aparecer em qualquer lugar, mas vai para o final se não tiver contexto
+    };
+    return order[servico] || 1000; // Serviços desconhecidos vão para o final
+  };
+
   const getServicoColor = (servico: string) => {
     const colors: Record<string, string> = {
       RLIINFO: 'bg-blue-100 text-blue-800',
       RLICELL: 'bg-green-100 text-green-800',
       RLIFUND: 'bg-orange-100 text-orange-800',
+      RLIDEAL: 'bg-indigo-100 text-indigo-800',    // Nova cor
       RLIPAYS: 'bg-purple-100 text-purple-800',
       RLIUNDO: 'bg-red-100 text-red-800',
       RLIWAIT: 'bg-yellow-100 text-yellow-800',
+      RLIAUTH: 'bg-cyan-100 text-cyan-800',        // Nova cor
+      RLIQUIT: 'bg-slate-100 text-slate-800',      // Nova cor
     };
     return colors[servico] || 'bg-gray-100 text-gray-800';
   };
@@ -410,29 +427,32 @@ const RelatorioTransacoesScreen = () => {
                                 {truncateTransactionId(group.transaction_id, 30)}
                               </span>
                             </TableCell>
-                            <TableCell>
-                              <div className="flex flex-wrap gap-1">
-                                {group.services.filter(s => s !== 'RLIWAIT').map((servico, index) => (
-                                  <Badge 
-                                    key={index}
-                                    className={`text-xs ${getServicoColor(servico)}`}
-                                  >
-                                    {servico}
-                                  </Badge>
-                                ))}
-                                {group.rliwaitGroup && (
-                                  <Badge 
-                                    className={`text-xs ${getServicoColor('RLIWAIT')} cursor-pointer hover:opacity-80`}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      toggleRliwaitGroup(group.transaction_id);
-                                    }}
-                                  >
-                                    RLIWAIT ({group.rliwaitGroup.count}x)
-                                  </Badge>
-                                )}
-                              </div>
-                            </TableCell>
+                             <TableCell>
+                               <div className="flex flex-wrap gap-1">
+                                 {group.services
+                                   .filter(s => s !== 'RLIWAIT')
+                                   .sort((a, b) => getServiceOrder(a) - getServiceOrder(b))
+                                   .map((servico, index) => (
+                                     <Badge 
+                                       key={index}
+                                       className={`text-xs ${getServicoColor(servico)}`}
+                                     >
+                                       {servico}
+                                     </Badge>
+                                   ))}
+                                 {group.rliwaitGroup && (
+                                   <Badge 
+                                     className={`text-xs ${getServicoColor('RLIWAIT')} cursor-pointer hover:opacity-80`}
+                                     onClick={(e) => {
+                                       e.stopPropagation();
+                                       toggleRliwaitGroup(group.transaction_id);
+                                     }}
+                                   >
+                                     RLIWAIT ({group.rliwaitGroup.count}x)
+                                   </Badge>
+                                 )}
+                               </div>
+                             </TableCell>
                             <TableCell className="text-center font-medium">
                               {group.totalCount}
                             </TableCell>
@@ -526,8 +546,18 @@ const RelatorioTransacoesScreen = () => {
                                 </>
                               )}
 
-                              {/* Other Services - Normal display */}
-                              {group.outrasTransacoes.map((transacao) => (
+                               {/* Other Services - Normal display */}
+                               {group.outrasTransacoes
+                                 .sort((a, b) => {
+                                   const orderA = getServiceOrder(a.servico);
+                                   const orderB = getServiceOrder(b.servico);
+                                   if (orderA !== orderB) {
+                                     return orderA - orderB;
+                                   }
+                                   // Se mesmo serviço, ordenar por data
+                                   return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+                                 })
+                                 .map((transacao) => (
                                 <TableRow 
                                   key={`${group.transaction_id}-${transacao.id}`}
                                   className="bg-background border-l-4 border-l-muted"
