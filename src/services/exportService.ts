@@ -20,6 +20,68 @@ interface Transacao {
 }
 
 export const exportService = {
+  formatJson(jsonString: string): string {
+    try {
+      const parsed = JSON.parse(jsonString);
+      return JSON.stringify(parsed, null, 2);
+    } catch (e) {
+      // Se não for JSON válido, retorna o texto original
+      return jsonString;
+    }
+  },
+
+  formatServiceDetails(transacao: Transacao, rliwaitInfo?: string): string {
+    const timestamp = new Date(transacao.created_at).toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+
+    // Parse response para extrair informações técnicas
+    let status = '200';
+    let responseTime = 'N/A';
+    try {
+      const responseData = JSON.parse(transacao.response);
+      status = responseData.status || responseData.statusCode || '200';
+      responseTime = responseData.responseTime || 'N/A';
+    } catch (e) {
+      // Response não é JSON válido, usar valores padrão
+    }
+
+    // Formatar título do serviço
+    let serviceTitle = `[${timestamp}] ${transacao.servico} - Status: ${status}`;
+    if (responseTime !== 'N/A') {
+      if (typeof responseTime === 'string' && !responseTime.includes('ms')) {
+        responseTime += 'ms';
+      }
+      serviceTitle += ` - Tempo: ${responseTime}`;
+    }
+    if (rliwaitInfo) {
+      serviceTitle += ` ${rliwaitInfo}`;
+    }
+
+    // Formatear request e response
+    const formattedRequest = this.formatJson(transacao.request);
+    const formattedResponse = this.formatJson(transacao.response);
+
+    // Indentar cada linha do JSON
+    const indentedRequest = formattedRequest.split('\n').map(line => `│ ${line}`).join('\n');
+    const indentedResponse = formattedResponse.split('\n').map(line => `│ ${line}`).join('\n');
+
+    let content = '';
+    content += '┌─────────────────────────────────────────────────────────────────\n';
+    content += `│ ${serviceTitle}\n`;
+    content += '├─────────────────────────────────────────────────────────────────\n';
+    content += '│ REQUEST:\n';
+    content += `${indentedRequest}\n`;
+    content += '│\n';
+    content += '│ RESPONSE:\n';
+    content += `${indentedResponse}\n`;
+    content += '└─────────────────────────────────────────────────────────────────\n\n';
+
+    return content;
+  },
+
   generateLogContent(allTransactions: TransacaoGrouped[], selectedTransactionIds: string[]): string {
     const selectedTransactions = allTransactions.filter(t => 
       selectedTransactionIds.includes(t.transaction_id)
@@ -73,48 +135,21 @@ export const exportService = {
       const rliwaitTotal = group.rliwaitGroup?.count || 0;
 
       sortedTransactions.forEach((transacao) => {
-        const timestamp = new Date(transacao.created_at).toLocaleTimeString('pt-BR', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        });
-
-        // Parse response para extrair informações técnicas
-        let status = '200';
-        let responseTime = 'N/A';
-        try {
-          const responseData = JSON.parse(transacao.response);
-          status = responseData.status || responseData.statusCode || '200';
-          responseTime = responseData.responseTime || 'N/A';
-        } catch (e) {
-          // Response não é JSON válido, usar valores padrão
-        }
-
         if (transacao.servico === 'RLIWAIT') {
-          content += `[${timestamp}] ${transacao.servico} - Status: ${status} - Tempo: ${responseTime}`;
-          if (typeof responseTime === 'string' && !responseTime.includes('ms')) {
-            responseTime += 'ms';
-          }
-          content += ` (Polling ${rliwaitCounter}/${rliwaitTotal})\n`;
+          const rliwaitInfo = `(Polling ${rliwaitCounter}/${rliwaitTotal})`;
+          content += this.formatServiceDetails(transacao, rliwaitInfo);
           rliwaitCounter++;
         } else {
-          content += `[${timestamp}] ${transacao.servico} - Status: ${status}`;
-          if (responseTime !== 'N/A') {
-            if (typeof responseTime === 'string' && !responseTime.includes('ms')) {
-              responseTime += 'ms';
-            }
-            content += ` - Tempo: ${responseTime}`;
-          }
-          content += '\n';
+          content += this.formatServiceDetails(transacao);
         }
       });
 
       if (index < selectedTransactions.length - 1) {
-        content += '\n-------------------------------------------------------------------\n\n';
+        content += '===================================================================\n\n';
       }
     });
 
-    content += '\n===================================================================\n';
+    content += '===================================================================\n';
     content += 'FIM DO RELATÓRIO\n';
     content += '===================================================================\n';
 
