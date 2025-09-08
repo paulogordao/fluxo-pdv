@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 const WelcomeScreen = () => {
   const navigate = useNavigate();
-  const { userName, companyName, isLoading } = useUserSession();
+  const { userName, companyName, tipo_simulacao, isLoading } = useUserSession();
   
   const handleStart = () => {
     // Simular início de sessão antes de navegar
@@ -23,6 +23,7 @@ const WelcomeScreen = () => {
         <UserProfileButton 
           userName={isLoading ? "Carregando..." : userName}
           companyName={isLoading ? "Carregando..." : companyName}
+          tipoSimulacao={tipo_simulacao}
         />
       </div>
 

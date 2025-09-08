@@ -620,6 +620,7 @@ curl --location 'https://uat-loyalty.dotznext.com/integration-router/api/default
         <UserProfileButton 
           userName={sessionLoading ? "Carregando..." : userName}
           companyName={sessionLoading ? "Carregando..." : companyName}
+          tipoSimulacao={tipo_simulacao}
         />
       </div>
 

@@ -1,16 +1,31 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Settings, User, Building2, LogOut } from "lucide-react";
+import { Settings, User, Building2, LogOut, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface UserProfileButtonProps {
   userName?: string;
   companyName?: string;
+  tipoSimulacao?: string;
 }
 
-const UserProfileButton = ({ userName = "Usuário", companyName = "Empresa" }: UserProfileButtonProps) => {
+const UserProfileButton = ({ userName = "Usuário", companyName = "Empresa", tipoSimulacao }: UserProfileButtonProps) => {
   const navigate = useNavigate();
+
+  const formatSimulationType = (tipo?: string) => {
+    if (!tipo) return "N/A";
+    switch (tipo.toUpperCase()) {
+      case "PROD":
+        return "Produção";
+      case "TEST":
+        return "Teste";
+      case "DEV":
+        return "Desenvolvimento";
+      default:
+        return tipo;
+    }
+  };
 
   const handleLogout = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click event
@@ -39,6 +54,10 @@ const UserProfileButton = ({ userName = "Usuário", companyName = "Empresa" }: U
               <div className="flex items-center space-x-1 text-xs text-gray-600">
                 <Building2 className="h-3 w-3 text-dotz-laranja" />
                 <span>{companyName}</span>
+              </div>
+              <div className="flex items-center space-x-1 text-xs text-gray-600">
+                <Play className="h-3 w-3 text-dotz-laranja" />
+                <span>Simulação: {formatSimulationType(tipoSimulacao)}</span>
               </div>
             </div>
           </div>

@@ -8,7 +8,7 @@ import { useUserSession } from "@/hooks/useUserSession";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { userName, companyName, isLoading } = useUserSession();
+  const { userName, companyName, tipo_simulacao, isLoading } = useUserSession();
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
@@ -17,6 +17,7 @@ const Index = () => {
         <UserProfileButton 
           userName={isLoading ? "Carregando..." : userName}
           companyName={isLoading ? "Carregando..." : companyName}
+          tipoSimulacao={tipo_simulacao}
         />
       </div>
 
