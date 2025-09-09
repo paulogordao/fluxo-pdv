@@ -275,6 +275,7 @@ const ScanScreen = () => {
           
           // If no Dotz eligibility, proceed with use_product_dz: 0
           await processRlidealPayment(0);
+          return;
           
         } else {
           // UAT VERSION 2 OR OTHER: Use RLIFUND service (existing logic)
