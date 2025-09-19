@@ -182,10 +182,18 @@ const MeiosDePagamentoScreen = () => {
     // Determinar a versão baseada no tipo de simulação
     const version = getVersionFromTipo(sessionData?.tipo_simulacao);
     
+    console.log(`[DEBUG] tipo_simulacao: ${sessionData?.tipo_simulacao}`);
+    console.log(`[DEBUG] version detectada: ${version}`);
+    console.log(`[DEBUG] option recebida: "${option}"`);
+    console.log(`[DEBUG] Condição none+v2: ${option === "none" && version === "2"}`);
+    
     // Mapear "none" para string vazia apenas na versão 2
     let paymentOptionValue = option;
     if (option === "none" && version === "2") {
       paymentOptionValue = "";
+      console.log(`[DEBUG] ✅ Mapeamento executado: "none" → ""`);
+    } else {
+      console.log(`[DEBUG] ❌ Mapeamento NÃO executado`);
     }
     
     try {
