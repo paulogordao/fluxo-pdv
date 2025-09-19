@@ -182,6 +182,12 @@ const MeiosDePagamentoScreen = () => {
     // Determinar a versão baseada no tipo de simulação
     const version = getVersionFromTipo(sessionData?.tipo_simulacao);
     
+    // Mapear "none" para string vazia apenas na versão 2
+    let paymentOptionValue = option;
+    if (option === "none" && version === "2") {
+      paymentOptionValue = "";
+    }
+    
     try {
       // Create timeout promise
       const timeoutPromise = new Promise((_, reject) => {
@@ -189,9 +195,10 @@ const MeiosDePagamentoScreen = () => {
       });
 
       console.log(`[MeiosDePagamentoScreen] Enviando RLIDEAL com versão: ${version} (tipo_simulacao: ${sessionData?.tipo_simulacao})`);
+      console.log(`[MeiosDePagamentoScreen] Opção original: ${option}, Valor enviado: ${paymentOptionValue}`);
       
       const response = await Promise.race([
-        comandoService.enviarComandoRlideal(transactionId, option, version),
+        comandoService.enviarComandoRlideal(transactionId, paymentOptionValue, version),
         timeoutPromise
       ]) as any;
 
