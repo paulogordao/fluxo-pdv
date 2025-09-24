@@ -91,11 +91,21 @@ export const TransacaoDetalhesModal: React.FC<TransacaoDetalhesModalProps> = ({
               <span className="text-sm">{formatarData(transacao.created_at)}</span>
             </div>
             
-            <div className="flex items-center space-x-2 md:col-span-2">
-              <span className="text-sm font-medium">Transaction ID:</span>
-              <span className="text-sm font-mono bg-background px-2 py-1 rounded">
-                {transacao.transaction_id}
-              </span>
+            <div className="flex items-center justify-between space-x-2 md:col-span-2">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium">Transaction ID:</span>
+                <span className="text-sm font-mono bg-background px-2 py-1 rounded">
+                  {transacao.transaction_id}
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => copiarTexto(transacao.transaction_id, 'Transaction ID')}
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copiar
+              </Button>
             </div>
             
             <div className="flex items-center space-x-2">
