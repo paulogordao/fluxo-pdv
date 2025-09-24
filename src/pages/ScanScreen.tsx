@@ -269,9 +269,11 @@ const ScanScreen = () => {
             }
           }
 
-          // If user has Dotz eligibility, show modal
+          // If user has Dotz eligibility, show modal (only for version 1)
           if (hasProductDz === 1) {
+            console.log("[ScanScreen] Versão 1 - showing standard Dotz payment modal");
             setShowDotzPaymentModal(true);
+            setShowDynamicDotzModal(false); // Ensure dynamic modal is off
             return; // Wait for modal response
           }
           
@@ -381,9 +383,10 @@ const ScanScreen = () => {
             } else {
               // payment_options has content - check for dynamic message
               if (messageContent) {
-                console.log("[ScanScreen] payment_options has content and dynamic message - showing modal");
+                console.log("[ScanScreen] Versão 2 - payment_options has content and dynamic message - showing dynamic modal");
                 setDynamicMessage(messageContent);
                 setShowDynamicDotzModal(true);
+                setShowDotzPaymentModal(false); // Ensure standard modal is off
               } else {
                 console.log("[ScanScreen] payment_options has content but no dynamic message - redirecting to interesse_pagamento");
                 navigate('/interesse_pagamento');
@@ -626,27 +629,35 @@ const ScanScreen = () => {
     }
   };
 
-  // Handle Dotz payment modal responses
+  // Handle Dotz payment modal responses (version 1)
   const handleDotzPaymentYes = async () => {
+    console.log("[ScanScreen] Standard Dotz modal - User selected YES");
     setShowDotzPaymentModal(false);
+    setShowDynamicDotzModal(false); // Ensure dynamic modal is off
     setIsProcessingPayment(true); // Add loading state
     await processRlidealPayment(1); // Use Dotz payment
     setIsProcessingPayment(false);
   };
 
   const handleDotzPaymentNo = () => {
+    console.log("[ScanScreen] Standard Dotz modal - User selected NO");
     setShowDotzPaymentModal(false);
+    setShowDynamicDotzModal(false); // Ensure dynamic modal is off
     processRlidealPayment(0); // Don't use Dotz payment
   };
 
   // Handle dynamic Dotz modal responses (for RLIFUND versão 2)
   const handleDynamicDotzYes = () => {
+    console.log("[ScanScreen] Dynamic Dotz modal - User selected YES");
     setShowDynamicDotzModal(false);
+    setShowDotzPaymentModal(false); // Ensure standard modal is off
     navigate('/interesse_pagamento');
   };
 
   const handleDynamicDotzNo = () => {
+    console.log("[ScanScreen] Dynamic Dotz modal - User selected NO");
     setShowDynamicDotzModal(false);
+    setShowDotzPaymentModal(false); // Ensure standard modal is off
     navigate('/confirmacao_pagamento', { state: { fromScanScreenFund: true } });
   };
 
