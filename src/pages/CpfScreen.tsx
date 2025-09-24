@@ -183,8 +183,8 @@ const CpfScreen = () => {
 
   // Utility function to map tipo_simulacao to version string
   const getVersionFromSimulationType = (tipoSimulacao: string): string => {
-    if (tipoSimulacao === "UAT - Versão 1") return "1";
-    if (tipoSimulacao === "UAT - Versão 2") return "2";
+    if (tipoSimulacao === "Versão 1") return "1";
+    if (tipoSimulacao === "Versão 2") return "2";
     return "2"; // default para versão 2
   };
 
@@ -207,7 +207,7 @@ const CpfScreen = () => {
       navigate('/scan');
     } else if (nextStep.description === "RLIDEAL") {
       // RLIDEAL - different behavior for UAT versions
-      if (tipoSimulacao === "UAT - Versão 1") {
+      if (tipoSimulacao === "Versão 1") {
         navigate('/scan');
       } else {
         navigate('/meios_de_pagamento');
@@ -316,7 +316,7 @@ const CpfScreen = () => {
         // Check if we have the expected response structure
         if (response && response[0] && response[0].response && response[0].response.data && response[0].response.data.next_step) {
           // Check if UAT Version 1 and has message to show modal
-          if (tipo_simulacao === "UAT - Versão 1" && response[0].response.data.message?.content) {
+          if (tipo_simulacao === "Versão 1" && response[0].response.data.message?.content) {
             console.log("UAT Versão 1 detectada com mensagem - mostrando modal");
             setMessageContent(response[0].response.data.message.content);
             setPendingNavigation(response[0]);
@@ -480,7 +480,7 @@ const CpfScreen = () => {
 
       // Calculate version based on tipo_simulacao for technical documentation
       const versionNumber = tipo_simulacao && tipo_simulacao !== "OFFLINE" ? 
-        (tipo_simulacao === "UAT - Versão 1" ? 1 : 2) : 2;
+        (tipo_simulacao === "Versão 1" ? 1 : 2) : 2;
 
       // Generate RLIINFO request for technical documentation
       const technicalRequest = {
@@ -524,7 +524,7 @@ const CpfScreen = () => {
 
       // Calculate version for RLIINFO request display
       const versionForDisplay = tipo_simulacao && tipo_simulacao !== "OFFLINE" ? 
-        (tipo_simulacao === "UAT - Versão 1" ? 1 : 2) : 2;
+        (tipo_simulacao === "Versão 1" ? 1 : 2) : 2;
 
       // Generate RLIINFO CURL command
       const rliinfoRequestText = `RLIINFO

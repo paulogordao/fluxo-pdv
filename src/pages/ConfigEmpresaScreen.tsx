@@ -366,8 +366,8 @@ const ConfigEmpresaScreen = () => {
                       </SelectTrigger>
                       <SelectContent className="bg-background border border-border shadow-lg z-50">
                         <SelectItem value="OFFLINE">OFFLINE</SelectItem>
-                        <SelectItem value="UAT - Versão 1">UAT - Versão 1</SelectItem>
-                        <SelectItem value="UAT - Versão 2">UAT - Versão 2</SelectItem>
+                        <SelectItem value="Versão 1">Versão 1</SelectItem>
+                        <SelectItem value="Versão 2">Versão 2</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

@@ -40,8 +40,8 @@ const MeiosDePagamentoScreen = () => {
   
   // Função para determinar a versão baseada no tipo de simulação
   const getVersionFromTipo = (tipo_simulacao?: string): string | undefined => {
-    if (tipo_simulacao === "UAT - Versão 1") return "1";
-    if (tipo_simulacao === "UAT - Versão 2") return "2";
+    if (tipo_simulacao === "Versão 1") return "1";
+    if (tipo_simulacao === "Versão 2") return "2";
     return undefined;
   };
   

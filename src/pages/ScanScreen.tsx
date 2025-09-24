@@ -250,7 +250,7 @@ const ScanScreen = () => {
         // Check simulation type to determine which command to use
         const tipoSimulacao = localStorage.getItem('tipo_simulacao');
         
-        if (tipoSimulacao === "UAT - Versão 1") {
+        if (tipoSimulacao === "Versão 1") {
           // UAT VERSION 1: Use RLIDEAL command
           console.log("[ScanScreen] UAT Versão 1 - using RLIDEAL service");
           
