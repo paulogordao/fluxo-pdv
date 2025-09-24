@@ -13,6 +13,7 @@ import { userService, UsuarioData } from "@/services/userService";
 import { empresaService, Empresa } from "@/services/empresaService";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { credentialsService } from "@/services/credentialsService";
+import { clearUserSessionCache } from "@/utils/cacheUtils";
 
 const ConfigUsuarioEditIndividualScreen = () => {
   const navigate = useNavigate();
@@ -175,6 +176,14 @@ const ConfigUsuarioEditIndividualScreen = () => {
       
       if (data.status === "ok") {
         toast.success("Usuário atualizado com sucesso!");
+        
+        // Clear user session cache to force refresh of user data
+        clearUserSessionCache();
+        
+        // Small delay to allow the cache clear to complete before navigation
+        setTimeout(() => {
+          navigate("/config_usuario_edit");
+        }, 100);
       } else {
         toast.error("Erro ao atualizar usuário. Tente novamente.");
       }

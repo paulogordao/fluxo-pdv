@@ -22,8 +22,18 @@ export const useUserSession = () => {
     error: null
   });
 
-  useEffect(() => {
-    const loadUserSession = async () => {
+  // Function to force refresh session data
+  const refreshSession = async () => {
+    // Clear cache first
+    localStorage.removeItem("user_session_cache");
+    sessionStorage.removeItem("user_name");
+    sessionStorage.removeItem("company_name");
+    
+    // Trigger a reload by calling loadUserSession
+    loadUserSession();
+  };
+
+  const loadUserSession = async () => {
       try {
         setSessionData(prev => ({ ...prev, isLoading: true, error: null }));
 
@@ -157,10 +167,11 @@ export const useUserSession = () => {
           }));
         }
       }
-    };
+  };
 
+  useEffect(() => {
     loadUserSession();
   }, []);
 
-  return sessionData;
+  return { ...sessionData, refreshSession };
 };
