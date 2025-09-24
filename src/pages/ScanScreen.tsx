@@ -651,7 +651,7 @@ const ScanScreen = () => {
     console.log("[ScanScreen] Dynamic Dotz modal - User selected YES");
     setShowDynamicDotzModal(false);
     setShowDotzPaymentModal(false); // Ensure standard modal is off
-    navigate('/interesse_pagamento');
+    navigate('/meios_de_pagamento');
   };
 
   const handleDynamicDotzNo = () => {
