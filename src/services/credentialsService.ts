@@ -123,6 +123,30 @@ export const credentialsService = {
     return [];
   },
 
+  async getCredentialById(credentialId: string): Promise<{ ambiente: string }> {
+    const userId = getUserId();
+    if (!userId) {
+      throw new Error('User ID not found');
+    }
+
+    const url = buildApiUrl('credenciais', { id: credentialId });
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-api-key': '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975',
+        'id_usuario': userId,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to fetch credential: ${errorText}`);
+    }
+
+    return await response.json();
+  },
+
   async updateCredentialStatus(partnerId: string, enabled: boolean): Promise<CredentialResponse> {
     const userId = getUserId();
     if (!userId) {

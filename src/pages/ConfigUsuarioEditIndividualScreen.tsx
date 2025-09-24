@@ -11,10 +11,13 @@ import PermissionModal from "@/components/PermissionModal";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { userService, UsuarioData } from "@/services/userService";
 import { empresaService, Empresa } from "@/services/empresaService";
+import { useUserPermissions } from "@/hooks/useUserPermissions";
+import { credentialsService } from "@/services/credentialsService";
 
 const ConfigUsuarioEditIndividualScreen = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { hasPermission } = useUserPermissions();
   const [userData, setUserData] = useState<UsuarioData | null>(null);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -103,6 +106,41 @@ const ConfigUsuarioEditIndividualScreen = () => {
       ...prev,
       [field]: value
     }));
+  };
+
+  const checkCompanyCredential = async (empresaId: string) => {
+    try {
+      // Find the selected empresa to get id_credencial
+      const selectedEmpresa = empresas.find(emp => emp.id === empresaId);
+      
+      if (selectedEmpresa?.id_credencial) {
+        // Fetch credential details
+        const credentialData = await credentialsService.getCredentialById(selectedEmpresa.id_credencial);
+        
+        // Check if it's production environment and user has permission
+        if (credentialData.ambiente === "prod" && !hasPermission("associar_usuario_ambiente_produtivo")) {
+          setPermissionMessage("A empresa selecionada esta com credencial para ambiente produtivo, somente usuários ROOT podem fazer essa associação, procure um administrador!");
+          setShowPermissionModal(true);
+          
+          // Reset empresa selection
+          setFormData(prev => ({
+            ...prev,
+            empresa: ""
+          }));
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao verificar credencial da empresa:', error);
+      // Don't show error to user, let them proceed if credential check fails
+    }
+  };
+
+  const handleEmpresaChange = (value: string) => {
+    handleInputChange('empresa', value);
+    if (value) {
+      checkCompanyCredential(value);
+    }
   };
 
   const handleSave = async () => {
@@ -275,7 +313,7 @@ const ConfigUsuarioEditIndividualScreen = () => {
                 </Label>
                 <Select 
                   value={formData.empresa} 
-                  onValueChange={(value) => handleInputChange('empresa', value)}
+                  onValueChange={handleEmpresaChange}
                   disabled={isLoadingEmpresas}
                 >
                   <SelectTrigger className="w-full">

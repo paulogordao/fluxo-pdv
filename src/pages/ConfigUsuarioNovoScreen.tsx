@@ -14,10 +14,14 @@ import { useToast } from "@/hooks/use-toast";
 import { userService, CreateUserData, AccessRequest } from "@/services/userService";
 import { permissionService } from "@/services/permissionService";
 import { empresaService, Empresa } from "@/services/empresaService";
+import { useUserPermissions } from "@/hooks/useUserPermissions";
+import { credentialsService } from "@/services/credentialsService";
+import PermissionModal from "@/components/PermissionModal";
 
 const ConfigUsuarioNovoScreen = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { hasPermission } = useUserPermissions();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -27,6 +31,10 @@ const ConfigUsuarioNovoScreen = () => {
     perfil: "",
     empresa: ""
   });
+
+  // Permission modal state
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
+  const [permissionMessage, setPermissionMessage] = useState("");
 
   // Get user ID from localStorage
   const getUserId = (): string | null => {
@@ -143,6 +151,41 @@ const ConfigUsuarioNovoScreen = () => {
       ...prev,
       [field]: value
     }));
+  };
+
+  const checkCompanyCredential = async (empresaId: string) => {
+    try {
+      // Find the selected empresa to get id_credencial
+      const selectedEmpresa = empresas.find(emp => emp.id === empresaId);
+      
+      if (selectedEmpresa?.id_credencial) {
+        // Fetch credential details
+        const credentialData = await credentialsService.getCredentialById(selectedEmpresa.id_credencial);
+        
+        // Check if it's production environment and user has permission
+        if (credentialData.ambiente === "prod" && !hasPermission("associar_usuario_ambiente_produtivo")) {
+          setPermissionMessage("A empresa selecionada esta com credencial para ambiente produtivo, somente usuários ROOT podem fazer essa associação, procure um administrador!");
+          setShowPermissionModal(true);
+          
+          // Reset empresa selection
+          setFormData(prev => ({
+            ...prev,
+            empresa: ""
+          }));
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao verificar credencial da empresa:', error);
+      // Don't show error to user, let them proceed if credential check fails
+    }
+  };
+
+  const handleEmpresaChange = (value: string) => {
+    handleInputChange('empresa', value);
+    if (value) {
+      checkCompanyCredential(value);
+    }
   };
 
   const handleSave = () => {
@@ -318,7 +361,7 @@ const ConfigUsuarioNovoScreen = () => {
                 </Label>
                 <Select 
                   value={formData.empresa} 
-                  onValueChange={(value) => handleInputChange('empresa', value)}
+                  onValueChange={handleEmpresaChange}
                   disabled={createUserMutation.isPending}
                 >
                   <SelectTrigger className="w-full">
@@ -447,6 +490,12 @@ const ConfigUsuarioNovoScreen = () => {
           </CardContent>
         </Card>
       </div>
+
+      <PermissionModal
+        isOpen={showPermissionModal}
+        onClose={() => setShowPermissionModal(false)}
+        message={permissionMessage}
+      />
     </ConfigLayoutWithSidebar>
   );
 };
