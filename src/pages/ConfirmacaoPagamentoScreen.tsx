@@ -12,7 +12,8 @@ import { useUserSession } from "@/hooks/useUserSession";
 import { comandoService, RlifundApiError } from "@/services/comandoService";
 import ErrorModal from "@/components/ErrorModal";
 import { usePdv } from "@/context/PdvContext";
-import { 
+import { generateRandomPaymentType, generateRandomBin } from "@/utils/cacheUtils";
+import {
   CreditCard,
   CreditCard as DebitCard,
   ShoppingCart as CartaoA,
@@ -466,13 +467,23 @@ const ConfirmacaoPagamentoScreen = () => {
       // Create payments array only if there's a residual amount > 0
       let payments = undefined;
       if (remainingAmount > 0) {
+        // Generate random payment type and corresponding fields
+        const paymentType = generateRandomPaymentType();
+        let bin = "";
+        let description = "Pagamento em Dinheiro";
+        
+        if (paymentType === 2) {
+          bin = generateRandomBin();
+          description = "Pagamento em cartão de crédito";
+        }
+        
         payments = [{
-          type: 1,
-          bin: "",
+          type: paymentType,
+          bin: bin,
           amount: parseFloat(remainingAmount.toFixed(2)), // Ensure exactly 2 decimal places
-          description: "Pagamento em Dinheiro"
+          description: description
         }];
-        console.log('[ConfirmacaoPagamento] Created payments array:', payments);
+        console.log('[ConfirmacaoPagamento] Created payments array with type:', paymentType, payments);
       } else {
         console.log('[ConfirmacaoPagamento] No residual amount - omitting payments array');
       }

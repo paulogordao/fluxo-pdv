@@ -30,3 +30,18 @@ export const hasUserSessionCache = (): boolean => {
     return false;
   }
 };
+
+/**
+ * Generates a random payment type (1 or 2)
+ */
+export const generateRandomPaymentType = (): number => {
+  return Math.random() < 0.5 ? 1 : 2;
+};
+
+/**
+ * Generates a random BIN string with 6 or 9 digits
+ */
+export const generateRandomBin = (): string => {
+  const length = Math.random() < 0.5 ? 6 : 9;
+  return Array.from({ length }, () => Math.floor(Math.random() * 10)).join('');
+};
