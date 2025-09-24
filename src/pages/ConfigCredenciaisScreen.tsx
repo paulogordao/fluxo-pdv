@@ -15,6 +15,8 @@ import { Loader2, Upload, Eye, EyeOff, Key, Calendar, Shield } from "lucide-reac
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { credentialsService, CredentialData, CredentialListItem } from "@/services/credentialsService";
 import { formatCNPJInput, normalizeCNPJ } from "@/utils/cnpjUtils";
+import { useUserPermissions } from "@/hooks/useUserPermissions";
+import PermissionModal from "@/components/PermissionModal";
 
 const credentialSchema = z.object({
   cnpj: z.string().min(14, "CNPJ é obrigatório e deve ter pelo menos 14 caracteres"),
@@ -30,6 +32,7 @@ type FormData = z.infer<typeof credentialSchema>;
 
 const ConfigCredenciaisScreen = () => {
   const { toast } = useToast();
+  const { hasPermission } = useUserPermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showClientSecret, setShowClientSecret] = useState(false);
@@ -38,6 +41,8 @@ const ConfigCredenciaisScreen = () => {
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [updatingCredentials, setUpdatingCredentials] = useState<Set<string>>(new Set());
   const [cnpjValue, setCnpjValue] = useState("");
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
+  const [permissionMessage, setPermissionMessage] = useState("");
 
   const {
     register,
@@ -131,6 +136,13 @@ const ConfigCredenciaisScreen = () => {
         description: "Por favor, selecione um arquivo PFX",
         variant: "destructive",
       });
+      return;
+    }
+
+    // Check permission for production environment
+    if (data.ambiente === "prod" && !hasPermission("criar_credencial_producao")) {
+      setPermissionMessage("Credenciais para ambientes produtivos só podem ser criados por usuários ROOT, procure o administrador!");
+      setShowPermissionModal(true);
       return;
     }
 
@@ -519,6 +531,12 @@ const ConfigCredenciaisScreen = () => {
           </CardContent>
         </Card>
       </div>
+
+      <PermissionModal
+        isOpen={showPermissionModal}
+        onClose={() => setShowPermissionModal(false)}
+        message={permissionMessage}
+      />
     </ConfigLayoutWithSidebar>
   );
 };
