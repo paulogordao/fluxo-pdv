@@ -7,12 +7,14 @@ interface DotzBenefitsModalProps {
   isOpen: boolean;
   onUsePoints: () => void;
   onSkipPoints: () => void;
+  dynamicMessage?: string;
 }
 
 const DotzBenefitsModal: React.FC<DotzBenefitsModalProps> = ({
   isOpen,
   onUsePoints,
   onSkipPoints,
+  dynamicMessage,
 }) => {
   return (
     <Dialog open={isOpen}>
@@ -36,8 +38,8 @@ const DotzBenefitsModal: React.FC<DotzBenefitsModalProps> = ({
               Falta Pouco!
             </h3>
             
-            <p className="text-gray-600 text-base leading-relaxed">
-              Você tem pontos disponíveis para usar nesta compra e economizar ainda mais!
+            <p className="text-gray-600 text-base leading-relaxed whitespace-pre-line">
+              {dynamicMessage || "Você tem pontos disponíveis para usar nesta compra e economizar ainda mais!"}
             </p>
 
             {/* Botões */}

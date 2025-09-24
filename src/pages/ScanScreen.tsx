@@ -51,6 +51,8 @@ const ScanScreen = () => {
   } | null>(null);
   
   const [showDotzPaymentModal, setShowDotzPaymentModal] = useState(false);
+  const [dynamicMessage, setDynamicMessage] = useState<string>("");
+  const [showDynamicDotzModal, setShowDynamicDotzModal] = useState(false);
   
   // Check simulation type from localStorage
   const [isOnlineMode, setIsOnlineMode] = useState(false);
@@ -366,7 +368,9 @@ const ScanScreen = () => {
           
           // Check payment_options in RLIFUND response (inside data object)
           const paymentOptions = response[0]?.response?.data?.payment_options;
+          const messageContent = response[0]?.response?.data?.message?.content;
           console.log("[ScanScreen] Payment options from RLIFUND:", paymentOptions);
+          console.log("[ScanScreen] Message content from RLIFUND:", messageContent);
           console.log("[ScanScreen] Full response structure:", JSON.stringify(response[0]?.response, null, 2));
           
           if (Array.isArray(paymentOptions)) {
@@ -375,9 +379,15 @@ const ScanScreen = () => {
               console.log("[ScanScreen] payment_options is empty - redirecting to confirmacao_pagamento");
               navigate('/confirmacao_pagamento', { state: { fromScanScreenFund: true } });
             } else {
-              // payment_options has content - show interest modal
-              console.log("[ScanScreen] payment_options has content - redirecting to interesse_pagamento");
-              navigate('/interesse_pagamento');
+              // payment_options has content - check for dynamic message
+              if (messageContent) {
+                console.log("[ScanScreen] payment_options has content and dynamic message - showing modal");
+                setDynamicMessage(messageContent);
+                setShowDynamicDotzModal(true);
+              } else {
+                console.log("[ScanScreen] payment_options has content but no dynamic message - redirecting to interesse_pagamento");
+                navigate('/interesse_pagamento');
+              }
             }
           } else {
             // Fallback: if payment_options is not an array or missing, check for data presence
@@ -627,6 +637,17 @@ const ScanScreen = () => {
   const handleDotzPaymentNo = () => {
     setShowDotzPaymentModal(false);
     processRlidealPayment(0); // Don't use Dotz payment
+  };
+
+  // Handle dynamic Dotz modal responses (for RLIFUND versão 2)
+  const handleDynamicDotzYes = () => {
+    setShowDynamicDotzModal(false);
+    navigate('/interesse_pagamento');
+  };
+
+  const handleDynamicDotzNo = () => {
+    setShowDynamicDotzModal(false);
+    navigate('/confirmacao_pagamento', { state: { fromScanScreenFund: true } });
   };
 
   // Check simulation type and initialize cart accordingly
@@ -942,6 +963,14 @@ const ScanScreen = () => {
         isOpen={showDotzPaymentModal}
         onUsePoints={handleDotzPaymentYes}
         onSkipPoints={handleDotzPaymentNo}
+      />
+
+      {/* Modal dinâmico com mensagem da RLIFUND */}
+      <DotzBenefitsModal
+        isOpen={showDynamicDotzModal}
+        onUsePoints={handleDynamicDotzYes}
+        onSkipPoints={handleDynamicDotzNo}
+        dynamicMessage={dynamicMessage}
       />
     </PdvLayout>;
 };
