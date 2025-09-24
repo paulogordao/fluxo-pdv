@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Upload, Eye, EyeOff, Key, Calendar, Shield } from "lucide-react";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
@@ -22,6 +23,7 @@ const credentialSchema = z.object({
   pfx_password: z.string().min(1, "Senha PFX é obrigatória"),
   pfx_file: z.string().min(1, "Arquivo PFX é obrigatório"),
   description: z.string().min(1, "Descrição é obrigatória"),
+  ambiente: z.enum(["prod", "uat"], { required_error: "Ambiente é obrigatório" }),
 });
 
 type FormData = z.infer<typeof credentialSchema>;
@@ -349,17 +351,33 @@ const ConfigCredenciaisScreen = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="client_id">Client ID *</Label>
-                  <Input
-                    id="client_id"
-                    {...register("client_id")}
-                    placeholder="Digite o Client ID"
-                    className={errors.client_id ? "border-destructive" : ""}
-                  />
-                  {errors.client_id && (
-                    <p className="text-sm text-destructive">{errors.client_id.message}</p>
+                  <Label htmlFor="ambiente">Ambiente *</Label>
+                  <Select onValueChange={(value) => setValue("ambiente", value as "prod" | "uat")}>
+                    <SelectTrigger className={errors.ambiente ? "border-destructive" : ""}>
+                      <SelectValue placeholder="Selecione o ambiente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="prod">Produção</SelectItem>
+                      <SelectItem value="uat">Homologação</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.ambiente && (
+                    <p className="text-sm text-destructive">{errors.ambiente.message}</p>
                   )}
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="client_id">Client ID *</Label>
+                <Input
+                  id="client_id"
+                  {...register("client_id")}
+                  placeholder="Digite o Client ID"
+                  className={errors.client_id ? "border-destructive" : ""}
+                />
+                {errors.client_id && (
+                  <p className="text-sm text-destructive">{errors.client_id.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">

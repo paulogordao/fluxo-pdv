@@ -7,6 +7,7 @@ export interface CredentialData {
   pfx_password: string;
   pfx_file: string; // Base64 encoded string
   description: string;
+  ambiente: string;
 }
 
 export interface CredentialResponse {
