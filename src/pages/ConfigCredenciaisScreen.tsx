@@ -222,6 +222,14 @@ const ConfigCredenciaisScreen = () => {
     }
   };
 
+  const formatAmbiente = (ambiente?: string) => {
+    switch(ambiente) {
+      case 'uat': return 'Homologação';
+      case 'prod': return 'Produção';
+      default: return 'N/A';
+    }
+  };
+
   return (
     <ConfigLayoutWithSidebar>
       <div className="space-y-6">
@@ -261,9 +269,10 @@ const ConfigCredenciaisScreen = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Descrição</TableHead>
+                      <TableHead className="hidden sm:table-cell">Ambiente</TableHead>
                       <TableHead className="hidden sm:table-cell">
                         <Calendar className="h-4 w-4 inline mr-1" />
-                        Data de Criação
+                        Data de Atualização
                       </TableHead>
                       <TableHead className="text-center">Status</TableHead>
                     </TableRow>
@@ -275,7 +284,16 @@ const ConfigCredenciaisScreen = () => {
                           {credential.description}
                         </TableCell>
                         <TableCell className="hidden sm:table-cell text-muted-foreground">
-                          {formatDate(credential.created_at)}
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            credential.ambiente === 'prod' 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
+                              : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                          }`}>
+                            {formatAmbiente(credential.ambiente)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell text-muted-foreground">
+                          {formatDate(credential.updated_at)}
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center space-x-2">

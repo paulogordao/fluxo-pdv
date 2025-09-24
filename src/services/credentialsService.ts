@@ -19,7 +19,8 @@ export interface CredentialListItem {
   partner_id: string;
   enabled: boolean;
   description: string;
-  created_at?: string;
+  updated_at?: string;
+  ambiente?: string;
 }
 
 export interface CredentialListResponse {
