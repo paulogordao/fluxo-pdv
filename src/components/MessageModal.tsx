@@ -35,7 +35,7 @@ export const MessageModal: React.FC<MessageModalProps> = ({
             onClick={onConfirm}
             className="px-8 py-2 bg-primary text-primary-foreground hover:bg-primary/90"
           >
-            Sim/Avançar
+            OK
           </AlertDialogAction>
         </div>
       </AlertDialogContent>

@@ -12,6 +12,7 @@ import TechnicalFooter from "@/components/TechnicalFooter";
 import { comandoService, RlifundItem, RlidealOrderItem, RlifundApiError } from "@/services/comandoService";
 import ErrorModal from "@/components/ErrorModal";
 import DotzBenefitsModal from "@/components/DotzBenefitsModal";
+import { MessageModal } from "@/components/MessageModal";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
 import { buscarProdutosFakes, type FakeProduct } from '@/services/produtoService';
 import { useFakeProducts } from '@/hooks/useFakeProducts';
@@ -53,6 +54,10 @@ const ScanScreen = () => {
   const [showDotzPaymentModal, setShowDotzPaymentModal] = useState(false);
   const [dynamicMessage, setDynamicMessage] = useState<string>("");
   const [showDynamicDotzModal, setShowDynamicDotzModal] = useState(false);
+  
+  // Modal for when no payment options are available but message exists
+  const [showNoPaymentOptionsModal, setShowNoPaymentOptionsModal] = useState(false);
+  const [noPaymentOptionsMessage, setNoPaymentOptionsMessage] = useState<string>("");
   
   // Check simulation type from localStorage
   const [isOnlineMode, setIsOnlineMode] = useState(false);
@@ -377,9 +382,16 @@ const ScanScreen = () => {
           
           if (Array.isArray(paymentOptions)) {
             if (paymentOptions.length === 0) {
-              // payment_options is empty array - go directly to payment confirmation
-              console.log("[ScanScreen] payment_options is empty - redirecting to confirmacao_pagamento");
-              navigate('/confirmacao_pagamento', { state: { fromScanScreenFund: true } });
+              // payment_options is empty array - check if message exists
+              if (messageContent) {
+                console.log("[ScanScreen] payment_options is empty with message - showing no payment options modal");
+                setNoPaymentOptionsMessage(messageContent);
+                setShowNoPaymentOptionsModal(true);
+              } else {
+                // No message - go directly to payment confirmation
+                console.log("[ScanScreen] payment_options is empty - redirecting to confirmacao_pagamento");
+                navigate('/confirmacao_pagamento', { state: { fromScanScreenFund: true } });
+              }
             } else {
               // payment_options has content - check for dynamic message
               if (messageContent) {
@@ -658,6 +670,13 @@ const ScanScreen = () => {
     console.log("[ScanScreen] Dynamic Dotz modal - User selected NO");
     setShowDynamicDotzModal(false);
     setShowDotzPaymentModal(false); // Ensure standard modal is off
+    navigate('/confirmacao_pagamento', { state: { fromScanScreenFund: true } });
+  };
+
+  // Handle no payment options modal OK button
+  const handleNoPaymentOptionsOk = () => {
+    console.log("[ScanScreen] No payment options modal - User clicked OK");
+    setShowNoPaymentOptionsModal(false);
     navigate('/confirmacao_pagamento', { state: { fromScanScreenFund: true } });
   };
 
@@ -982,6 +1001,13 @@ const ScanScreen = () => {
         onUsePoints={handleDynamicDotzYes}
         onSkipPoints={handleDynamicDotzNo}
         dynamicMessage={dynamicMessage}
+      />
+
+      {/* Modal para quando não há meios de pagamento mas existe mensagem */}
+      <MessageModal
+        isOpen={showNoPaymentOptionsModal}
+        message={noPaymentOptionsMessage}
+        onConfirm={handleNoPaymentOptionsOk}
       />
     </PdvLayout>;
 };
