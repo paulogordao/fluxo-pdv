@@ -204,7 +204,43 @@ export const credentialsService = {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Failed to check credential health: ${errorText}`);
+      
+      // Try to extract specific error message from the response
+      let specificError = `Failed to check credential health: ${errorText}`;
+      
+      try {
+        const errorResponse = JSON.parse(errorText);
+        // Handle array format like [{"request": ..., "error": {...}}]
+        if (Array.isArray(errorResponse) && errorResponse[0]?.error?.message) {
+          const errorMessage = errorResponse[0].error.message;
+          
+          // Try to parse nested JSON in error message like "400 - "{\"detail\":\"...\"}"
+          const jsonMatch = errorMessage.match(/\{.*\}/);
+          if (jsonMatch) {
+            try {
+              const parsedJson = JSON.parse(jsonMatch[0].replace(/\\"/g, '"'));
+              if (parsedJson.detail) {
+                specificError = parsedJson.detail;
+              } else if (parsedJson.message) {
+                specificError = parsedJson.message;
+              }
+            } catch (parseError) {
+              // Keep original error message if parsing fails
+            }
+          }
+        }
+        // Handle direct error format like {"detail": "..."}
+        else if (errorResponse?.detail) {
+          specificError = errorResponse.detail;
+        }
+        else if (errorResponse?.message) {
+          specificError = errorResponse.message;
+        }
+      } catch (parseError) {
+        // Keep fallback error message if JSON parsing fails
+      }
+      
+      throw new Error(specificError);
     }
 
     return await response.json();

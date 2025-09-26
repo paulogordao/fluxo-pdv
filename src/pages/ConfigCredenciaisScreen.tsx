@@ -18,6 +18,7 @@ import { credentialsService, CredentialData, CredentialListItem } from "@/servic
 import { formatCNPJInput, normalizeCNPJ } from "@/utils/cnpjUtils";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import PermissionModal from "@/components/PermissionModal";
+import { extractErrorMessage, formatHealthCheckError } from '@/utils/errorUtils';
 
 const credentialSchema = z.object({
   cnpj: z.string().min(14, "CNPJ é obrigatório e deve ter pelo menos 14 caracteres"),
@@ -295,7 +296,8 @@ const ConfigCredenciaisScreen = () => {
     } catch (error) {
       // Capture error details
       const errorDetails = {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: extractErrorMessage(error),
+        originalError: error,
         timestamp: new Date().toISOString(),
         type: 'network_error',
         partnerId: partnerId
@@ -317,7 +319,7 @@ const ConfigCredenciaisScreen = () => {
       console.error('Error checking credential health:', error);
       toast({
         title: "Erro no health check",
-        description: error instanceof Error ? error.message : "Ocorreu um erro inesperado",
+        description: extractErrorMessage(error),
         variant: "destructive",
       });
     } finally {
@@ -718,6 +720,16 @@ const ConfigCredenciaisScreen = () => {
           
           {selectedErrorDetails && (
             <div className="space-y-4 max-h-96 overflow-y-auto">
+              {/* Prominent Error Message */}
+              <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <Label className="text-sm font-semibold text-destructive">Erro Específico</Label>
+                <p className="text-sm font-medium text-destructive mt-2">
+                  {selectedErrorDetails.type === 'network_error' 
+                    ? selectedErrorDetails.error 
+                    : formatHealthCheckError(selectedErrorDetails)}
+                </p>
+              </div>
+
               <div>
                 <Label className="text-sm font-medium">Timestamp</Label>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -727,9 +739,9 @@ const ConfigCredenciaisScreen = () => {
 
               {selectedErrorDetails.type === 'network_error' ? (
                 <div>
-                  <Label className="text-sm font-medium">Erro de Conexão</Label>
+                  <Label className="text-sm font-medium">Tipo</Label>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {selectedErrorDetails.error}
+                    Erro de Conexão/Rede
                   </p>
                 </div>
               ) : (
@@ -754,7 +766,7 @@ const ConfigCredenciaisScreen = () => {
 
                   {selectedErrorDetails.response?.response && (
                     <div>
-                      <Label className="text-sm font-medium">Resposta da API</Label>
+                      <Label className="text-sm font-medium">Resposta Completa da API</Label>
                       <div className="mt-1 p-3 bg-muted rounded-md">
                         <pre className="text-xs text-muted-foreground overflow-x-auto">
                           {JSON.stringify(selectedErrorDetails.response.response, null, 2)}
@@ -763,6 +775,20 @@ const ConfigCredenciaisScreen = () => {
                     </div>
                   )}
                 </>
+              )}
+
+              {/* Debug Information */}
+              {selectedErrorDetails.originalError && (
+                <details className="text-xs">
+                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                    Informações de Debug
+                  </summary>
+                  <div className="mt-2 p-2 bg-muted rounded text-xs">
+                    <pre className="overflow-x-auto">
+                      {JSON.stringify(selectedErrorDetails.originalError, null, 2)}
+                    </pre>
+                  </div>
+                </details>
               )}
 
               <div className="flex justify-end space-x-2 pt-4">
