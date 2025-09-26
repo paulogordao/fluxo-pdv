@@ -67,6 +67,9 @@ const RelatorioEstornosScreen = () => {
         customerInfoId.includes(searchTerm) ||
         transacao.id.toString().includes(searchTerm)
       );
+    }).sort((a, b) => {
+      // Ordenar por data decrescente (mais recente primeiro)
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
   }, [data, searchTerm]);
 
