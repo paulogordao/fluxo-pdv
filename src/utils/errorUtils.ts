@@ -48,11 +48,6 @@ export const extractErrorMessage = (error: unknown): string => {
   if (error && typeof error === 'object') {
     const errorObj = error as any;
     
-    // Handle array format like [{"request": ..., "error": {...}}]
-    if (Array.isArray(errorObj) && errorObj[0]?.error) {
-      return extractErrorMessage(errorObj[0].error);
-    }
-    
     // Handle direct properties
     if (errorObj.detail) {
       return errorObj.detail;
