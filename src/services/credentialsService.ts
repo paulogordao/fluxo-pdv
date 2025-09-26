@@ -27,13 +27,9 @@ export interface CredentialListItem {
 }
 
 export interface HealthCheckResponse {
-  status_code: number;
-  url: string;
-  response: {
-    data: {
-      database: boolean;
-    };
-    success: boolean;
+  status: number;
+  error?: {
+    message: string;
   };
 }
 

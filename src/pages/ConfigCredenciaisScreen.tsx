@@ -268,7 +268,7 @@ const ConfigCredenciaisScreen = () => {
 
     try {
       const healthResponse = await credentialsService.checkCredentialHealth(partnerId);
-      const isHealthy = healthResponse?.response?.success === true;
+      const isHealthy = healthResponse.status === 200;
       
       // Update credential status based on response
       setCredentials(prev => 
