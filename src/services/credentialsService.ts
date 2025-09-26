@@ -22,6 +22,18 @@ export interface CredentialListItem {
   description: string;
   updated_at?: string;
   ambiente?: string;
+  healthStatus?: 'loading' | 'healthy' | 'unhealthy' | 'not-checked';
+}
+
+export interface HealthCheckResponse {
+  status_code: number;
+  url: string;
+  response: {
+    data: {
+      database: boolean;
+    };
+    success: boolean;
+  };
 }
 
 export interface CredentialListResponse {
@@ -168,6 +180,30 @@ export const credentialsService = {
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Failed to update credential status: ${errorText}`);
+    }
+
+    return await response.json();
+  },
+
+  async checkCredentialHealth(partnerId: string): Promise<HealthCheckResponse> {
+    const userId = getUserId();
+    if (!userId) {
+      throw new Error('User ID not found');
+    }
+
+    const url = buildApiUrl('credenciais', { id: partnerId, status: 'true' });
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-api-key': '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975',
+        'id_usuario': userId,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to check credential health: ${errorText}`);
     }
 
     return await response.json();

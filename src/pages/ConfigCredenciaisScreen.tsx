@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, Eye, EyeOff, Key, Calendar, Shield } from "lucide-react";
+import { Loader2, Upload, Eye, EyeOff, Key, Calendar, Shield, RefreshCw, CircleDot } from "lucide-react";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { credentialsService, CredentialData, CredentialListItem } from "@/services/credentialsService";
 import { formatCNPJInput, normalizeCNPJ } from "@/utils/cnpjUtils";
@@ -43,6 +43,7 @@ const ConfigCredenciaisScreen = () => {
   const [cnpjValue, setCnpjValue] = useState("");
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [permissionMessage, setPermissionMessage] = useState("");
+  const [healthCheckingCredentials, setHealthCheckingCredentials] = useState<Set<string>>(new Set());
 
   const {
     register,
@@ -63,7 +64,11 @@ const ConfigCredenciaisScreen = () => {
     setIsLoadingCredentials(true);
     try {
       const credentialsData = await credentialsService.getCredentials();
-      setCredentials(Array.isArray(credentialsData) ? credentialsData : []);
+      const credentialsWithHealthStatus = (Array.isArray(credentialsData) ? credentialsData : []).map(cred => ({
+        ...cred,
+        healthStatus: 'not-checked' as const
+      }));
+      setCredentials(credentialsWithHealthStatus);
     } catch (error) {
       console.error("Erro ao carregar credenciais:", error);
       setCredentials([]); // Ensure we always have an array
@@ -244,6 +249,117 @@ const ConfigCredenciaisScreen = () => {
     }
   };
 
+  const handleHealthCheck = async (partnerId: string) => {
+    // Add to health checking set
+    setHealthCheckingCredentials(prev => new Set(prev).add(partnerId));
+    
+    // Update credential status to loading
+    setCredentials(prev => 
+      prev.map(cred => 
+        cred.partner_id === partnerId 
+          ? { ...cred, healthStatus: 'loading' }
+          : cred
+      )
+    );
+
+    try {
+      const healthResponse = await credentialsService.checkCredentialHealth(partnerId);
+      const isHealthy = healthResponse?.response?.success === true;
+      
+      // Update credential status based on response
+      setCredentials(prev => 
+        prev.map(cred => 
+          cred.partner_id === partnerId 
+            ? { ...cred, healthStatus: isHealthy ? 'healthy' : 'unhealthy' }
+            : cred
+        )
+      );
+
+      toast({
+        title: "Health check concluído",
+        description: `Credencial está ${isHealthy ? 'funcionando' : 'com problemas'}`,
+        variant: isHealthy ? "default" : "destructive",
+      });
+    } catch (error) {
+      // Update credential status to unhealthy on error
+      setCredentials(prev => 
+        prev.map(cred => 
+          cred.partner_id === partnerId 
+            ? { ...cred, healthStatus: 'unhealthy' }
+            : cred
+        )
+      );
+
+      console.error('Error checking credential health:', error);
+      toast({
+        title: "Erro no health check",
+        description: error instanceof Error ? error.message : "Ocorreu um erro inesperado",
+        variant: "destructive",
+      });
+    } finally {
+      // Remove from health checking set
+      setHealthCheckingCredentials(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(partnerId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleRefreshAllHealthChecks = async () => {
+    const activeCredentials = credentials.filter(cred => cred.enabled);
+    
+    for (const credential of activeCredentials) {
+      // Add delay between requests to avoid overwhelming the server
+      await new Promise(resolve => setTimeout(resolve, 500));
+      handleHealthCheck(credential.partner_id);
+    }
+  };
+
+  const getHealthStatusIcon = (credential: CredentialListItem) => {
+    if (!credential.enabled) {
+      return (
+        <div className="flex items-center justify-center">
+          <CircleDot className="h-4 w-4 text-muted-foreground" />
+        </div>
+      );
+    }
+
+    switch (credential.healthStatus) {
+      case 'loading':
+        return (
+          <div className="flex items-center justify-center">
+            <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+          </div>
+        );
+      case 'healthy':
+        return (
+          <div className="flex items-center justify-center">
+            <CircleDot className="h-4 w-4 text-green-500 fill-green-500" />
+          </div>
+        );
+      case 'unhealthy':
+        return (
+          <div className="flex items-center justify-center">
+            <CircleDot className="h-4 w-4 text-red-500 fill-red-500" />
+          </div>
+        );
+      default:
+        return (
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleHealthCheck(credential.partner_id)}
+              disabled={healthCheckingCredentials.has(credential.partner_id)}
+              className="p-1 hover:bg-muted rounded-md transition-colors"
+              title="Verificar health check"
+            >
+              <RefreshCw className="h-4 w-4 text-muted-foreground hover:text-primary" />
+            </button>
+          </div>
+        );
+    }
+  };
+
   return (
     <ConfigLayoutWithSidebar>
       <div className="space-y-6">
@@ -262,9 +378,21 @@ const ConfigCredenciaisScreen = () => {
         {/* Credentials List */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Shield className="h-5 w-5" />
-              <span>Credenciais Cadastradas</span>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Shield className="h-5 w-5" />
+                <span>Credenciais Cadastradas</span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefreshAllHealthChecks}
+                disabled={credentials.filter(cred => cred.enabled).length === 0}
+                className="flex items-center space-x-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                <span className="hidden sm:inline">Verificar Todas</span>
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -279,18 +407,19 @@ const ConfigCredenciaisScreen = () => {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Descrição</TableHead>
-                      <TableHead className="hidden sm:table-cell">Ambiente</TableHead>
-                      <TableHead className="hidden sm:table-cell">
-                        <Calendar className="h-4 w-4 inline mr-1" />
-                        Data de Atualização
-                      </TableHead>
-                      <TableHead className="text-center">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Descrição</TableHead>
+                        <TableHead className="hidden sm:table-cell">Ambiente</TableHead>
+                        <TableHead className="hidden sm:table-cell">
+                          <Calendar className="h-4 w-4 inline mr-1" />
+                          Data de Atualização
+                        </TableHead>
+                        <TableHead className="text-center">Status</TableHead>
+                        <TableHead className="text-center">Health Check</TableHead>
+                      </TableRow>
+                    </TableHeader>
                   <TableBody>
                     {credentials.map((credential) => (
                       <TableRow key={credential.partner_id}>
@@ -325,6 +454,9 @@ const ConfigCredenciaisScreen = () => {
                               {credential.enabled ? 'Ativa' : 'Inativa'}
                             </span>
                           </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {getHealthStatusIcon(credential)}
                         </TableCell>
                       </TableRow>
                     ))}
