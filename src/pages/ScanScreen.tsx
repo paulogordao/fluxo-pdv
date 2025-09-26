@@ -658,6 +658,136 @@ const ScanScreen = () => {
     processRlidealPayment(0); // Don't use Dotz payment
   };
 
+  // Function to process RLIDEAL payment for version 2 (with empty payment_option)
+  const processRlidealForVersion2 = async () => {
+    try {
+      // Get transaction ID from localStorage 
+      const transactionId = localStorage.getItem('transactionId');
+      if (!transactionId) {
+        console.error('Transaction ID não encontrado. Redirecionando para identificação.');
+        navigate('/cpf');
+        return;
+      }
+      
+      // Function to calculate minimum gross profit when the value is 0 or invalid
+      const calculateMinimumGrossProfit = (unitPrice: number): number => {
+        const minimumMargin = Math.max(unitPrice * 0.1, 0.01); // 10% margin or minimum 0.01
+        return parseFloat(minimumMargin.toFixed(2));
+      };
+
+      // Map cart items to RLIDEAL format
+      const rlidealItems = cart.map(product => {
+        // Check if product has complete data from fake products API
+        const fakeProduct = fakeProducts.find(fp => fp.ean === product.barcode);
+        
+        if (fakeProduct) {
+          // Ensure gross_profit_amount is never 0
+          const grossProfitAmount = fakeProduct.gross_profit_amount <= 0 
+            ? calculateMinimumGrossProfit(fakeProduct.unit_price)
+            : fakeProduct.gross_profit_amount;
+            
+          if (fakeProduct.gross_profit_amount <= 0) {
+            console.log(`[ScanScreen] Corrected gross_profit_amount for ${fakeProduct.name}: ${fakeProduct.gross_profit_amount} -> ${grossProfitAmount}`);
+          }
+          
+          // Use complete data from API
+          return {
+            ean: fakeProduct.ean,
+            sku: fakeProduct.sku,
+            unit_price: fakeProduct.unit_price,
+            discount: fakeProduct.discount,
+            quantity: product.quantity || 1,
+            name: fakeProduct.name,
+            unit_type: fakeProduct.unit_type,
+            brand: fakeProduct.brand || "Unknown",
+            manufacturer: fakeProduct.manufacturer || "Unknown",
+            categories: fakeProduct.categories,
+            gross_profit_amount: grossProfitAmount,
+            is_private_label: fakeProduct.is_private_label,
+            is_on_sale: fakeProduct.is_on_sale
+          };
+        } else {
+          // Use mock data with defaults for missing fields
+          const mockGrossProfit = calculateMinimumGrossProfit(product.price);
+          
+          return {
+            ean: product.barcode,
+            sku: product.id,
+            unit_price: product.price,
+            discount: 0,
+            quantity: product.quantity || 1,
+            name: product.name,
+            unit_type: "UN",
+            brand: "Mock",
+            manufacturer: "Test",
+            categories: ["general"],
+            gross_profit_amount: mockGrossProfit,
+            is_private_label: false,
+            is_on_sale: false
+          };
+        }
+      });
+      
+      const orderData = {
+        value_total: parseFloat(totalAmount.toFixed(2)),
+        discount: 0,
+        date: new Date().toISOString(),
+        items: rlidealItems
+      };
+      
+      console.log("[ScanScreen] Mapped RLIDEAL items for version 2:", rlidealItems);
+      console.log("[ScanScreen] Order data for version 2:", orderData);
+      console.log("[ScanScreen] Using empty payment_option for version 2");
+      
+      // Call RLIDEAL service for Version 2 with empty payment_option
+      const response = await comandoService.enviarComandoRlideal(
+        transactionId,
+        "", // empty payment_option as requested
+        "2" // version 2
+      );
+      
+      console.log("[ScanScreen] RLIDEAL Version 2 response:", response);
+      
+      // Store RLIDEAL response in localStorage for technical documentation
+      localStorage.setItem('rlidealResponse', JSON.stringify(response));
+      
+      // Always redirect to meios_de_pagamento after RLIDEAL call for version 2
+      console.log("[ScanScreen] Version 2 RLIDEAL completed - redirecting to meios_de_pagamento");
+      navigate('/meios_de_pagamento');
+      
+    } catch (error) {
+      console.error("Payment processing error in version 2:", error);
+      if (error instanceof RlifundApiError) {
+        setErrorDetails({
+          code: error.errorCode,
+          message: error.errorMessage,
+          fullRequest: error.fullRequest,
+          fullResponse: error.fullResponse
+        });
+        setShowErrorModal(true);
+      } else {
+        // Check for timeout errors specifically
+        if (error.name === 'AbortError' || error.message?.toLowerCase().includes('timeout') || error.message?.toLowerCase().includes('tempo limite')) {
+          setErrorDetails({
+            code: 'TIMEOUT_ERROR',
+            message: "Tempo limite da operação excedido. Tente novamente.",
+            fullRequest: null,
+            fullResponse: null
+          });
+        } else {
+          // Generic error for other types
+          setErrorDetails({
+            code: 'ERRO_GENERICO',
+            message: error instanceof Error ? error.message : "Erro desconhecido",
+            fullRequest: null,
+            fullResponse: null
+          });
+        }
+        setShowErrorModal(true);
+      }
+    }
+  };
+
   // Handle dynamic Dotz modal responses (for RLIFUND versão 2)
   const handleDynamicDotzYes = () => {
     console.log("[ScanScreen] Dynamic Dotz modal - User selected YES");
@@ -666,11 +796,13 @@ const ScanScreen = () => {
     navigate('/meios_de_pagamento');
   };
 
-  const handleDynamicDotzNo = () => {
+  const handleDynamicDotzNo = async () => {
     console.log("[ScanScreen] Dynamic Dotz modal - User selected NO");
     setShowDynamicDotzModal(false);
     setShowDotzPaymentModal(false); // Ensure standard modal is off
-    navigate('/confirmacao_pagamento', { state: { fromScanScreenFund: true } });
+    setIsProcessingPayment(true); // Add loading state
+    await processRlidealForVersion2(); // Call RLIDEAL for version 2
+    setIsProcessingPayment(false);
   };
 
   // Handle no payment options modal OK button
