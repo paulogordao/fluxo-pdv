@@ -57,6 +57,11 @@ const RelatorioEstornosScreen = () => {
     if (!data?.data) return [];
     
     return data.data.filter((transacao) => {
+      // Primeiro filtrar apenas transações de sucesso
+      const { success } = parseTransactionData(transacao);
+      if (!success) return false;
+      
+      // Depois aplicar filtro de busca se houver
       if (!searchTerm) return true;
       
       const { transactionId, customerInfoId } = parseTransactionData(transacao);
@@ -199,14 +204,13 @@ const RelatorioEstornosScreen = () => {
                       <TableHead>Transaction ID</TableHead>
                       <TableHead>CPF</TableHead>
                       <TableHead>Valor</TableHead>
-                      <TableHead>Status</TableHead>
                       <TableHead>Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredTransactions.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="h-32 text-center">
+                        <TableCell colSpan={6} className="h-32 text-center">
                           <div className="flex flex-col items-center gap-2">
                             <RotateCcw className="h-8 w-8 text-muted-foreground" />
                             <p className="text-muted-foreground">
@@ -240,15 +244,10 @@ const RelatorioEstornosScreen = () => {
                               {formatCurrency(amount)}
                             </TableCell>
                             <TableCell>
-                              <Badge variant={success ? "default" : "destructive"}>
-                                {success ? 'Sucesso' : 'Erro'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
                               <Button
                                 size="sm"
                                 variant="outline"
-                                disabled={!success || transacao.estornado}
+                                disabled={transacao.estornado}
                                 onClick={() => handleEstorno(transacao)}
                                 className="gap-2"
                               >
