@@ -32,6 +32,7 @@ import ConfigUsuarioEditIndividualScreen from "./pages/ConfigUsuarioEditIndividu
 import ConfigUsuarioNovoScreen from "./pages/ConfigUsuarioNovoScreen";
 import ConfigUsuariosTesteScreen from "./pages/ConfigUsuariosTesteScreen";
 import RelatorioTransacoesScreen from "./pages/RelatorioTransacoesScreen";
+import RelatorioEstornosScreen from "./pages/RelatorioEstornosScreen";
 import ConfigCredenciaisScreen from "./pages/ConfigCredenciaisScreen";
 
 const queryClient = new QueryClient();
@@ -71,6 +72,7 @@ const App = () => (
               <Route path="/config_usuario_novo" element={<ConfigUsuarioNovoScreen />} />
               <Route path="/config_usuarios_teste" element={<ConfigUsuariosTesteScreen />} />
               <Route path="/relatorio_transacoes" element={<RelatorioTransacoesScreen />} />
+              <Route path="/relatorio_estornos" element={<RelatorioEstornosScreen />} />
               <Route path="/config_credenciais" element={<ConfigCredenciaisScreen />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

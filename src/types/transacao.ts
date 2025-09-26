@@ -18,3 +18,19 @@ export interface TransacaoRequest {
 export interface TransacaoResponseData {
   [key: string]: any;
 }
+
+export interface TransacaoEstorno {
+  id: number;
+  created_at: string;
+  transaction_id: string;
+  servico: string;
+  request: string;
+  response: string;
+  id_usuario: string;
+  id_empresa: string;
+  estornado: boolean;
+}
+
+export interface TransacaoEstornoResponse {
+  data: TransacaoEstorno[];
+}
