@@ -753,7 +753,7 @@ const ScanScreen = () => {
       
       // Always redirect to confirmacao_pagamento after RLIDEAL call for version 2 (when "Nenhum" is selected)
       console.log("[ScanScreen] Version 2 RLIDEAL completed - redirecting to confirmacao_pagamento");
-      navigate('/confirmacao_pagamento');
+      navigate('/confirmacao_pagamento', { state: { fromScanScreenIdeal: true } });
       
     } catch (error) {
       console.error("Payment processing error in version 2:", error);

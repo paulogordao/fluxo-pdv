@@ -405,11 +405,29 @@ const ConfirmacaoPagamentoScreen = () => {
       return result;
     }
     
-    // If coming from ScanScreen RLIDEAL flow, return the real cart total
-    if (comingFromScanScreenIdeal && totalAmount > 0) {
-      const result = parseFloat(totalAmount.toFixed(2));
-      console.log('[ConfirmacaoPagamento] Using real cart total for RLIDEAL RLIPAYS:', result);
-      return result;
+    // If coming from ScanScreen RLIDEAL flow, use residual from RLIDEAL response
+    if (comingFromScanScreenIdeal) {
+      try {
+        const rlidealResponseStr = localStorage.getItem('rlidealResponse');
+        if (rlidealResponseStr) {
+          const rlidealResponse = JSON.parse(rlidealResponseStr);
+          const residual = rlidealResponse[0]?.response?.data?.order?.residual;
+          if (residual !== undefined) {
+            const result = parseFloat(residual.toFixed(2));
+            console.log('[ConfirmacaoPagamento] Using RLIDEAL residual amount for RLIPAYS:', result);
+            return result;
+          }
+        }
+      } catch (error) {
+        console.error('[ConfirmacaoPagamento] Error reading RLIDEAL response:', error);
+      }
+      
+      // Fallback to totalAmount if residual not available
+      if (totalAmount > 0) {
+        const result = parseFloat(totalAmount.toFixed(2));
+        console.log('[ConfirmacaoPagamento] Using real cart total for RLIDEAL RLIPAYS (fallback):', result);
+        return result;
+      }
     }
     
     const subtotalValue = parseFloat(displayValues.subtotal.replace('R$ ', '').replace('.', '').replace(',', '.'));
