@@ -94,4 +94,57 @@ export const transacaoService = {
       throw error;
     }
   },
+
+  async estornarTransacao(id: string, transactionId: string, cpf: string): Promise<any> {
+    try {
+      const userId = getUserId();
+      console.log('[transacaoService] Estornando transação:', { id, transactionId, cpf, userId });
+      
+      if (!userId) {
+        throw new Error("ID do usuário não encontrado");
+      }
+
+      const url = buildApiUrl('transacoes/estorno');
+      console.log('[transacaoService] URL construída para estorno:', url);
+      
+      const headers = {
+        ...API_CONFIG.defaultHeaders,
+        'User-Agent': 'SimuladorPDV/1.0',
+        'id_usuario': userId,
+      };
+
+      const body = {
+        id,
+        transaction_id: transactionId,
+        cpf
+      };
+
+      console.log('[transacaoService] Dados do estorno:', body);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      console.log('[transacaoService] Response status estorno:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('[transacaoService] Erro no estorno:', response.status, errorData);
+        throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('[transacaoService] Estorno realizado com sucesso:', data);
+      return data;
+    } catch (error) {
+      console.error('[transacaoService] Erro detalhado no estorno:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      throw error;
+    }
+  },
 };

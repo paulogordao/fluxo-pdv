@@ -1,0 +1,37 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { transacaoService } from '@/services/transacaoService';
+import { useToast } from '@/hooks/use-toast';
+
+interface EstornoParams {
+  id: string;
+  transactionId: string;
+  cpf: string;
+}
+
+export const useEstornoTransacao = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: ({ id, transactionId, cpf }: EstornoParams) =>
+      transacaoService.estornarTransacao(id, transactionId, cpf),
+    onSuccess: (data) => {
+      toast({
+        title: "Estorno realizado com sucesso",
+        description: "A transação foi estornada com sucesso.",
+        variant: "default",
+      });
+      
+      // Invalidar e refetch das transações para atualizar a lista
+      queryClient.invalidateQueries({ queryKey: ['transacoes-pays'] });
+    },
+    onError: (error: Error) => {
+      console.error('[useEstornoTransacao] Erro:', error);
+      toast({
+        title: "Erro ao realizar estorno",
+        description: error.message || "Ocorreu um erro ao tentar estornar a transação.",
+        variant: "destructive",
+      });
+    },
+  });
+};

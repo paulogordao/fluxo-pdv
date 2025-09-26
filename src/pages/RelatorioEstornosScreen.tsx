@@ -3,7 +3,9 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { RotateCcw, Search, RefreshCw, AlertCircle, X } from 'lucide-react';
 import { useTransacoesPays } from '@/hooks/useTransacoesPays';
+import { useEstornoTransacao } from '@/hooks/useEstornoTransacao';
 import { TransacaoEstorno } from '@/types/transacao';
+import { useToast } from '@/hooks/use-toast';
 import ConfigLayoutWithSidebar from '@/components/ConfigLayoutWithSidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +25,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 const RelatorioEstornosScreen = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { data, isLoading, error, refetch, isRefetching } = useTransacoesPays();
+  const estornoMutation = useEstornoTransacao();
 
   // Função para extrair dados do JSON de forma segura
   const parseTransactionData = (transacao: TransacaoEstorno) => {
@@ -95,10 +98,17 @@ const RelatorioEstornosScreen = () => {
     }
   };
 
-  // Função para processar estorno (placeholder)
+  // Função para processar estorno
   const handleEstorno = (transacao: TransacaoEstorno) => {
-    console.log('Processando estorno para:', transacao.id);
-    // TODO: Implementar lógica de estorno
+    if (confirm('Tem certeza que deseja estornar esta transação?')) {
+      const { transactionId, customerInfoId } = parseTransactionData(transacao);
+      
+      estornoMutation.mutate({
+        id: transacao.id.toString(),
+        transactionId: transactionId || transacao.transaction_id,
+        cpf: customerInfoId || '',
+      });
+    }
   };
 
   // Componente de loading
@@ -247,12 +257,16 @@ const RelatorioEstornosScreen = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                disabled={transacao.estornado}
+                                disabled={transacao.estornado || estornoMutation.isPending}
                                 onClick={() => handleEstorno(transacao)}
                                 className="gap-2"
                               >
-                                <RotateCcw className="h-4 w-4" />
-                                {transacao.estornado ? 'Estornado' : 'Estornar'}
+                                {estornoMutation.isPending ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                                ) : (
+                                  <RotateCcw className="h-4 w-4" />
+                                )}
+                                {transacao.estornado ? 'Estornado' : estornoMutation.isPending ? 'Estornando...' : 'Estornar'}
                               </Button>
                             </TableCell>
                           </TableRow>
