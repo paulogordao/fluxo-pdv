@@ -259,30 +259,35 @@ const RelatorioEstornosScreen = () => {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredTransactions.map((transacao) => {
+                      filteredTransactions.map((transacao, index) => {
                         const { transactionId, customerInfoId, amount, success } = parseTransactionData(transacao);
                         
                         return (
-                          <TableRow key={transacao.id}>
+                          <TableRow 
+                            key={transacao.id}
+                            className={`transition-colors hover:bg-muted/50 ${
+                              index % 2 === 0 ? 'bg-background' : 'bg-muted/25'
+                            }`}
+                          >
                             <TableCell className="font-mono text-sm">
                               {transacao.id}
                             </TableCell>
                             <TableCell>
                               {formatDate(transacao.created_at)}
                             </TableCell>
-                            <TableCell className="font-mono text-sm max-w-xs truncate">
+                            <TableCell className="font-mono text-sm max-w-xs truncate text-green-700 bg-green-50/50 px-2 py-1 rounded">
                               {transactionId}
                             </TableCell>
                             <TableCell className="font-mono">
                               {customerInfoId}
                             </TableCell>
-                            <TableCell className="font-semibold">
+                            <TableCell className="font-semibold text-blue-600">
                               {formatCurrency(amount)}
                             </TableCell>
                             <TableCell>
                               <Button
                                 size="sm"
-                                variant="outline"
+                                variant="destructive"
                                 disabled={transacao.estornado || estornoMutation.isPending}
                                 onClick={() => handleEstorno(transacao)}
                                 className="gap-2"
