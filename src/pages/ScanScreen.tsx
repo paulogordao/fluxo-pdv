@@ -788,136 +788,13 @@ const ScanScreen = () => {
     }
   };
 
-  // Function to process RLIDEAL payment for version 2 with benefit (when "Sim" is selected)
-  const processRlidealForVersion2WithBenefit = async () => {
-    try {
-      // Get transaction ID from localStorage 
-      const transactionId = localStorage.getItem('transactionId');
-      if (!transactionId) {
-        console.error('Transaction ID não encontrado. Redirecionando para identificação.');
-        navigate('/cpf');
-        return;
-      }
-      
-      // Function to calculate minimum gross profit when the value is 0 or invalid
-      const calculateMinimumGrossProfit = (unitPrice: number): number => {
-        const minimumMargin = Math.max(unitPrice * 0.1, 0.01); // 10% margin or minimum 0.01
-        return parseFloat(minimumMargin.toFixed(2));
-      };
-
-      // Map cart items to RLIDEAL format
-      const rlidealItems = cart.map(product => {
-        // Check if product has complete data from fake products API
-        const fakeProduct = fakeProducts.find(fp => fp.ean === product.barcode);
-        
-        if (fakeProduct) {
-          // Ensure gross_profit_amount is never 0
-          const grossProfitAmount = fakeProduct.gross_profit_amount <= 0 
-            ? calculateMinimumGrossProfit(fakeProduct.unit_price)
-            : fakeProduct.gross_profit_amount;
-            
-          if (fakeProduct.gross_profit_amount <= 0) {
-            console.log(`[ScanScreen] Corrected gross_profit_amount for ${fakeProduct.name}: ${fakeProduct.gross_profit_amount} -> ${grossProfitAmount}`);
-          }
-          
-          // Use complete data from API
-          return {
-            ean: fakeProduct.ean,
-            sku: fakeProduct.sku,
-            unit_price: fakeProduct.unit_price,
-            discount: fakeProduct.discount,
-            quantity: product.quantity || 1,
-            name: fakeProduct.name,
-            unit_type: fakeProduct.unit_type,
-            brand: fakeProduct.brand || "Unknown",
-            manufacturer: fakeProduct.manufacturer || "Unknown",
-            categories: fakeProduct.categories,
-            gross_profit_amount: grossProfitAmount,
-            is_private_label: fakeProduct.is_private_label,
-            is_on_sale: fakeProduct.is_on_sale
-          };
-        } else {
-          // Use mock data with defaults for missing fields
-          const mockGrossProfit = calculateMinimumGrossProfit(product.price);
-          
-          return {
-            ean: product.barcode,
-            sku: product.id,
-            unit_price: product.price,
-            discount: 0,
-            quantity: product.quantity || 1,
-            name: product.name,
-            unit_type: "UN",
-            brand: "Mock",
-            manufacturer: "Test",
-            categories: ["general"],
-            gross_profit_amount: mockGrossProfit,
-            is_private_label: false,
-            is_on_sale: false
-          };
-        }
-      });
-      
-      console.log("[ScanScreen] Mapped RLIDEAL items for version 2 with benefit:", rlidealItems);
-      console.log("[ScanScreen] Using 'app' payment_option for version 2 with benefit");
-      
-      // Call RLIDEAL service for Version 2 with "app" payment_option
-      const response = await comandoService.enviarComandoRlideal(
-        transactionId,
-        "app", // payment_option for benefit usage
-        "2" // version 2
-      );
-      
-      console.log("[ScanScreen] RLIDEAL Version 2 with benefit response:", response);
-      
-      // Store RLIDEAL response in localStorage for technical documentation
-      localStorage.setItem('rlidealResponse', JSON.stringify(response));
-      
-      // Always redirect to meios_de_pagamento after RLIDEAL call for version 2 with benefit
-      console.log("[ScanScreen] Version 2 RLIDEAL with benefit completed - redirecting to meios_de_pagamento");
-      navigate('/meios_de_pagamento');
-      
-    } catch (error) {
-      console.error("Payment processing error in version 2 with benefit:", error);
-      if (error instanceof RlifundApiError) {
-        setErrorDetails({
-          code: error.errorCode,
-          message: error.errorMessage,
-          fullRequest: error.fullRequest,
-          fullResponse: error.fullResponse
-        });
-        setShowErrorModal(true);
-      } else {
-        // Check for timeout errors specifically
-        if (error.name === 'AbortError' || error.message?.toLowerCase().includes('timeout') || error.message?.toLowerCase().includes('tempo limite')) {
-          setErrorDetails({
-            code: 'TIMEOUT_ERROR',
-            message: "Tempo limite da operação excedido. Tente novamente.",
-            fullRequest: null,
-            fullResponse: null
-          });
-        } else {
-          // Generic error for other types
-          setErrorDetails({
-            code: 'ERRO_GENERICO',
-            message: error instanceof Error ? error.message : "Erro desconhecido",
-            fullRequest: null,
-            fullResponse: null
-          });
-        }
-        setShowErrorModal(true);
-      }
-    }
-  };
 
   // Handle dynamic Dotz modal responses (for RLIFUND versão 2)
   const handleDynamicDotzYes = async () => {
     console.log("[ScanScreen] Dynamic Dotz modal - User selected YES");
     setShowDynamicDotzModal(false);
     setShowDotzPaymentModal(false); // Ensure standard modal is off
-    setIsProcessingPayment(true); // Add loading state
-    await processRlidealForVersion2WithBenefit(); // Call RLIDEAL with benefit for version 2
-    setIsProcessingPayment(false);
+    navigate('/meios_de_pagamento'); // Navigate directly to payment methods without calling RLIDEAL
   };
 
   const handleDynamicDotzNo = async () => {
