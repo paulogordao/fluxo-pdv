@@ -136,7 +136,15 @@ export const transacaoService = {
       }
 
       const data = await response.json();
-      console.log('[transacaoService] Estorno realizado com sucesso:', data);
+      console.log('[transacaoService] Resposta do estorno:', data);
+      
+      // Verificar se o estorno foi bem-sucedido
+      if (data.response?.success === false) {
+        const errorMessage = data.response?.errors?.[0]?.message || 'Erro desconhecido ao processar estorno';
+        console.error('[transacaoService] Erro retornado pela API:', errorMessage);
+        throw new Error(errorMessage);
+      }
+      
       return data;
     } catch (error) {
       console.error('[transacaoService] Erro detalhado no estorno:', {

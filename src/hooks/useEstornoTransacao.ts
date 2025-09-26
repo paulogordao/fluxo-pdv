@@ -16,9 +16,10 @@ export const useEstornoTransacao = () => {
     mutationFn: ({ id, transactionId, cpf }: EstornoParams) =>
       transacaoService.estornarTransacao(id, transactionId, cpf),
     onSuccess: (data) => {
+      const successMessage = data?.response?.data?.message?.content || "A transação foi estornada com sucesso.";
       toast({
         title: "Estorno realizado com sucesso",
-        description: "A transação foi estornada com sucesso.",
+        description: successMessage,
         variant: "default",
       });
       

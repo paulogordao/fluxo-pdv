@@ -21,9 +21,21 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const RelatorioEstornosScreen = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<TransacaoEstorno | null>(null);
   const { data, isLoading, error, refetch, isRefetching } = useTransacoesPays();
   const estornoMutation = useEstornoTransacao();
 
@@ -98,17 +110,31 @@ const RelatorioEstornosScreen = () => {
     }
   };
 
-  // Função para processar estorno
+  // Função para abrir modal de confirmação
   const handleEstorno = (transacao: TransacaoEstorno) => {
-    if (confirm('Tem certeza que deseja estornar esta transação?')) {
-      const { transactionId, customerInfoId } = parseTransactionData(transacao);
+    setSelectedTransaction(transacao);
+    setConfirmModalOpen(true);
+  };
+
+  // Função para confirmar estorno
+  const handleConfirmEstorno = () => {
+    if (selectedTransaction) {
+      const { transactionId, customerInfoId } = parseTransactionData(selectedTransaction);
       
       estornoMutation.mutate({
-        id: transacao.id.toString(),
-        transactionId: transactionId || transacao.transaction_id,
+        id: selectedTransaction.id.toString(),
+        transactionId: transactionId || selectedTransaction.transaction_id,
         cpf: customerInfoId || '',
       });
     }
+    setConfirmModalOpen(false);
+    setSelectedTransaction(null);
+  };
+
+  // Função para cancelar estorno
+  const handleCancelEstorno = () => {
+    setConfirmModalOpen(false);
+    setSelectedTransaction(null);
   };
 
   // Componente de loading
@@ -279,6 +305,33 @@ const RelatorioEstornosScreen = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Modal de Confirmação de Estorno */}
+        <AlertDialog open={confirmModalOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Estorno</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja estornar esta transação? Esta ação não pode ser desfeita.
+                {selectedTransaction && (
+                  <div className="mt-2 p-2 bg-muted rounded text-sm">
+                    <div><strong>ID:</strong> {selectedTransaction.id}</div>
+                    <div><strong>Transaction ID:</strong> {parseTransactionData(selectedTransaction).transactionId}</div>
+                    <div><strong>CPF:</strong> {parseTransactionData(selectedTransaction).customerInfoId}</div>
+                  </div>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={handleCancelEstorno}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmEstorno}>
+                Confirmar Estorno
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </ConfigLayoutWithSidebar>
   );
