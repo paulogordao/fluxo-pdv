@@ -318,7 +318,7 @@ const ConfigCredenciaisScreen = () => {
 
       console.error('Error checking credential health:', error);
       toast({
-        title: "Erro no health check",
+        title: "Erro na verificação",
         description: extractErrorMessage(error),
         variant: "destructive",
       });

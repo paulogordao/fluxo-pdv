@@ -28,9 +28,7 @@ export interface CredentialListItem {
 
 export interface HealthCheckResponse {
   status: number;
-  error?: {
-    message: string;
-  };
+  message: string | null;
 }
 
 export interface CredentialListResponse {
@@ -200,14 +198,10 @@ export const credentialsService = {
 
     const responseJson = await response.json();
     
-    // Handle new API format: {status: 400, error: {message: "..."}} or {status: 200}  
-    if (responseJson.status === 400 && responseJson.error?.message) {
-      throw new Error(responseJson.error.message);
-    }
-
-    // Handle 403 Forbidden (permission error)
-    if (responseJson.status === 403) {
-      throw new Error('Acesso negado. Você não tem permissão para verificar esta credencial.');
+    // Handle normalized API format: {status: 200, message: null} for success
+    // Any status !== 200 is an error with message
+    if (responseJson.status !== 200) {
+      throw new Error(responseJson.message || 'Health check failed');
     }
 
     return responseJson;
