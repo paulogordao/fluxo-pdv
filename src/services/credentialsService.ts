@@ -209,6 +209,11 @@ export const credentialsService = {
       throw new Error(responseJson.error.message);
     }
 
+    // Handle 403 Forbidden (permission error)
+    if (responseJson.status === 403) {
+      throw new Error('Acesso negado. Você não tem permissão para verificar esta credencial.');
+    }
+
     return responseJson;
   }
 };
