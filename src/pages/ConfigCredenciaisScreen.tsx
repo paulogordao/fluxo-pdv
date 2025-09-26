@@ -8,10 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, Eye, EyeOff, Key, Calendar, Shield, RefreshCw, CircleDot } from "lucide-react";
+import { Loader2, Upload, Eye, EyeOff, Key, Calendar, Shield, RefreshCw, CircleDot, AlertCircle } from "lucide-react";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { credentialsService, CredentialData, CredentialListItem } from "@/services/credentialsService";
 import { formatCNPJInput, normalizeCNPJ } from "@/utils/cnpjUtils";
@@ -44,6 +45,8 @@ const ConfigCredenciaisScreen = () => {
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [permissionMessage, setPermissionMessage] = useState("");
   const [healthCheckingCredentials, setHealthCheckingCredentials] = useState<Set<string>>(new Set());
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [selectedErrorDetails, setSelectedErrorDetails] = useState<any>(null);
 
   const {
     register,
@@ -257,7 +260,7 @@ const ConfigCredenciaisScreen = () => {
     setCredentials(prev => 
       prev.map(cred => 
         cred.partner_id === partnerId 
-          ? { ...cred, healthStatus: 'loading' }
+          ? { ...cred, healthStatus: 'loading', healthError: null }
           : cred
       )
     );
@@ -270,7 +273,16 @@ const ConfigCredenciaisScreen = () => {
       setCredentials(prev => 
         prev.map(cred => 
           cred.partner_id === partnerId 
-            ? { ...cred, healthStatus: isHealthy ? 'healthy' : 'unhealthy' }
+            ? { 
+                ...cred, 
+                healthStatus: isHealthy ? 'healthy' : 'unhealthy',
+                healthError: isHealthy ? null : {
+                  response: healthResponse,
+                  timestamp: new Date().toISOString(),
+                  message: 'Health check failed',
+                  partnerId: partnerId
+                }
+              }
             : cred
         )
       );
@@ -281,11 +293,23 @@ const ConfigCredenciaisScreen = () => {
         variant: isHealthy ? "default" : "destructive",
       });
     } catch (error) {
+      // Capture error details
+      const errorDetails = {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+        type: 'network_error',
+        partnerId: partnerId
+      };
+
       // Update credential status to unhealthy on error
       setCredentials(prev => 
         prev.map(cred => 
           cred.partner_id === partnerId 
-            ? { ...cred, healthStatus: 'unhealthy' }
+            ? { 
+                ...cred, 
+                healthStatus: 'unhealthy',
+                healthError: errorDetails
+              }
             : cred
         )
       );
@@ -341,7 +365,16 @@ const ConfigCredenciaisScreen = () => {
       case 'unhealthy':
         return (
           <div className="flex items-center justify-center">
-            <CircleDot className="h-4 w-4 text-red-500 fill-red-500" />
+            <button
+              onClick={() => {
+                setSelectedErrorDetails(credential.healthError);
+                setShowErrorModal(true);
+              }}
+              className="p-1 hover:bg-muted rounded-md transition-colors"
+              title="Clique para ver detalhes do erro"
+            >
+              <AlertCircle className="h-4 w-4 text-red-500 cursor-pointer hover:text-red-600" />
+            </button>
           </div>
         );
       default:
@@ -669,6 +702,88 @@ const ConfigCredenciaisScreen = () => {
         onClose={() => setShowPermissionModal(false)}
         message={permissionMessage}
       />
+
+      {/* Error Details Modal */}
+      <Dialog open={showErrorModal} onOpenChange={setShowErrorModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <AlertCircle className="h-5 w-5 text-red-500" />
+              <span>Detalhes do Erro - Health Check</span>
+            </DialogTitle>
+            <DialogDescription>
+              Informações detalhadas sobre o erro ocorrido durante a verificação da credencial.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedErrorDetails && (
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              <div>
+                <Label className="text-sm font-medium">Timestamp</Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {new Date(selectedErrorDetails.timestamp).toLocaleString('pt-BR')}
+                </p>
+              </div>
+
+              {selectedErrorDetails.type === 'network_error' ? (
+                <div>
+                  <Label className="text-sm font-medium">Erro de Conexão</Label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {selectedErrorDetails.error}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {selectedErrorDetails.response && (
+                    <div>
+                      <Label className="text-sm font-medium">Status Code</Label>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {selectedErrorDetails.response.status_code}
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedErrorDetails.response?.url && (
+                    <div>
+                      <Label className="text-sm font-medium">URL</Label>
+                      <p className="text-sm text-muted-foreground mt-1 break-all">
+                        {selectedErrorDetails.response.url}
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedErrorDetails.response?.response && (
+                    <div>
+                      <Label className="text-sm font-medium">Resposta da API</Label>
+                      <div className="mt-1 p-3 bg-muted rounded-md">
+                        <pre className="text-xs text-muted-foreground overflow-x-auto">
+                          {JSON.stringify(selectedErrorDetails.response.response, null, 2)}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button variant="outline" onClick={() => setShowErrorModal(false)}>
+                  Fechar
+                </Button>
+                {selectedErrorDetails.partnerId && (
+                  <Button 
+                    onClick={() => {
+                      setShowErrorModal(false);
+                      handleHealthCheck(selectedErrorDetails.partnerId);
+                    }}
+                  >
+                    Tentar Novamente
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </ConfigLayoutWithSidebar>
   );
 };

@@ -23,6 +23,7 @@ export interface CredentialListItem {
   updated_at?: string;
   ambiente?: string;
   healthStatus?: 'loading' | 'healthy' | 'unhealthy' | 'not-checked';
+  healthError?: any;
 }
 
 export interface HealthCheckResponse {
