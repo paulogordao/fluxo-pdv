@@ -260,7 +260,13 @@ const CpfScreen = () => {
       // Check if simulation type is OFFLINE or ONLINE
       if (tipo_simulacao && tipo_simulacao !== "OFFLINE") {
         // ONLINE mode - use new comando service
-        setLoadingMessage("Processando CPF no ambiente de homologação...");
+        const ambienteTexto = ambiente === "producao" 
+          ? "PRODUÇÃO" 
+          : ambiente === "homologacao" 
+            ? "homologação" 
+            : "homologação"; // fallback
+        
+        setLoadingMessage(`Processando CPF no ambiente de ${ambienteTexto}...`);
         console.log(`Modo ONLINE detectado - usando serviço de comando - Tipo: ${tipo_simulacao}`);
         
         // Calculate version based on tipo_simulacao
