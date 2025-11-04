@@ -17,6 +17,7 @@ const ConfirmacaoPagamentoTokenScreen = () => {
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [validationMessage, setValidationMessage] = useState("");
   const [isFatalError, setIsFatalError] = useState(false);
+  const [isSuccessModal, setIsSuccessModal] = useState(false);
   const navigate = useNavigate();
   const {
     tipo_simulacao,
@@ -134,13 +135,15 @@ const ConfirmacaoPagamentoTokenScreen = () => {
           // Store the RLIAUTH response in localStorage
           localStorage.setItem('rliauthResponse', JSON.stringify(response));
 
-          // Navigate to confirmation page
-          navigate("/confirmacao_pagamento", {
-            state: {
-              fromTokenScreen: true,
-              isOnline: true
-            }
-          });
+          // Extract success message from response
+          const successMessage = response[0]?.response?.data?.message?.content || "Token válido! Transação autorizada.";
+          
+          // Show success modal instead of navigating immediately
+          setValidationMessage(successMessage);
+          setIsSuccessModal(true);
+          setIsFatalError(false);
+          setShowValidationModal(true);
+          
         } catch (error) {
           console.error('[TokenScreen] Error calling RLIAUTH:', error);
           
@@ -150,6 +153,7 @@ const ConfirmacaoPagamentoTokenScreen = () => {
           // Check if this is a fatal error (cannot retry)
           const isFatal = (error as any).isFatal === true;
           setIsFatalError(isFatal);
+          setIsSuccessModal(false);
           
           // Show validation modal with error message
           const errorMessage = error instanceof Error ? error.message : "Token inválido. Tente novamente.";
@@ -374,8 +378,17 @@ const ConfirmacaoPagamentoTokenScreen = () => {
         isOpen={showValidationModal}
         onPrimaryAction={() => {
           setShowValidationModal(false);
-          if (isFatalError) {
-            // Fatal error: navigate to payment confirmation
+          
+          if (isSuccessModal) {
+            // Success: navigate to payment confirmation
+            navigate("/confirmacao_pagamento", {
+              state: {
+                fromTokenScreen: true,
+                isOnline: true
+              }
+            });
+          } else if (isFatalError) {
+            // Fatal error: navigate to payment confirmation with failure flag
             navigate("/confirmacao_pagamento", {
               state: {
                 fromTokenScreen: true,
@@ -384,17 +397,24 @@ const ConfirmacaoPagamentoTokenScreen = () => {
               }
             });
           }
-          // If not fatal, token digits already cleared, user can try again
+          // If recoverable error, token digits already cleared, user can try again
         }}
         onCancel={() => {
           setShowValidationModal(false);
-          navigate("/meios_de_pagamento");
+          if (!isSuccessModal) {
+            // Only allow cancel for error scenarios
+            navigate("/meios_de_pagamento");
+          }
         }}
         message={validationMessage}
-        title="Validação do Token"
-        primaryButtonText={isFatalError ? "OK" : "Tentar Novamente"}
+        title={isSuccessModal ? "Token Validado" : "Validação do Token"}
+        primaryButtonText={
+          isSuccessModal ? "OK" : 
+          isFatalError ? "OK" : 
+          "Tentar Novamente"
+        }
         cancelButtonText="Voltar"
-        showCancelButton={!isFatalError}
+        showCancelButton={!isFatalError && !isSuccessModal}
       />
     </div>;
 };
