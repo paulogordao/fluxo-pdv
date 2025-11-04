@@ -228,8 +228,11 @@ const MeiosDePagamentoScreen = () => {
         console.log('[MeiosDePagamentoScreen] Redirecting to /confirmacao_pagamento_app for app option');
         navigate('/confirmacao_pagamento_app');
       } else {
-        // Default navigation for other cases
-        navigate('/confirmacao_pagamento');
+        // Default navigation for other cases (none option)
+        console.log('[MeiosDePagamentoScreen] Redirecting to /confirmacao_pagamento for none option');
+        navigate('/confirmacao_pagamento', {
+          state: { fromRlidealNoneOption: true }
+        });
       }
 
     } catch (error: any) {

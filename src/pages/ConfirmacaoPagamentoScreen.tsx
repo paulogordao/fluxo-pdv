@@ -45,6 +45,9 @@ const ConfirmacaoPagamentoScreen = () => {
   // Check if coming from app screen (RLIWAIT -> RLIPAYS flow)
   const comingFromAppScreen = location.state?.fromAppScreen || false;
   
+  // Check if coming from RLIDEAL with "none" option
+  const comingFromRlidealNone = location.state?.fromRlidealNoneOption || false;
+  
   // Check if token validation failed (fatal error)
   const tokenValidationFailed = location.state?.tokenValidationFailed || false;
   
@@ -148,6 +151,46 @@ const ConfirmacaoPagamentoScreen = () => {
         }
       } catch (error) {
         console.error('[ConfirmacaoPagamento] Error reading orderData from localStorage:', error);
+      }
+    }
+
+    // Check if coming from RLIDEAL with "none" option
+    if (comingFromRlidealNone) {
+      try {
+        const rlidealResponseStr = localStorage.getItem('rlidealResponse');
+        if (rlidealResponseStr) {
+          const rlidealResponse = JSON.parse(rlidealResponseStr);
+          const orderData = rlidealResponse[0]?.response?.data?.order;
+          
+          console.log('[ConfirmacaoPagamento] Using RLIDEAL data for none option:', orderData);
+          
+          if (orderData) {
+            const subtotal = orderData.value?.toFixed(2).replace('.', ',') || "0,00";
+            const desconto = orderData.discount?.toFixed(2).replace('.', ',') || "0,00";
+            const residual = orderData.residual?.toFixed(2).replace('.', ',') || subtotal;
+            
+            setDisplayValues({
+              subtotal,
+              desconto,
+              recebido: "0,00", // Nenhum pagamento foi feito ainda (opção "nenhum")
+              showEncargos: true
+            });
+            
+            setPaymentAmount({ 
+              encargos: residual, 
+              recebido: "0,00" 
+            });
+            
+            setDocumentationSlug("RLIDEALRLIPAYS");
+            
+            console.log('[ConfirmacaoPagamento] Using RLIDEAL values for none option:', {
+              subtotal, desconto, residual
+            });
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('[ConfirmacaoPagamento] Error reading RLIDEAL data for none option:', error);
       }
     }
 
@@ -312,7 +355,7 @@ const ConfirmacaoPagamentoScreen = () => {
       });
       console.log('[ConfirmacaoPagamento] Default option selected');
     }
-  }, [selectedPaymentOption, comingFromTokenScreen, comingFromOtpScreen, comingFromScanScreen, comingFromScanScreenIdeal, comingFromAppScreen, tipo_simulacao, sessionLoading, rliauthData, totalAmount, tokenValidationFailed]);
+  }, [selectedPaymentOption, comingFromTokenScreen, comingFromOtpScreen, comingFromScanScreen, comingFromScanScreenIdeal, comingFromAppScreen, comingFromRlidealNone, tipo_simulacao, sessionLoading, rliauthData, totalAmount, tokenValidationFailed]);
 
   // Load technical data from localStorage based on flow
   useEffect(() => {
@@ -326,6 +369,10 @@ const ConfirmacaoPagamentoScreen = () => {
       // Fluxo RLIDEAL → RLIPAYS
       previousServiceResponse = localStorage.getItem('rlidealResponse');
       console.log('[ConfirmacaoPagamento] Loading RLIDEAL response for technical data');
+    } else if (comingFromRlidealNone) {
+      // Fluxo RLIDEAL → RLIPAYS (opção "nenhum")
+      previousServiceResponse = localStorage.getItem('rlidealResponse');
+      console.log('[ConfirmacaoPagamento] Loading RLIDEAL response for technical data (none option)');
     } else if (!comingFromTokenScreen && !comingFromOtpScreen && !comingFromAppScreen) {
       // Fluxo RLIDEAL → RLIPAYS (vindo de meios de pagamento)
       previousServiceResponse = localStorage.getItem('rlidealResponse');
@@ -440,6 +487,24 @@ const ConfirmacaoPagamentoScreen = () => {
         }
       } catch (error) {
         console.error('[ConfirmacaoPagamento] Error reading orderData for calculation:', error);
+      }
+    }
+    
+    // If coming from RLIDEAL none option, use residual from RLIDEAL response
+    if (comingFromRlidealNone) {
+      try {
+        const rlidealResponseStr = localStorage.getItem('rlidealResponse');
+        if (rlidealResponseStr) {
+          const rlidealResponse = JSON.parse(rlidealResponseStr);
+          const residual = rlidealResponse[0]?.response?.data?.order?.residual;
+          if (residual !== undefined) {
+            const result = parseFloat(residual.toFixed(2));
+            console.log('[ConfirmacaoPagamento] Using RLIDEAL residual for none option RLIPAYS:', result);
+            return result;
+          }
+        }
+      } catch (error) {
+        console.error('[ConfirmacaoPagamento] Error reading RLIDEAL response for none option:', error);
       }
     }
     
