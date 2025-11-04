@@ -15,6 +15,7 @@ import PermissionModal from "@/components/PermissionModal";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { empresaService, type Empresa } from "@/services/empresaService";
 import { credentialsService, type CredentialListItem } from "@/services/credentialsService";
+import { clearUserSessionCache } from "@/utils/cacheUtils";
 
 const empresaEditSchema = z.object({
   nome: z.string().min(1, "Nome da empresa é obrigatório"),
@@ -149,6 +150,9 @@ const ConfigEmpresaEditScreen = () => {
       console.log("Resposta da atualização:", responseData);
 
       if (responseData.code === "200" || responseData.code === 200) {
+        // Limpar cache da sessão para forçar reload dos dados atualizados
+        clearUserSessionCache();
+        
         toast.success("Empresa atualizada com sucesso!");
         // Aguardar um pouco antes de redirecionar para que o usuário veja a mensagem
         setTimeout(() => {
