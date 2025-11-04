@@ -855,43 +855,54 @@ const ScanScreen = () => {
     
     console.log(`ScanScreen modo: ${isOnline ? 'ONLINE' : 'OFFLINE'} (tipo_simulacao: ${tipoSimulacao})`);
     
+    // Verificar se estamos restaurando do cache
+    const restoreFromCache = location.state?.restoreFromCache;
+    
     if (isOnline) {
-      // ONLINE mode: start with empty data and load fake products
-      setLastScanned(null);
-      setInitialCart([]);
-      console.log('Modo ONLINE: iniciando com dados vazios');
+      // ONLINE mode: start with empty data ONLY if not restoring from cache
+      if (!restoreFromCache) {
+        setLastScanned(null);
+        setInitialCart([]);
+        console.log('Modo ONLINE: iniciando com dados vazios');
+      } else {
+        console.log('Modo ONLINE: mantendo carrinho do cache (não limpar)');
+      }
       
       // Products will be loaded automatically by useFakeProducts hook
     } else {
       // OFFLINE mode: use mock data
-      const mockProducts = [{
-        id: '1',
-        name: 'Deo Aero Suave Men 200ml',
-        price: 9.99,
-        barcode: '7891000315507',
-        quantity: 2
-      }, {
-        id: '2',
-        name: 'AmacConfort Brisa 1L',
-        price: 14.00,
-        barcode: '7891008086697',
-        quantity: 1
-      }, {
-        id: '3',
-        name: 'Sabão Líquido Ba 300ml',
-        price: 6.99,
-        barcode: '7896002301428',
-        quantity: 5
-      }];
+      if (!restoreFromCache) {
+        const mockProducts = [{
+          id: '1',
+          name: 'Deo Aero Suave Men 200ml',
+          price: 9.99,
+          barcode: '7891000315507',
+          quantity: 2
+        }, {
+          id: '2',
+          name: 'AmacConfort Brisa 1L',
+          price: 14.00,
+          barcode: '7891008086697',
+          quantity: 1
+        }, {
+          id: '3',
+          name: 'Sabão Líquido Ba 300ml',
+          price: 6.99,
+          barcode: '7896002301428',
+          quantity: 5
+        }];
 
-      // Configurar o último item escaneado como o último da lista
-      setLastScanned(mockProducts[mockProducts.length - 1]);
+        // Configurar o último item escaneado como o último da lista
+        setLastScanned(mockProducts[mockProducts.length - 1]);
 
-      // Definir o carrinho inicial com os produtos mockados
-      setInitialCart(mockProducts);
-      console.log('Modo OFFLINE: iniciando com dados mockados');
+        // Definir o carrinho inicial com os produtos mockados
+        setInitialCart(mockProducts);
+        console.log('Modo OFFLINE: iniciando com dados mockados');
+      } else {
+        console.log('Modo OFFLINE: mantendo carrinho do cache (não limpar)');
+      }
     }
-  }, []); // Removido [setInitialCart] para evitar loop infinito
+  }, [location.state?.restoreFromCache]); // Adicionar location.state como dependência
 
 
   // Add product to cart from fake products list
