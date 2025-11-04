@@ -16,6 +16,7 @@ const ConfirmacaoPagamentoTokenScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [validationMessage, setValidationMessage] = useState("");
+  const [isFatalError, setIsFatalError] = useState(false);
   const navigate = useNavigate();
   const {
     tipo_simulacao,
@@ -145,6 +146,10 @@ const ConfirmacaoPagamentoTokenScreen = () => {
           
           // Clear the entered token digits for retry
           setTokenDigits([]);
+          
+          // Check if this is a fatal error (cannot retry)
+          const isFatal = (error as any).isFatal === true;
+          setIsFatalError(isFatal);
           
           // Show validation modal with error message
           const errorMessage = error instanceof Error ? error.message : "Token inválido. Tente novamente.";
@@ -369,7 +374,17 @@ const ConfirmacaoPagamentoTokenScreen = () => {
         isOpen={showValidationModal}
         onPrimaryAction={() => {
           setShowValidationModal(false);
-          // Token digits already cleared, user can try again
+          if (isFatalError) {
+            // Fatal error: navigate to payment confirmation
+            navigate("/confirmacao_pagamento", {
+              state: {
+                fromTokenScreen: true,
+                isOnline: true,
+                tokenValidationFailed: true
+              }
+            });
+          }
+          // If not fatal, token digits already cleared, user can try again
         }}
         onCancel={() => {
           setShowValidationModal(false);
@@ -377,8 +392,9 @@ const ConfirmacaoPagamentoTokenScreen = () => {
         }}
         message={validationMessage}
         title="Validação do Token"
-        primaryButtonText="Tentar Novamente"
+        primaryButtonText={isFatalError ? "OK" : "Tentar Novamente"}
         cancelButtonText="Voltar"
+        showCancelButton={!isFatalError}
       />
     </div>;
 };

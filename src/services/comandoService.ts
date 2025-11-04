@@ -876,20 +876,32 @@ export const comandoService = {
         console.log(`[comandoService] RLIAUTH Message Content: ${messageContent}`);
         console.log(`[comandoService] RLIAUTH Next Step: ${nextStep}`);
 
-        // Check if token was rejected based on multiple indicators
+        // Check specific error codes
+        if (messageId === 1002) {
+          // Fatal error - cannot retry
+          console.error(`[comandoService] Token inválido - erro fatal (não pode tentar novamente)`);
+          const error = new Error(messageContent || 'Token inválido. Redirecionando...');
+          (error as any).isFatal = true; // Mark as fatal error
+          throw error;
+        }
+
+        // Check if token was rejected based on multiple indicators (recoverable error)
         const isTokenInvalid = 
+          messageId === 1001 || // Specific recoverable error code
           messageId >= 1000 || // Error message IDs are typically >= 1000
           nextStep === "RLIAUTH" || // If next step is RLIAUTH again, token was rejected
           messageContent.toLowerCase().includes('inválido') ||
           messageContent.toLowerCase().includes('tentar novamente');
 
         if (isTokenInvalid) {
-          console.error(`[comandoService] Token inválido detectado:`, {
+          console.error(`[comandoService] Token inválido detectado (recuperável):`, {
             messageId,
             messageContent,
             nextStep
           });
-          throw new Error(messageContent || 'Token inválido. Tente novamente.');
+          const error = new Error(messageContent || 'Token inválido. Tente novamente.');
+          (error as any).isFatal = false; // Mark as recoverable error
+          throw error;
         }
       }
 
