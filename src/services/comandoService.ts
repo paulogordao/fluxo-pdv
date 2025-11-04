@@ -888,7 +888,7 @@ export const comandoService = {
         // Check if token was rejected based on multiple indicators (recoverable error)
         const isTokenInvalid = 
           messageId === 1001 || // Specific recoverable error code
-          messageId >= 1000 || // Error message IDs are typically >= 1000
+          messageId > 1002 || // Error message IDs above 1002 (1000 is success, 1001/1002 are handled separately)
           nextStep === "RLIAUTH" || // If next step is RLIAUTH again, token was rejected
           messageContent.toLowerCase().includes('inválido') ||
           messageContent.toLowerCase().includes('tentar novamente');
