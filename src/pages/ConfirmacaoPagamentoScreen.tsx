@@ -44,6 +44,9 @@ const ConfirmacaoPagamentoScreen = () => {
   // Check if coming from app screen (RLIWAIT -> RLIPAYS flow)
   const comingFromAppScreen = location.state?.fromAppScreen || false;
   
+  // Check if token validation failed (fatal error)
+  const tokenValidationFailed = location.state?.tokenValidationFailed || false;
+  
   // Payment amounts and display values
   const [paymentAmount, setPaymentAmount] = useState({ encargos: "68,93", recebido: "68,93" });
   const [displayValues, setDisplayValues] = useState({
@@ -199,7 +202,48 @@ const ConfirmacaoPagamentoScreen = () => {
       return;
     }
 
-    if (!isOfflineCompany && rliauthData?.length > 0 && (comingFromTokenScreen || comingFromOtpScreen)) {
+    // Check if token validation failed - use RLIDEAL data instead of RLIAUTH
+    if (tokenValidationFailed && comingFromTokenScreen) {
+      try {
+        // Try to load RLIDEAL response which has the order data
+        const rlidealResponseStr = localStorage.getItem('rlidealResponse');
+        if (rlidealResponseStr) {
+          const rlidealResponse = JSON.parse(rlidealResponseStr);
+          const orderData = rlidealResponse[0]?.response?.data?.order;
+          
+          console.log('[ConfirmacaoPagamento] Token validation failed, using RLIDEAL order data:', orderData);
+          
+          if (orderData) {
+            const subtotal = orderData.value?.toFixed(2).replace('.', ',') || "0,00";
+            const desconto = orderData.discount?.toFixed(2).replace('.', ',') || "0,00";
+            const remainingValue = orderData.residual?.toFixed(2).replace('.', ',') || subtotal;
+            
+            setDisplayValues({
+              subtotal,
+              desconto,
+              recebido: "0,00", // No payment was made since token failed
+              showEncargos: true
+            });
+            
+            setPaymentAmount({ 
+              encargos: remainingValue, 
+              recebido: "0,00" 
+            });
+            
+            setDocumentationSlug("RLIAUTHRLIPAYS");
+            
+            console.log('[ConfirmacaoPagamento] Using RLIDEAL values after token failure:', {
+              subtotal, desconto, remainingValue
+            });
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('[ConfirmacaoPagamento] Error reading RLIDEAL data for token failure:', error);
+      }
+    }
+
+    if (!isOfflineCompany && rliauthData?.length > 0 && (comingFromTokenScreen || comingFromOtpScreen) && !tokenValidationFailed) {
       // Use dynamic data from RLIAUTH for non-OFFLINE companies
       const orderData = rliauthData[0]?.response?.data?.order;
       if (orderData) {
@@ -267,7 +311,7 @@ const ConfirmacaoPagamentoScreen = () => {
       });
       console.log('[ConfirmacaoPagamento] Default option selected');
     }
-  }, [selectedPaymentOption, comingFromTokenScreen, comingFromOtpScreen, comingFromScanScreen, comingFromScanScreenIdeal, comingFromAppScreen, tipo_simulacao, sessionLoading, rliauthData, totalAmount]);
+  }, [selectedPaymentOption, comingFromTokenScreen, comingFromOtpScreen, comingFromScanScreen, comingFromScanScreenIdeal, comingFromAppScreen, tipo_simulacao, sessionLoading, rliauthData, totalAmount, tokenValidationFailed]);
 
   // Load technical data from localStorage based on flow
   useEffect(() => {
