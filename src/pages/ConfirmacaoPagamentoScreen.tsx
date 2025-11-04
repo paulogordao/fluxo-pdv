@@ -117,12 +117,13 @@ const ConfirmacaoPagamentoScreen = () => {
     // Check if coming from app screen (RLIWAIT -> RLIPAYS flow)
     if (comingFromAppScreen) {
       try {
-        const orderDataStr = localStorage.getItem('orderData');
-        if (orderDataStr) {
-          const orderData = JSON.parse(orderDataStr);
-          console.log('[ConfirmacaoPagamento] Using RLIWAIT order data:', orderData);
+        const rlidealResponseStr = localStorage.getItem('rlidealResponse');
+        if (rlidealResponseStr) {
+          const rlidealResponse = JSON.parse(rlidealResponseStr);
+          const order = rlidealResponse[0]?.response?.data?.order;
           
-          const order = orderData.order;
+          console.log('[ConfirmacaoPagamento] Using RLIDEAL order data from app flow:', order);
+          
           if (order) {
             const subtotal = order.value?.toFixed(2).replace('.', ',') || "0,00";
             const desconto = order.discount?.toFixed(2).replace('.', ',') || "0,00";
@@ -133,7 +134,7 @@ const ConfirmacaoPagamentoScreen = () => {
               subtotal,
               desconto,
               recebido: paidOut,
-              showEncargos: false
+              showEncargos: true
             });
             
             setPaymentAmount({ 
@@ -143,14 +144,14 @@ const ConfirmacaoPagamentoScreen = () => {
             
             setDocumentationSlug("RLIWAITRLIPAYS");
             
-            console.log('[ConfirmacaoPagamento] Using RLIWAIT values:', {
+            console.log('[ConfirmacaoPagamento] Using RLIDEAL values from app flow:', {
               subtotal, desconto, paidOut, remainingValue
             });
             return;
           }
         }
       } catch (error) {
-        console.error('[ConfirmacaoPagamento] Error reading orderData from localStorage:', error);
+        console.error('[ConfirmacaoPagamento] Error reading rlidealResponse from localStorage:', error);
       }
     }
 
