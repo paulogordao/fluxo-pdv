@@ -40,6 +40,7 @@ export const useEncerrarAtendimento = () => {
       localStorage.removeItem('transactionId');
       localStorage.removeItem('cpf');
       localStorage.removeItem('telefone');
+      localStorage.removeItem('rlifundRequest');
       localStorage.removeItem('rlifundResponse');
       localStorage.removeItem('rlidealResponse');
       localStorage.removeItem('rlipaysResponse');

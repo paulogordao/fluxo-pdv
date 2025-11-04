@@ -45,3 +45,29 @@ export const generateRandomBin = (): string => {
   const length = Math.random() < 0.5 ? 6 : 9;
   return Array.from({ length }, () => Math.floor(Math.random() * 10)).join('');
 };
+
+/**
+ * Clears RLIFUND cache (both request and response)
+ */
+export const clearRlifundCache = (): void => {
+  try {
+    localStorage.removeItem("rlifundRequest");
+    localStorage.removeItem("rlifundResponse");
+    console.log("[cacheUtils] RLIFUND cache cleared successfully");
+  } catch (error) {
+    console.error("[cacheUtils] Error clearing RLIFUND cache:", error);
+  }
+};
+
+/**
+ * Gets stored RLIFUND request
+ */
+export const getRlifundRequest = (): any | null => {
+  try {
+    const data = localStorage.getItem("rlifundRequest");
+    return data ? JSON.parse(data) : null;
+  } catch (error) {
+    console.error("[cacheUtils] Error getting RLIFUND request:", error);
+    return null;
+  }
+};
