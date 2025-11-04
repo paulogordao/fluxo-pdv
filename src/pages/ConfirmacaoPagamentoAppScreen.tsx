@@ -187,7 +187,10 @@ const ConfirmacaoPagamentoAppScreen = () => {
     if (isOnlineFlow && pollingStatus.isPolling) {
       stopPolling();
     }
-    navigate("/confirmacao_pagamento");
+    console.log('[ConfirmacaoPagamentoApp] Cancelling and returning to confirmation screen');
+    navigate("/confirmacao_pagamento", {
+      state: { fromAppScreen: true }
+    });
   };
 
   // Show alert dialog first
