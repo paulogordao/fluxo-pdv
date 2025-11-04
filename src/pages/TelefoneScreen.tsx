@@ -259,7 +259,6 @@ const TelefoneScreen = () => {
         <div className="w-full mb-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold">Informe seu Celular</h2>
-            <EncerrarAtendimentoButton />
           </div>
           
           {/* Alert for production environment */}
@@ -324,6 +323,11 @@ const TelefoneScreen = () => {
           </div>
         </div>
       </Card>
+
+      {/* Encerrar Atendimento - Fixed bottom right */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <EncerrarAtendimentoButton />
+      </div>
 
       </PdvLayout>
       

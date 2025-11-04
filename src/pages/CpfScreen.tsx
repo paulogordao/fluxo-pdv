@@ -17,6 +17,7 @@ import { MessageModal } from "@/components/MessageModal";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
 import { comandoService } from "@/services/comandoService";
 import { empresaService } from "@/services/empresaService";
+import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
 
 const CpfScreen = () => {
   const [cpf, setCpf] = useState("");
@@ -720,6 +721,11 @@ curl --location 'https://uat-loyalty.dotznext.com/integration-router/api/default
               <NumPad />
             </div>
           </Card>
+
+          {/* Encerrar Atendimento - Fixed bottom right */}
+          <div className="fixed bottom-6 right-6 z-50">
+            <EncerrarAtendimentoButton />
+          </div>
 
         </PdvLayout>
       </div>

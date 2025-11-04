@@ -931,7 +931,6 @@ const ScanScreen = () => {
             <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black">C</div>
             <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black">D</div>
           </div>
-          <EncerrarAtendimentoButton />
         </div>
       </div>
 
@@ -1142,6 +1141,11 @@ const ScanScreen = () => {
         message={noPaymentOptionsMessage}
         onConfirm={handleNoPaymentOptionsOk}
       />
+
+      {/* Encerrar Atendimento - Fixed bottom right */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <EncerrarAtendimentoButton />
+      </div>
     </PdvLayout>;
 };
 
