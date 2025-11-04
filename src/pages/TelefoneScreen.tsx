@@ -10,6 +10,7 @@ import { comandoService } from "@/services/comandoService";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
+import { useUserSession } from "@/hooks/useUserSession";
 
 const TelefoneScreen = () => {
   const [telefone, setTelefone] = useState("");
@@ -26,6 +27,7 @@ const TelefoneScreen = () => {
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [tipoSimulacao, setTipoSimulacao] = useState<string>("OFFLINE");
   const navigate = useNavigate();
+  const { ambiente } = useUserSession();
 
   useEffect(() => {
     const fetchApiData = async () => {
@@ -95,7 +97,13 @@ const TelefoneScreen = () => {
     // Verificar se estamos em modo ONLINE e se temos transaction_id
     if (tipoSimulacao !== "OFFLINE" && transactionId) {
       setIsSubmitLoading(true);
-      setLoadingMessage("Processando telefone no ambiente de homologação...");
+      const ambienteTexto = ambiente === "producao" 
+        ? "PRODUÇÃO" 
+        : ambiente === "homologacao" 
+          ? "homologação" 
+          : "homologação"; // fallback
+      
+      setLoadingMessage(`Processando telefone no ambiente de ${ambienteTexto}...`);
       
       const startTime = Date.now();
       
@@ -253,6 +261,34 @@ const TelefoneScreen = () => {
             <h2 className="text-2xl font-bold">Informe seu Celular</h2>
             <EncerrarAtendimentoButton />
           </div>
+          
+          {/* Alert for production environment */}
+          {ambiente === "producao" && (
+            <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 rounded">
+              <div className="flex items-center">
+                <span className="text-red-600 font-semibold text-sm">
+                  ⚠️ ATENÇÃO: AMBIENTE DE PRODUÇÃO
+                </span>
+              </div>
+              <p className="text-red-600 text-xs mt-1">
+                O telefone informado será cadastrado no ambiente produtivo
+              </p>
+            </div>
+          )}
+
+          {/* Alert for homologation environment */}
+          {ambiente === "homologacao" && (
+            <div className="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
+              <div className="flex items-center">
+                <span className="text-yellow-700 font-semibold text-sm">
+                  ⚠️ Atenção: ambiente de homologação
+                </span>
+              </div>
+              <p className="text-yellow-700 text-xs mt-1">
+                O telefone informado será cadastrado no ambiente de testes
+              </p>
+            </div>
+          )}
           
           {lastError && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
