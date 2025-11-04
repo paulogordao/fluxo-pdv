@@ -205,5 +205,34 @@ export const credentialsService = {
     }
 
     return responseJson;
+  },
+
+  async getCredentialByUser(): Promise<{ 
+    ambiente: string; 
+    description?: string; 
+    cnpj_id?: string; 
+    enabled?: boolean 
+  }> {
+    const userId = getUserId();
+    if (!userId) {
+      throw new Error('User ID not found');
+    }
+
+    const url = buildApiUrl('credencialPorUsuario');
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-api-key': '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975',
+        'id_usuario': userId,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to fetch credential by user: ${errorText}`);
+    }
+
+    return await response.json();
   }
 };

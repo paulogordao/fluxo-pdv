@@ -134,17 +134,27 @@ export const useUserSession = () => {
         const companyName = empresaData.nome || "Empresa";
         const tipoSimulacao = empresaData.tipo_simulacao || null;
 
-        // 5. Fetch credential environment if available
+        // 5. Fetch credential environment directly by user
         let ambiente: string | null = null;
-        if (empresaData.id_credencial) {
-          try {
-            const credentialData = await credentialsService.getCredentialById(empresaData.id_credencial);
-            console.log("[useUserSession] Credential data full response:", credentialData);
-            ambiente = credentialData.ambiente || null;
-            console.log("[useUserSession] Credential environment:", ambiente);
-          } catch (error) {
-            console.warn("[useUserSession] Failed to fetch credential environment:", error);
+        try {
+          const credentialData = await credentialsService.getCredentialByUser();
+          console.log("[useUserSession] Credential data from user endpoint:", credentialData);
+          
+          // Map API values to internal values
+          // API returns: "prod" or "homolog"
+          // Internal: "producao" or "homologacao"
+          if (credentialData.ambiente === "prod") {
+            ambiente = "producao";
+          } else if (credentialData.ambiente === "homolog") {
+            ambiente = "homologacao";
+          } else {
+            ambiente = null;
           }
+          
+          console.log("[useUserSession] Mapped environment:", ambiente);
+        } catch (error) {
+          console.warn("[useUserSession] Failed to fetch credential by user:", error);
+          ambiente = null;
         }
 
         const sessionData = {
