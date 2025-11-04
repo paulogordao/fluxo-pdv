@@ -9,10 +9,13 @@ import { useUserSession } from "@/hooks/useUserSession";
 import { comandoService } from "@/services/comandoService";
 import { toast } from "sonner";
 import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
+import ValidationModal from "@/components/ValidationModal";
 const ConfirmacaoPagamentoTokenScreen = () => {
   const [tokenDigits, setTokenDigits] = useState<string[]>([]);
   const [remainingTime, setRemainingTime] = useState(16); // Initial time in seconds
   const [isLoading, setIsLoading] = useState(false);
+  const [showValidationModal, setShowValidationModal] = useState(false);
+  const [validationMessage, setValidationMessage] = useState("");
   const navigate = useNavigate();
   const {
     tipo_simulacao,
@@ -139,7 +142,14 @@ const ConfirmacaoPagamentoTokenScreen = () => {
           });
         } catch (error) {
           console.error('[TokenScreen] Error calling RLIAUTH:', error);
-          toast.error("Erro ao validar token. Tente novamente.");
+          
+          // Clear the entered token digits for retry
+          setTokenDigits([]);
+          
+          // Show validation modal with error message
+          const errorMessage = error instanceof Error ? error.message : "Token inválido. Tente novamente.";
+          setValidationMessage(errorMessage);
+          setShowValidationModal(true);
         } finally {
           setIsLoading(false);
         }
@@ -353,6 +363,23 @@ const ConfirmacaoPagamentoTokenScreen = () => {
       
       {/* Technical Footer Component */}
       <TechnicalFooter requestData={technicalRequestData} responseData={technicalResponseData} previousRequestData={technicalPreviousRequestData} isLoading={isLoading} slug="RLIDEALRLIAUTH" loadOnMount={false} sourceScreen="confirmacao_pagamento_token" />
+      
+      {/* Validation Modal */}
+      <ValidationModal 
+        isOpen={showValidationModal}
+        onPrimaryAction={() => {
+          setShowValidationModal(false);
+          // Token digits already cleared, user can try again
+        }}
+        onCancel={() => {
+          setShowValidationModal(false);
+          navigate("/meios_de_pagamento");
+        }}
+        message={validationMessage}
+        title="Validação do Token"
+        primaryButtonText="Tentar Novamente"
+        cancelButtonText="Voltar"
+      />
     </div>;
 };
 export default ConfirmacaoPagamentoTokenScreen;

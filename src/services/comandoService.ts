@@ -865,6 +865,34 @@ export const comandoService = {
         throw new Error(`Resposta indica falha: success=${data[0].response.success}`);
       }
 
+      // Validate RLIAUTH specific response - check for token validation errors
+      const responseData = data[0].response.data;
+      if (responseData) {
+        const messageId = responseData.message?.id;
+        const messageContent = responseData.message?.content || '';
+        const nextStep = responseData.next_step?.[0]?.description;
+
+        console.log(`[comandoService] RLIAUTH Message ID: ${messageId}`);
+        console.log(`[comandoService] RLIAUTH Message Content: ${messageContent}`);
+        console.log(`[comandoService] RLIAUTH Next Step: ${nextStep}`);
+
+        // Check if token was rejected based on multiple indicators
+        const isTokenInvalid = 
+          messageId >= 1000 || // Error message IDs are typically >= 1000
+          nextStep === "RLIAUTH" || // If next step is RLIAUTH again, token was rejected
+          messageContent.toLowerCase().includes('inválido') ||
+          messageContent.toLowerCase().includes('tentar novamente');
+
+        if (isTokenInvalid) {
+          console.error(`[comandoService] Token inválido detectado:`, {
+            messageId,
+            messageContent,
+            nextStep
+          });
+          throw new Error(messageContent || 'Token inválido. Tente novamente.');
+        }
+      }
+
       return data;
     } catch (error) {
       clearTimeout(timeoutId);
