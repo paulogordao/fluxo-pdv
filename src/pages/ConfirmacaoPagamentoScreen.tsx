@@ -12,7 +12,7 @@ import { useUserSession } from "@/hooks/useUserSession";
 import { comandoService, RlifundApiError } from "@/services/comandoService";
 import ErrorModal from "@/components/ErrorModal";
 import { usePdv } from "@/context/PdvContext";
-import { generateRandomPaymentType, generateRandomBin } from "@/utils/cacheUtils";
+import { generateRandomPaymentType, generateRandomBin, getCartCache } from "@/utils/cacheUtils";
 import {
   CreditCard,
   CreditCard as DebitCard,
@@ -20,7 +20,8 @@ import {
   Gift as Vale,
   Award as Resgate,
   QrCode as Pix,
-  Utensils as ValeRefeicao
+  Utensils as ValeRefeicao,
+  ShoppingCart
 } from "lucide-react";
 import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
 
@@ -29,7 +30,7 @@ const ConfirmacaoPagamentoScreen = () => {
   const location = useLocation();
   const { selectedPaymentOption } = usePaymentOption();
   const { tipo_simulacao, isLoading: sessionLoading, ambiente } = useUserSession();
-  const { totalAmount } = usePdv();
+  const { totalAmount, setInitialCart } = usePdv();
   
   // Check if coming from token screen or otp screen
   const comingFromTokenScreen = location.state?.fromTokenScreen || false;
@@ -631,6 +632,33 @@ const ConfirmacaoPagamentoScreen = () => {
     handleFinalizarPagamento();
   };
 
+  const handleContinuarComprando = () => {
+    try {
+      // Recuperar cache do carrinho
+      const cartCache = getCartCache();
+      
+      if (!cartCache) {
+        console.warn('[ConfirmacaoPagamento] Nenhum cache de carrinho encontrado');
+        toast.warning("Não há produtos salvos. Iniciando nova compra.");
+        navigate('/scan');
+        return;
+      }
+      
+      console.log('[ConfirmacaoPagamento] Restaurando carrinho do cache:', cartCache);
+      
+      // Restaurar produtos no PdvContext
+      setInitialCart(cartCache.cart);
+      
+      toast.success(`Carrinho restaurado - ${cartCache.cart.length} produto(s) carregado(s)`);
+      
+      // Navegar para página de scan
+      navigate('/scan');
+    } catch (error) {
+      console.error('[ConfirmacaoPagamento] Erro ao restaurar carrinho:', error);
+      toast.error("Não foi possível restaurar o carrinho");
+    }
+  };
+
   // Determine the previous service name based on the flow
   const getPreviousServiceName = () => {
     if (comingFromScanScreen) {
@@ -768,17 +796,31 @@ const ConfirmacaoPagamentoScreen = () => {
             </div>
             
             {/* Footer */}
-            <div className="bg-red-600 text-white p-3 text-center">
+            <div className="bg-red-600 text-white p-3">
               {tipo_simulacao !== "OFFLINE" && !sessionLoading ? (
-                <Button
-                  onClick={handleFinalizarPagamento}
-                  disabled={isLoadingPayment || showSuccessMessage}
-                  className="bg-white text-red-600 hover:bg-gray-100 font-medium px-6 py-2 rounded"
-                >
-                  {isLoadingPayment ? "Finalizando..." : "Finalizar pagamento"}
-                </Button>
+                <div className="flex items-center justify-between gap-3">
+                  {/* Botão "Continuar comprando" à esquerda */}
+                  <Button
+                    onClick={handleContinuarComprando}
+                    disabled={isLoadingPayment || showSuccessMessage}
+                    variant="outline"
+                    className="bg-white text-blue-600 hover:bg-gray-100 border-blue-600 font-medium px-4 py-2 rounded flex items-center gap-2"
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    Continuar comprando
+                  </Button>
+                  
+                  {/* Botão "Finalizar pagamento" à direita */}
+                  <Button
+                    onClick={handleFinalizarPagamento}
+                    disabled={isLoadingPayment || showSuccessMessage}
+                    className="bg-white text-red-600 hover:bg-gray-100 font-medium px-6 py-2 rounded flex-1"
+                  >
+                    {isLoadingPayment ? "Finalizando..." : "Finalizar pagamento"}
+                  </Button>
+                </div>
               ) : (
-                <p>Sem troco {!displayValues.showEncargos ? `- R$ ${paymentAmount.encargos}` : ''}</p>
+                <p className="text-center">Sem troco {!displayValues.showEncargos ? `- R$ ${paymentAmount.encargos}` : ''}</p>
               )}
             </div>
           </div>
