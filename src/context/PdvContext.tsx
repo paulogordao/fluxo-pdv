@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 
 // Tipos para os produtos
 export interface Product {
@@ -151,9 +151,11 @@ export const PdvProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Adicionar função para definir o carrinho inicial com produtos mockados
-  const setInitialCart = (products: Product[]) => {
+  // Memoizado para prevenir loops infinitos
+  const setInitialCart = useCallback((products: Product[]) => {
+    console.log('[PdvContext] setInitialCart called with', products.length, 'products');
     setCart(products);
-  };
+  }, []); // Dependências vazias = referência estável
 
   const findProductByBarcode = (barcode: string): Product | undefined => {
     return MOCK_PRODUCTS.find(p => p.barcode === barcode);

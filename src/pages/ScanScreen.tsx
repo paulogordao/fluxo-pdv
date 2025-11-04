@@ -101,7 +101,8 @@ const ScanScreen = () => {
       // Clear the state flag to prevent re-triggering
       window.history.replaceState({}, document.title);
     }
-  }, [location.state, setInitialCart]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]); // Removido setInitialCart das dependências (agora é estável)
   
   // Fetch initial slug with stored CPF
   useEffect(() => {
