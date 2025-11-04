@@ -43,6 +43,8 @@ export const MOCK_PRODUCTS: Product[] = [
 interface PdvContextType {
   cart: Product[];
   addToCart: (product: Product) => void;
+  increaseQuantity: (productId: string) => void;
+  decreaseQuantity: (productId: string) => void;
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
   findProductByBarcode: (barcode: string) => Product | undefined;
@@ -84,6 +86,56 @@ export const PdvProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const increaseQuantity = (productId: string) => {
+    setCart(currentCart => {
+      const productIndex = currentCart.findIndex(p => p.id === productId);
+      
+      if (productIndex === -1) return currentCart;
+      
+      const updatedCart = [...currentCart];
+      const product = updatedCart[productIndex];
+      updatedCart[productIndex] = {
+        ...product,
+        quantity: (product.quantity || 1) + 1,
+      };
+      return updatedCart;
+    });
+    
+    console.log('API Call: PATCH /api/cart/items/' + productId, {
+      action: 'increase',
+      quantity: 1
+    });
+  };
+
+  const decreaseQuantity = (productId: string) => {
+    setCart(currentCart => {
+      const productIndex = currentCart.findIndex(p => p.id === productId);
+      
+      if (productIndex === -1) return currentCart;
+      
+      const product = currentCart[productIndex];
+      const currentQuantity = product.quantity || 1;
+      
+      if (currentQuantity <= 1) {
+        // Se quantidade é 1, remove o produto do carrinho
+        console.log('API Call: DELETE /api/cart/items/' + productId);
+        return currentCart.filter(item => item.id !== productId);
+      } else {
+        // Se quantidade é maior que 1, diminui em 1
+        const updatedCart = [...currentCart];
+        updatedCart[productIndex] = {
+          ...product,
+          quantity: currentQuantity - 1,
+        };
+        console.log('API Call: PATCH /api/cart/items/' + productId, {
+          action: 'decrease',
+          quantity: -1
+        });
+        return updatedCart;
+      }
+    });
+  };
+
   const removeFromCart = (productId: string) => {
     setCart(currentCart => currentCart.filter(item => item.id !== productId));
     
@@ -118,6 +170,8 @@ export const PdvProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       value={{
         cart,
         addToCart,
+        increaseQuantity,
+        decreaseQuantity,
         removeFromCart,
         clearCart,
         findProductByBarcode,

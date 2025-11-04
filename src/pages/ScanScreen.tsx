@@ -4,7 +4,7 @@ import PdvLayout from "@/components/PdvLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePdv, Product } from "@/context/PdvContext";
-import { ShoppingCart, Loader2, Plus } from "lucide-react";
+import { ShoppingCart, Loader2, Plus, Minus, Trash2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +29,8 @@ const ScanScreen = () => {
   
   const {
     addToCart,
+    increaseQuantity,
+    decreaseQuantity,
     findProductByBarcode,
     cart,
     totalAmount,
@@ -1019,7 +1021,35 @@ const ScanScreen = () => {
                       <TableRow key={item.id} className="hover:bg-gray-50">
                         <TableCell className="font-medium py-3">{item.name}</TableCell>
                         <TableCell className="text-right py-3">{formatCurrency(item.price)}</TableCell>
-                        <TableCell className="text-center py-3">{item.quantity}</TableCell>
+                        <TableCell className="py-3">
+                          <div className="flex items-center justify-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => decreaseQuantity(item.id)}
+                              className="h-7 w-7 p-0"
+                              title={item.quantity === 1 ? "Remover produto" : "Diminuir quantidade"}
+                            >
+                              {item.quantity === 1 ? (
+                                <Trash2 className="h-3 w-3 text-destructive" />
+                              ) : (
+                                <Minus className="h-3 w-3" />
+                              )}
+                            </Button>
+                            <span className="font-semibold min-w-[2rem] text-center">
+                              {item.quantity}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => increaseQuantity(item.id)}
+                              className="h-7 w-7 p-0"
+                              title="Aumentar quantidade"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right font-semibold py-3">{formatCurrency(item.price * (item.quantity || 1))}</TableCell>
                       </TableRow>
                     ))
