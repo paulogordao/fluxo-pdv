@@ -644,15 +644,12 @@ const ConfirmacaoPagamentoScreen = () => {
         return;
       }
       
-      console.log('[ConfirmacaoPagamento] Restaurando carrinho do cache:', cartCache);
-      
-      // Restaurar produtos no PdvContext
-      setInitialCart(cartCache.cart);
+      console.log('[ConfirmacaoPagamento] Cache encontrado:', cartCache);
       
       toast.success(`Carrinho restaurado - ${cartCache.cart.length} produto(s) carregado(s)`);
       
-      // Navegar para página de scan
-      navigate('/scan');
+      // Navegar para página de scan com flag para restaurar do cache
+      navigate('/scan', { state: { restoreFromCache: true } });
     } catch (error) {
       console.error('[ConfirmacaoPagamento] Erro ao restaurar carrinho:', error);
       toast.error("Não foi possível restaurar o carrinho");

@@ -18,6 +18,7 @@ import { buscarProdutosFakes, type FakeProduct } from '@/services/produtoService
 import { useFakeProducts } from '@/hooks/useFakeProducts';
 import { useToast } from "@/hooks/use-toast";
 import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
+import { getCartCache } from "@/utils/cacheUtils";
 
 const ScanScreen = () => {
   const [barcode, setBarcode] = useState("");
@@ -80,6 +81,27 @@ const ScanScreen = () => {
   const from = new URLSearchParams(location.search).get('from');
   // Set the appropriate slug based on the source page
   const detailSlug = from === 'telefone' ? 'RLICELLRLIFUND' : 'RLIINFORLIFUND';
+  
+  // Restore cart from cache when navigating back from payment confirmation
+  useEffect(() => {
+    const restoreFromCache = location.state?.restoreFromCache;
+    
+    if (restoreFromCache) {
+      console.log('[ScanScreen] Restore flag detected, loading cart from cache');
+      
+      const cartCache = getCartCache();
+      if (cartCache && cartCache.cart && cartCache.cart.length > 0) {
+        console.log('[ScanScreen] Restoring cart from cache:', cartCache);
+        setInitialCart(cartCache.cart);
+        console.log('[ScanScreen] Cart restored successfully');
+      } else {
+        console.warn('[ScanScreen] No cart cache found or cache is empty');
+      }
+      
+      // Clear the state flag to prevent re-triggering
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, setInitialCart]);
   
   // Fetch initial slug with stored CPF
   useEffect(() => {
