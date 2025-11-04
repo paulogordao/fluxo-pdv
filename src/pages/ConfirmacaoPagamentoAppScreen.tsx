@@ -639,12 +639,19 @@ const ConfirmacaoPagamentoAppScreen = () => {
           </DialogHeader>
           <div className="space-y-3">
             {/* Dynamic buttons based on available payment options */}
-            {availablePaymentOptions.map((option, index) => <Button key={option.option} onClick={() => handlePaymentOptionSelect(option.option)} className="w-full bg-dotz-laranja hover:bg-dotz-laranja/90 text-white py-3 text-base text-left">
-                {index + 1}. {option.message}
+            {availablePaymentOptions.map((option, index) => <Button key={option.option} onClick={() => handlePaymentOptionSelect(option.option)} disabled={isTokenLoading} className="w-full bg-dotz-laranja hover:bg-dotz-laranja/90 text-white py-3 text-base text-left disabled:opacity-50 disabled:cursor-not-allowed">
+                {isTokenLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />
+                    Processando...
+                  </>
+                ) : (
+                  <>{index + 1}. {option.message}</>
+                )}
               </Button>)}
             
             {/* Always show "Nenhum" option */}
-            <Button onClick={handleNoneOption} variant="outline" className="w-full py-3 text-base border-gray-300 hover:bg-gray-50">
+            <Button onClick={handleNoneOption} variant="outline" disabled={isTokenLoading} className="w-full py-3 text-base border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
               {availablePaymentOptions.length + 1}. Nenhum
             </Button>
           </div>
