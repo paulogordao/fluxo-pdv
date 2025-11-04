@@ -60,7 +60,17 @@ export const useUserSession = () => {
             const parsed = JSON.parse(cachedData);
             const isExpired = Date.now() - parsed.timestamp > parsed.expires_in;
             
-            if (!isExpired && parsed.userId === userId) {
+            // Validate if cache has all required fields (including new fields like 'ambiente')
+            const hasRequiredFields = 
+              typeof parsed.userName === 'string' &&
+              typeof parsed.companyName === 'string' &&
+              typeof parsed.userId === 'string' &&
+              'ambiente' in parsed; // Verifica se o campo existe (mesmo que seja null)
+            
+            if (!hasRequiredFields) {
+              console.log("[useUserSession] Cache is missing required fields (possibly 'ambiente'), invalidating cache");
+              localStorage.removeItem("user_session_cache");
+            } else if (!isExpired && parsed.userId === userId) {
               console.log("[useUserSession] Using cached data:", parsed);
               setSessionData({
                 userName: parsed.userName,
@@ -129,6 +139,7 @@ export const useUserSession = () => {
         if (empresaData.id_credencial) {
           try {
             const credentialData = await credentialsService.getCredentialById(empresaData.id_credencial);
+            console.log("[useUserSession] Credential data full response:", credentialData);
             ambiente = credentialData.ambiente || null;
             console.log("[useUserSession] Credential environment:", ambiente);
           } catch (error) {
