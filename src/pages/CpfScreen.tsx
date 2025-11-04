@@ -34,7 +34,7 @@ const CpfScreen = () => {
   const [technicalRequestData, setTechnicalRequestData] = useState<string | undefined>();
   const [technicalResponseData, setTechnicalResponseData] = useState<string | undefined>();
   const navigate = useNavigate();
-  const { userName, companyName, tipo_simulacao, userId, isLoading: sessionLoading } = useUserSession();
+  const { userName, companyName, tipo_simulacao, ambiente, userId, isLoading: sessionLoading } = useUserSession();
 
   // Auto-generate RLIINFO request when page loads in ONLINE mode
   useEffect(() => {
@@ -653,12 +653,22 @@ curl --location 'https://uat-loyalty.dotznext.com/integration-router/api/default
             <div className="w-full mb-8">
               <h2 className="text-2xl font-bold text-center mb-6">Informe seu CPF</h2>
               
-              {/* Alert for non-OFFLINE simulation types */}
-              {tipo_simulacao && tipo_simulacao !== "OFFLINE" && (
-                <Alert className="mb-6">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    Atenção este parceiro está parametrizado para que as requisições de simulação seja feito em ambiente de homologação da Dotz
+              {/* Alert for production environment - RED */}
+              {ambiente === "producao" && (
+                <Alert className="mb-6 border-red-500 bg-red-50">
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                  <AlertDescription className="text-red-800 font-semibold">
+                    ⚠️ ATENÇÃO: Este parceiro está em AMBIENTE DE PRODUÇÃO. Todas as transações são REAIS e impactam o sistema produtivo da Dotz.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Alert for homologation environment - YELLOW */}
+              {ambiente === "homologacao" && (
+                <Alert className="mb-6 border-yellow-500 bg-yellow-50">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                  <AlertDescription className="text-yellow-800">
+                    Atenção: Este parceiro está parametrizado para que as requisições de simulação sejam feitas em ambiente de homologação da Dotz
                   </AlertDescription>
                 </Alert>
               )}
