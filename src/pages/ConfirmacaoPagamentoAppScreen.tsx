@@ -187,7 +187,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
     if (isOnlineFlow && pollingStatus.isPolling) {
       stopPolling();
     }
-    navigate("/meios_de_pagamento");
+    navigate("/confirmacao_pagamento");
   };
 
   // Show alert dialog first
