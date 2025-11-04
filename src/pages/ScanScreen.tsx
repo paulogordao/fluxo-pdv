@@ -360,6 +360,15 @@ const ScanScreen = () => {
           console.log("[ScanScreen] Mapped RLIFUND items:", rlifundItems);
           console.log("[ScanScreen] Total amount:", totalAmount.toString());
           
+          // Store original cart data before sending to RLIFUND
+          const cartCache = {
+            cart: cart,
+            totalAmount: parseFloat(totalAmount.toFixed(2)),
+            timestamp: Date.now()
+          };
+          localStorage.setItem('cartCache', JSON.stringify(cartCache));
+          console.log("[ScanScreen] Cart cache stored:", cartCache);
+          
           // Call RLIFUND service
           const response = await comandoService.enviarComandoRlifund(
             transactionId,

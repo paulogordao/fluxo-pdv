@@ -436,10 +436,6 @@ export const comandoService = {
     console.log(`[comandoService] Request body:`, requestBody);
     console.log(`[comandoService] User ID sendo usado: ${userId}`);
     
-    // Store RLIFUND request in localStorage for potential reuse
-    localStorage.setItem('rlifundRequest', JSON.stringify(requestBody));
-    console.log(`[comandoService] RLIFUND request stored in localStorage:`, requestBody);
-    
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
     

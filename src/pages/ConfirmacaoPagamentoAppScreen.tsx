@@ -202,65 +202,65 @@ const ConfirmacaoPagamentoAppScreen = () => {
     setIsTokenLoading(true);
     setAlertDialogOpen(false);
     try {
-      // Recuperar dados da compra original do localStorage
-      const rlifundResponseStr = localStorage.getItem('rlifundResponse');
-      if (!rlifundResponseStr) {
-        console.error('[Token] Resposta RLIFUND original não encontrada no localStorage');
+      // Recuperar dados originais do carrinho
+      const cartCacheStr = localStorage.getItem('cartCache');
+      if (!cartCacheStr) {
+        console.error('[Token] Dados do carrinho não encontrados');
         toast.error("Dados da compra não encontrados. Retorne para o início.");
         navigate('/meios_de_pagamento');
         return;
       }
-      let originalRlifundData;
-      try {
-        originalRlifundData = JSON.parse(rlifundResponseStr);
-        console.log('[Token] Dados RLIFUND originais recuperados:', originalRlifundData);
-      } catch (parseError) {
-        console.error('[Token] Erro ao fazer parse dos dados RLIFUND:', parseError);
-        toast.error("Erro nos dados da compra. Retorne para o início.");
+
+      const cartCache = JSON.parse(cartCacheStr);
+      const { cart, totalAmount } = cartCache;
+      console.log('[Token] Dados do carrinho recuperados:', cartCache);
+
+      // Validar dados do carrinho
+      if (!cart || !Array.isArray(cart) || cart.length === 0) {
+        console.error('[Token] Carrinho vazio ou inválido');
+        toast.error("Carrinho vazio. Retorne para o início.");
         navigate('/meios_de_pagamento');
         return;
       }
 
-      // Extrair informações necessárias da estrutura RLIFUND correta
-      const originalRequest = originalRlifundData[0]?.request?.data?.input?.order;
-      const originalResponse = originalRlifundData[0]?.response?.data;
-      if (!originalRequest || !originalResponse) {
-        console.error('[Token] Estrutura RLIFUND inválida - request.data.input.order ou response.data não encontrados');
-        console.log('[Token] originalRequest:', originalRequest);
-        console.log('[Token] originalResponse:', originalResponse);
-        toast.error("Estrutura de dados inválida. Retorne para o início.");
+      if (!totalAmount || totalAmount <= 0) {
+        console.error('[Token] Valor total inválido');
+        toast.error("Valor da compra inválido. Retorne para o início.");
         navigate('/meios_de_pagamento');
         return;
       }
 
-      // Extrair value_total e items da estrutura correta
-      const valueTotal = originalRequest.value;
-      const items = originalRequest.items;
-      if (!valueTotal || !items || !Array.isArray(items)) {
-        console.error('[Token] Dados da compra inválidos - order.value ou order.items não encontrados');
-        console.log('[Token] valueTotal:', valueTotal);
-        console.log('[Token] items:', items);
-        toast.error("Dados da compra inválidos. Retorne para o início.");
-        navigate('/meios_de_pagamento');
-        return;
-      }
+      // Converter cart para formato RLIFUND items
+      const items = cart.map(product => ({
+        ean: product.barcode,
+        sku: product.id,
+        unit_price: product.price,
+        discount: 0,
+        quantity: product.quantity || 1,
+        name: product.name,
+        unit_type: "UN",
+        brand: "Unknown",
+        manufacturer: "Unknown",
+        categories: ["groceries"],
+        gross_profit_amount: Math.max(product.price * 0.1, 0.01),
+        is_private_label: false,
+        is_on_sale: false
+      }));
+
+      console.log('[Token] Items convertidos para RLIFUND:', items);
 
       // Usar o transactionId existente para manter a sessão no backend
       console.log('[Token] Reutilizando transactionId existente para token:', transactionId);
-
-      // Preparar dados para nova chamada RLIFUND com OTP (mesmo transactionId)
-      const rlifundPayload = {
-        transactionId: transactionId,
-        paymentOptionType: "otp",
-        valueTotal: valueTotal,
-        items: items
-      };
-      console.log('[Token] Preparando chamada RLIFUND com OTP:', rlifundPayload);
-      console.log('[Token] Value total original:', valueTotal);
-      console.log('[Token] Items originais (quantidade):', items?.length);
+      console.log('[Token] Value total do carrinho:', totalAmount);
+      console.log('[Token] Quantidade de items:', items.length);
 
       // Chamar RLIFUND com payment_option_type: "otp" usando o mesmo transactionId
-      const rlifundResponse = await comandoService.enviarComandoRlifund(transactionId, "otp", valueTotal.toString(), items);
+      const rlifundResponse = await comandoService.enviarComandoRlifund(
+        transactionId, 
+        "otp", 
+        totalAmount.toString(), 
+        items
+      );
       console.log('[Token] Resposta RLIFUND com OTP recebida:', rlifundResponse);
 
       // Verificar se a resposta é válida

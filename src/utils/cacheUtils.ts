@@ -71,3 +71,45 @@ export const getRlifundRequest = (): any | null => {
     return null;
   }
 };
+
+/**
+ * Stores cart data cache
+ */
+export const setCartCache = (cart: any[], totalAmount: number): void => {
+  try {
+    const cartCache = {
+      cart,
+      totalAmount,
+      timestamp: Date.now()
+    };
+    localStorage.setItem("cartCache", JSON.stringify(cartCache));
+    console.log("[cacheUtils] Cart cache stored:", cartCache);
+  } catch (error) {
+    console.error("[cacheUtils] Error storing cart cache:", error);
+  }
+};
+
+/**
+ * Gets stored cart cache
+ */
+export const getCartCache = (): { cart: any[], totalAmount: number, timestamp: number } | null => {
+  try {
+    const data = localStorage.getItem("cartCache");
+    return data ? JSON.parse(data) : null;
+  } catch (error) {
+    console.error("[cacheUtils] Error getting cart cache:", error);
+    return null;
+  }
+};
+
+/**
+ * Clears cart cache
+ */
+export const clearCartCache = (): void => {
+  try {
+    localStorage.removeItem("cartCache");
+    console.log("[cacheUtils] Cart cache cleared");
+  } catch (error) {
+    console.error("[cacheUtils] Error clearing cart cache:", error);
+  }
+};

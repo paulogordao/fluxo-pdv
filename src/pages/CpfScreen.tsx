@@ -251,9 +251,10 @@ const CpfScreen = () => {
     
     try {
       // Clear cache from previous transaction
+      localStorage.removeItem('cartCache');
       localStorage.removeItem('rlifundRequest');
       localStorage.removeItem('rlifundResponse');
-      console.log('[CpfScreen] Cache RLIFUND limpo para nova transação');
+      console.log('[CpfScreen] Cache limpo para nova transação');
       
       // Store the CPF in localStorage for future use
       localStorage.setItem('cpfDigitado', cpf);
