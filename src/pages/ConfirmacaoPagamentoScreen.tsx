@@ -671,14 +671,8 @@ const ConfirmacaoPagamentoScreen = () => {
                       <p className="mb-2">
                         Esta transação será processada no <strong>ambiente produtivo</strong> e <strong>movimentará valores reais</strong>.
                       </p>
-                      <p className="flex items-center gap-2">
-                        <span>Caso necessário, a transação pode ser estornada em:</span>
-                        <button
-                          onClick={() => navigate('/relatorio_estornos')}
-                          className="inline-flex items-center px-2 py-1 text-xs font-medium text-red-800 bg-red-100 rounded hover:bg-red-200 transition-colors"
-                        >
-                          Relatório de Estornos →
-                        </button>
+                      <p>
+                        Caso necessário, a transação poderá ser estornada após a finalização através do <strong>Relatório de Estornos</strong>.
                       </p>
                     </div>
                   </div>
