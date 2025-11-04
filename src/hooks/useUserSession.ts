@@ -2,12 +2,14 @@
 import { useState, useEffect } from 'react';
 import { userService } from '@/services/userService';
 import { empresaService } from '@/services/empresaService';
+import { credentialsService } from '@/services/credentialsService';
 
 interface UserSessionData {
   userName: string;
   companyName: string;
   userId: string | null;
   tipo_simulacao: string | null;
+  ambiente: string | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -18,6 +20,7 @@ export const useUserSession = () => {
     companyName: "Empresa",
     userId: null,
     tipo_simulacao: null,
+    ambiente: null,
     isLoading: true,
     error: null
   });
@@ -64,6 +67,7 @@ export const useUserSession = () => {
                 companyName: parsed.companyName,
                 userId: parsed.userId,
                 tipo_simulacao: parsed.tipo_simulacao,
+                ambiente: parsed.ambiente || null,
                 isLoading: false,
                 error: null
               });
@@ -94,6 +98,7 @@ export const useUserSession = () => {
             companyName: userData.empresa || "Empresa",
             userId,
             tipo_simulacao: null,
+            ambiente: null,
             isLoading: false,
             error: null
           };
@@ -119,16 +124,29 @@ export const useUserSession = () => {
         const companyName = empresaData.nome || "Empresa";
         const tipoSimulacao = empresaData.tipo_simulacao || null;
 
+        // 5. Fetch credential environment if available
+        let ambiente: string | null = null;
+        if (empresaData.id_credencial) {
+          try {
+            const credentialData = await credentialsService.getCredentialById(empresaData.id_credencial);
+            ambiente = credentialData.ambiente || null;
+            console.log("[useUserSession] Credential environment:", ambiente);
+          } catch (error) {
+            console.warn("[useUserSession] Failed to fetch credential environment:", error);
+          }
+        }
+
         const sessionData = {
           userName,
           companyName,
           userId,
           tipo_simulacao: tipoSimulacao,
+          ambiente,
           isLoading: false,
           error: null
         };
 
-        // 5. Cache the fresh data
+        // 6. Cache the fresh data
         const cacheData = {
           ...sessionData,
           timestamp: Date.now(),
@@ -154,6 +172,7 @@ export const useUserSession = () => {
             companyName: fallbackCompanyName || "Empresa",
             userId,
             tipo_simulacao: null,
+            ambiente: null,
             isLoading: false,
             error: null
           });
@@ -162,6 +181,7 @@ export const useUserSession = () => {
             ...prev,
             userId,
             tipo_simulacao: null,
+            ambiente: null,
             isLoading: false,
             error: error instanceof Error ? error.message : "Erro ao carregar dados"
           }));
