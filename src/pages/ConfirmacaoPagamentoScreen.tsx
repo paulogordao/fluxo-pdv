@@ -28,7 +28,7 @@ const ConfirmacaoPagamentoScreen = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedPaymentOption } = usePaymentOption();
-  const { tipo_simulacao, isLoading: sessionLoading } = useUserSession();
+  const { tipo_simulacao, isLoading: sessionLoading, ambiente } = useUserSession();
   const { totalAmount } = usePdv();
   
   // Check if coming from token screen or otp screen
@@ -523,6 +523,20 @@ const ConfirmacaoPagamentoScreen = () => {
       setShowSuccessMessage(true);
       setCountdown(5);
       
+      // Show production environment toast if applicable
+      if (ambiente === "producao") {
+        toast.success(
+          "Transação realizada em PRODUÇÃO! Caso necessário, acesse o Relatório de Estornos.",
+          {
+            duration: 8000,
+            action: {
+              label: "Ver Estornos",
+              onClick: () => navigate('/relatorio_estornos')
+            }
+          }
+        );
+      }
+      
       // You can navigate to a success page or handle next steps based on response
       // const nextStep = response[0]?.response?.data?.next_step;
       // if (nextStep?.length > 0) {
@@ -592,15 +606,38 @@ const ConfirmacaoPagamentoScreen = () => {
       {showSuccessMessage && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-8 text-center max-w-md mx-4">
-            <div className="text-green-500 text-6xl mb-4">✓</div>
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+              <svg className="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
               Pagamento realizado com sucesso!
             </h2>
-            <p className="text-gray-600 mb-6">
+            
+            {/* Production environment info */}
+            {ambiente === "producao" && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-800 font-medium mb-2">
+                  🔴 Transação realizada em ambiente de <strong>PRODUÇÃO</strong>
+                </p>
+                <p className="text-xs text-red-700">
+                  Caso necessário estornar, acesse:{" "}
+                  <button
+                    onClick={() => navigate('/relatorio_estornos')}
+                    className="underline font-medium hover:text-red-900"
+                  >
+                    Relatório de Estornos
+                  </button>
+                </p>
+              </div>
+            )}
+            
+            <p className="text-gray-600 mb-4">
               A transação foi processada.
             </p>
             <div className="text-lg font-semibold text-primary">
-              Redirecionando em {countdown} segundos...
+              Redirecionando em <span className="text-2xl">{countdown}</span> segundos...
             </div>
           </div>
         </div>
@@ -616,6 +653,38 @@ const ConfirmacaoPagamentoScreen = () => {
               <h2 className="text-xl font-medium">Confirmação de Pagamento</h2>
               <EncerrarAtendimentoButton />
             </div>
+            
+            {/* Production environment warning - shown only in production */}
+            {ambiente === "producao" && !showSuccessMessage && (
+              <div className="m-4 p-4 bg-red-50 border-l-4 border-red-600 rounded-lg">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <h3 className="text-sm font-bold text-red-800">
+                      ⚠️ ATENÇÃO: TRANSAÇÃO EM AMBIENTE DE PRODUÇÃO
+                    </h3>
+                    <div className="mt-2 text-sm text-red-700">
+                      <p className="mb-2">
+                        Esta transação será processada no <strong>ambiente produtivo</strong> e <strong>movimentará valores reais</strong>.
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <span>Caso necessário, a transação pode ser estornada em:</span>
+                        <button
+                          onClick={() => navigate('/relatorio_estornos')}
+                          className="inline-flex items-center px-2 py-1 text-xs font-medium text-red-800 bg-red-100 rounded hover:bg-red-200 transition-colors"
+                        >
+                          Relatório de Estornos →
+                        </button>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* Receipt Details */}
             <div className="p-6">
