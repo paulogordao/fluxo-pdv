@@ -69,7 +69,7 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
 
       setPollingStatus(prev => ({
         ...prev,
-        attempts: prev.attempts + 1,
+        attempts: 0, // ✅ RESETAR contador ao ter sucesso
         lastAttemptTime: new Date(),
         nextStepData: nextStep,
         orderData: responseData,
@@ -95,15 +95,29 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
       
       if (!isMountedRef.current) return false;
 
+      const newAttempts = pollingStatus.attempts + 1;
+      
       setPollingStatus(prev => ({
         ...prev,
-        attempts: prev.attempts + 1,
+        attempts: newAttempts,
         lastAttemptTime: new Date(),
         error: error.message || 'Erro desconhecido',
         status: 'error'
       }));
       
-      // Em caso de erro, continuar tentando (pode ser problema temporário)
+      // ❌ PARAR POLLING APÓS 3 ERROS CONSECUTIVOS
+      if (newAttempts >= 3) {
+        console.error('[useRliwaitPolling] ❌ Múltiplos erros consecutivos detectados - PARANDO polling');
+        setPollingStatus(prev => ({
+          ...prev,
+          isPolling: false,
+          status: 'error'
+        }));
+        return false; // PARAR polling
+      }
+      
+      // Em caso de erro, continuar tentando apenas se menos de 3 erros
+      console.warn('[useRliwaitPolling] Erro detectado, mas continuando polling (tentativa ' + newAttempts + '/3)');
       return true;
     }
   };
@@ -177,13 +191,6 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
       console.error('[useRliwaitPolling] Error sending cancel request:', error);
     }
   };
-
-  // Auto start polling se solicitado
-  useEffect(() => {
-    if (autoStart && transactionId) {
-      startPolling();
-    }
-  }, [autoStart, transactionId]);
 
   // Cleanup on unmount - SEM DEPENDÊNCIAS para evitar loops
   useEffect(() => {

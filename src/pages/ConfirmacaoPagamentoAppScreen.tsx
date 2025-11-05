@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle, Clock, RefreshCw } from "lucide-react";
@@ -69,6 +69,9 @@ const ConfirmacaoPagamentoAppScreen = () => {
     sendCancelRequest
   } = useRliwaitPolling(isOnlineFlow ? transactionId : null, false // Don't auto start
   );
+
+  // Ref para controlar se polling já foi iniciado
+  const pollingStartedRef = useRef(false);
 
   // Fetch API data for technical documentation
   useEffect(() => {
@@ -146,13 +149,14 @@ const ConfirmacaoPagamentoAppScreen = () => {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Start polling when component mounts (ONLINE flow only)
+  // Start polling when component mounts (ONLINE flow only) - UMA VEZ APENAS
   useEffect(() => {
-    if (isOnlineFlow && transactionId) {
-      console.log('[ConfirmacaoPagamentoAppScreen] Starting RLIWAIT polling for ONLINE flow');
+    if (isOnlineFlow && transactionId && !pollingStartedRef.current) {
+      console.log('[ConfirmacaoPagamentoAppScreen] Starting RLIWAIT polling for ONLINE flow (ONCE)');
+      pollingStartedRef.current = true;
       startPolling();
     }
-  }, [isOnlineFlow, transactionId]);
+  }, []); // ✅ Array vazio - executa apenas no mount
 
   // Cleanup polling on unmount
   useEffect(() => {
@@ -161,6 +165,8 @@ const ConfirmacaoPagamentoAppScreen = () => {
       if (pollingStatus.isPolling) {
         stopPolling();
       }
+      // ✅ Resetar ref para permitir novo polling se component montar novamente
+      pollingStartedRef.current = false;
     };
   }, []);
 
