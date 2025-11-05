@@ -886,23 +886,12 @@ export const comandoService = {
           throw error;
         }
 
-        // Check if token was rejected based on multiple indicators (recoverable error)
-        const isTokenInvalid = 
-          messageId === 1001 || // Specific recoverable error code
-          messageId > 1002 || // Error message IDs above 1002 (1000 is success, 1001/1002 are handled separately)
-          nextStep === "RLIAUTH" || // If next step is RLIAUTH again, token was rejected
-          messageContent.toLowerCase().includes('inválido') ||
-          messageContent.toLowerCase().includes('tentar novamente');
-
-        if (isTokenInvalid) {
-          console.error(`[comandoService] Token inválido detectado (recuperável):`, {
-            messageId,
-            messageContent,
-            nextStep
-          });
-          const error = new Error(messageContent || 'Token inválido. Tente novamente.');
-          (error as any).isFatal = false; // Mark as recoverable error
-          throw error;
+        // ✅ Para messageId 1001 (recuperável): APENAS LOG - permitir que o componente trate através do ValidationModal
+        if (messageId === 1001) {
+          console.log(`[comandoService] Token inválido (recuperável) - messageId 1001`);
+          console.log(`[comandoService] Mensagem: ${messageContent}`);
+          console.log(`[comandoService] A mensagem será exibida no ValidationModal`);
+          // NÃO throw error - retornar resposta normalmente para que o ValidationModal seja exibido
         }
       }
 
