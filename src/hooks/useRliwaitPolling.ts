@@ -31,7 +31,15 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
+      console.log('[useRliwaitPolling] isMountedRef cleanup - forcing stop');
       isMountedRef.current = false;
+      
+      // ✅ FORÇAR LIMPEZA IMEDIATA DO INTERVALO
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+        console.log('[useRliwaitPolling] Interval forcefully cleared on unmount');
+      }
     };
   }, []);
 
@@ -149,10 +157,26 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
     // Primeira chamada imediata
     performPolling().then(shouldContinue => {
       if (shouldContinue && isMountedRef.current) {
+        const intervalId = Date.now(); // Identificador único para debug
+        console.log(`[useRliwaitPolling] Created interval ${intervalId} for transaction ${transactionId}`);
+        
         // Iniciar intervalos de 10 segundos
         intervalRef.current = setInterval(async () => {
+          console.log(`[useRliwaitPolling] Interval ${intervalId} tick - isMounted: ${isMountedRef.current}`);
+          
+          // ✅ VERIFICAR SE COMPONENTE AINDA ESTÁ MONTADO
+          if (!isMountedRef.current) {
+            console.warn(`[useRliwaitPolling] Interval ${intervalId} - Component unmounted - stopping interval`);
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+            }
+            return;
+          }
+          
           const continuePolling = await performPolling();
           if (!continuePolling && intervalRef.current) {
+            console.log(`[useRliwaitPolling] Interval ${intervalId} - Polling complete - clearing interval`);
             clearInterval(intervalRef.current);
             intervalRef.current = null;
           }

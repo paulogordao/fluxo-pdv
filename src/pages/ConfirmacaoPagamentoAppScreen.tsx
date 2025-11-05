@@ -153,22 +153,20 @@ const ConfirmacaoPagamentoAppScreen = () => {
   useEffect(() => {
     if (isOnlineFlow && transactionId && !pollingStartedRef.current) {
       console.log('[ConfirmacaoPagamentoAppScreen] Starting RLIWAIT polling for ONLINE flow (ONCE)');
+      console.log('[ConfirmacaoPagamentoAppScreen] Transaction ID:', transactionId);
       pollingStartedRef.current = true;
       startPolling();
     }
-  }, []); // ✅ Array vazio - executa apenas no mount
-
-  // Cleanup polling on unmount
-  useEffect(() => {
+    
+    // ✅ CLEANUP - Parar polling quando componente desmontar
     return () => {
-      console.log('[ConfirmacaoPagamentoAppScreen] Component unmounting - stopping polling');
-      if (pollingStatus.isPolling) {
+      console.log('[ConfirmacaoPagamentoAppScreen] Component unmounting - forcing stop');
+      if (pollingStartedRef.current) {
         stopPolling();
+        pollingStartedRef.current = false;
       }
-      // ✅ Resetar ref para permitir novo polling se component montar novamente
-      pollingStartedRef.current = false;
     };
-  }, []);
+  }, [isOnlineFlow, transactionId, startPolling, stopPolling]);
 
   // Monitor polling timeout
   useEffect(() => {
