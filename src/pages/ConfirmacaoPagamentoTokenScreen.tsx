@@ -16,8 +16,10 @@ const ConfirmacaoPagamentoTokenScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [validationMessage, setValidationMessage] = useState("");
-  const [isFatalError, setIsFatalError] = useState(false);
   const [isSuccessModal, setIsSuccessModal] = useState(false);
+  const [validationNextStep, setValidationNextStep] = useState("");
+  const [validationMessageId, setValidationMessageId] = useState<number | null>(null);
+  const [pendingRliauthResponse, setPendingRliauthResponse] = useState<any>(null);
   const navigate = useNavigate();
   const {
     tipo_simulacao,
@@ -128,6 +130,7 @@ const ConfirmacaoPagamentoTokenScreen = () => {
             setIsLoading(false);
             return;
           }
+          
           console.log('[TokenScreen] Calling RLIAUTH with token:', token);
           const response = await comandoService.enviarComandoRliauth(transactionId, token);
           console.log('[TokenScreen] RLIAUTH Response:', response);
@@ -135,29 +138,36 @@ const ConfirmacaoPagamentoTokenScreen = () => {
           // Store the RLIAUTH response in localStorage
           localStorage.setItem('rliauthResponse', JSON.stringify(response));
 
-          // Extract success message from response
-          const successMessage = response[0]?.response?.data?.message?.content || "Token válido! Transação autorizada.";
+          // Verificar se há mensagem do sistema (sucesso ou erro recuperável)
+          const systemMessage = response?.[0]?.response?.data?.message?.content;
+          const messageId = response?.[0]?.response?.data?.message?.id;
+          const nextStep = response?.[0]?.response?.data?.next_step?.[0]?.description;
           
-          // Show success modal instead of navigating immediately
-          setValidationMessage(successMessage);
-          setIsSuccessModal(true);
-          setIsFatalError(false);
-          setShowValidationModal(true);
+          if (systemMessage) {
+            console.log('[TokenScreen] System message found:', systemMessage);
+            console.log('[TokenScreen] Message ID:', messageId);
+            console.log('[TokenScreen] Next step:', nextStep);
+            
+            // Salvar resposta pendente
+            setPendingRliauthResponse(response);
+            setValidationMessage(systemMessage);
+            setValidationNextStep(nextStep || "");
+            setValidationMessageId(messageId);
+            
+            // Determinar se é sucesso ou erro
+            setIsSuccessModal(messageId !== 1001 && messageId !== 1002);
+            setShowValidationModal(true);
+            return;
+          }
           
         } catch (error) {
           console.error('[TokenScreen] Error calling RLIAUTH:', error);
           
-          // Clear the entered token digits for retry
-          setTokenDigits([]);
-          
-          // Check if this is a fatal error (cannot retry)
-          const isFatal = (error as any).isFatal === true;
-          setIsFatalError(isFatal);
-          setIsSuccessModal(false);
-          
-          // Show validation modal with error message
-          const errorMessage = error instanceof Error ? error.message : "Token inválido. Tente novamente.";
+          // Mostrar erro genérico
+          const errorMessage = error instanceof Error ? error.message : "Erro ao validar token. Tente novamente.";
           setValidationMessage(errorMessage);
+          setIsSuccessModal(false);
+          setValidationMessageId(null);
           setShowValidationModal(true);
         } finally {
           setIsLoading(false);
@@ -378,43 +388,68 @@ const ConfirmacaoPagamentoTokenScreen = () => {
         isOpen={showValidationModal}
         onPrimaryAction={() => {
           setShowValidationModal(false);
+          setValidationMessage("");
+          setValidationNextStep("");
+          const currentMessageId = validationMessageId;
+          setValidationMessageId(null);
           
-          if (isSuccessModal) {
-            // Success: navigate to payment confirmation
+          // Se messageId é 1002, SEMPRE redirecionar (não pode tentar novamente)
+          if (currentMessageId === 1002) {
+            console.log('[TokenScreen] messageId 1002 - Redirecionando para confirmacao_pagamento');
+            
+            if (pendingRliauthResponse) {
+              console.log('[TokenScreen] Saving pending RLIAUTH response to localStorage');
+              localStorage.setItem('rliauthResponse', JSON.stringify(pendingRliauthResponse));
+              setPendingRliauthResponse(null);
+            }
+            
             navigate("/confirmacao_pagamento", {
               state: {
                 fromTokenScreen: true,
                 isOnline: true
               }
             });
-          } else if (isFatalError) {
-            // Fatal error: navigate to payment confirmation with failure flag
-            navigate("/confirmacao_pagamento", {
-              state: {
-                fromTokenScreen: true,
-                isOnline: true,
-                tokenValidationFailed: true
-              }
-            });
+            return;
           }
-          // If recoverable error, token digits already cleared, user can try again
+          
+          // Se messageId é 1001 OU next_step é RLIAUTH, permitir tentar novamente
+          if (currentMessageId === 1001 || validationNextStep === "RLIAUTH") {
+            console.log('[TokenScreen] Erro recuperável - limpando dígitos para nova tentativa');
+            setTokenDigits([]);
+            setPendingRliauthResponse(null);
+            return;
+          }
+          
+          // Caso contrário (sucesso ou outro next_step), redirecionar
+          if (pendingRliauthResponse) {
+            console.log('[TokenScreen] Saving pending RLIAUTH response to localStorage');
+            localStorage.setItem('rliauthResponse', JSON.stringify(pendingRliauthResponse));
+            setPendingRliauthResponse(null);
+          }
+          
+          navigate("/confirmacao_pagamento", {
+            state: {
+              fromTokenScreen: true,
+              isOnline: true
+            }
+          });
         }}
         onCancel={() => {
           setShowValidationModal(false);
-          if (!isSuccessModal) {
-            // Only allow cancel for error scenarios
-            navigate("/meios_de_pagamento");
-          }
+          setValidationMessage("");
+          setValidationNextStep("");
+          setValidationMessageId(null);
+          navigate("/meios_de_pagamento");
         }}
         message={validationMessage}
         title={isSuccessModal ? "Token Validado" : "Validação do Token"}
         primaryButtonText={
-          isSuccessModal ? "OK" : 
-          isFatalError ? "OK" : 
-          "Tentar Novamente"
+          validationMessageId === 1002 ? "Continuar" :
+          validationNextStep === "RLIAUTH" ? "Tentar Novamente" : 
+          "Continuar"
         }
         cancelButtonText="Voltar"
-        showCancelButton={!isFatalError && !isSuccessModal}
+        showCancelButton={validationMessageId !== 1002 && !isSuccessModal}
       />
     </div>;
 };
