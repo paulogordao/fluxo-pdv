@@ -71,6 +71,7 @@ export interface ComandoRlipaysRequest {
 export interface ComandoRliwaitRequest {
   comando: string;
   id_transaction: string;
+  cancel: boolean;
 }
 
 export interface ComandoRliquitRequest {
@@ -1032,7 +1033,7 @@ export const comandoService = {
   },
 
   // RLIWAIT command method
-  async enviarComandoRliwait(transactionId: string): Promise<ComandoResponse> {
+  async enviarComandoRliwait(transactionId: string, cancel: boolean = false): Promise<ComandoResponse> {
     // Get user ID for header
     const userId = getUserId();
     if (!userId) {
@@ -1041,10 +1042,11 @@ export const comandoService = {
 
     const requestBody: ComandoRliwaitRequest = {
       comando: 'RLIWAIT',
-      id_transaction: transactionId
+      id_transaction: transactionId,
+      cancel
     };
 
-    console.log(`[comandoService] Enviando comando RLIWAIT:`, requestBody);
+    console.log(`[comandoService] Enviando comando RLIWAIT (cancel=${cancel}):`, requestBody);
     console.log(`[comandoService] User ID sendo usado: ${userId}`);
 
     const controller = new AbortController();

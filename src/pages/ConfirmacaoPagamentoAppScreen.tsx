@@ -65,7 +65,8 @@ const ConfirmacaoPagamentoAppScreen = () => {
   const {
     pollingStatus,
     startPolling,
-    stopPolling
+    stopPolling,
+    sendCancelRequest
   } = useRliwaitPolling(isOnlineFlow ? transactionId : null, false // Don't auto start
   );
 
@@ -183,11 +184,22 @@ const ConfirmacaoPagamentoAppScreen = () => {
   const handlePaymentConfirmation = () => {
     navigate("/confirmacao_pagamento");
   };
-  const handleCancel = () => {
-    if (isOnlineFlow && pollingStatus.isPolling) {
-      stopPolling();
+  const handleCancel = async () => {
+    console.log('[ConfirmacaoPagamentoApp] User clicked cancel button');
+    
+    if (isOnlineFlow && transactionId) {
+      console.log('[ConfirmacaoPagamentoApp] Sending cancel request before stopping polling');
+      
+      // Enviar RLIWAIT com cancel=true
+      await sendCancelRequest();
+      
+      // Parar o polling
+      if (pollingStatus.isPolling) {
+        stopPolling();
+      }
     }
-    console.log('[ConfirmacaoPagamentoApp] Cancelling and returning to confirmation screen');
+    
+    console.log('[ConfirmacaoPagamentoApp] Returning to confirmation screen');
     navigate("/confirmacao_pagamento", {
       state: { fromAppScreen: true }
     });

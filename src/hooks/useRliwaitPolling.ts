@@ -35,7 +35,7 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
     };
   }, []);
 
-  const performPolling = async (): Promise<boolean> => {
+  const performPolling = async (cancel: boolean = false): Promise<boolean> => {
     if (!transactionId || !isMountedRef.current) {
       return false;
     }
@@ -56,9 +56,9 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
     }
 
     try {
-      console.log(`[useRliwaitPolling] Tentativa ${pollingStatus.attempts + 1} - Enviando RLIWAIT para transaction: ${transactionId}`);
+      console.log(`[useRliwaitPolling] Tentativa ${pollingStatus.attempts + 1} - Enviando RLIWAIT ${cancel ? '(CANCEL)' : ''} para transaction: ${transactionId}`);
       
-      const response: ComandoResponse = await comandoService.enviarComandoRliwait(transactionId);
+      const response: ComandoResponse = await comandoService.enviarComandoRliwait(transactionId, cancel);
       
       if (!isMountedRef.current) return false;
 
@@ -155,6 +155,22 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
     }));
   };
 
+  const sendCancelRequest = async () => {
+    if (!transactionId) {
+      console.error('[useRliwaitPolling] Cannot send cancel request - no transaction ID');
+      return;
+    }
+
+    console.log(`[useRliwaitPolling] Enviando RLIWAIT com cancel=true para transaction: ${transactionId}`);
+    
+    try {
+      await performPolling(true); // Envia com cancel=true
+      console.log(`[useRliwaitPolling] Cancel request sent successfully`);
+    } catch (error) {
+      console.error('[useRliwaitPolling] Error sending cancel request:', error);
+    }
+  };
+
   // Auto start polling se solicitado
   useEffect(() => {
     if (autoStart && transactionId) {
@@ -173,6 +189,7 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
   return {
     pollingStatus,
     startPolling,
-    stopPolling
+    stopPolling,
+    sendCancelRequest
   };
 };
