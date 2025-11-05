@@ -17,6 +17,7 @@ const OtpDataNascimentoScreen = () => {
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [validationMessage, setValidationMessage] = useState("");
   const [validationNextStep, setValidationNextStep] = useState("");
+  const [validationMessageId, setValidationMessageId] = useState<number | null>(null);
   const [errorDetails, setErrorDetails] = useState<any>(null);
   const [pendingRliauthResponse, setPendingRliauthResponse] = useState<any>(null);
   const navigate = useNavigate();
@@ -159,14 +160,17 @@ const OtpDataNascimentoScreen = () => {
 
         // Check if there's a system message to show the user
         const systemMessage = response?.[0]?.response?.data?.message?.content;
+        const messageId = response?.[0]?.response?.data?.message?.id;
         const nextStep = response?.[0]?.response?.data?.next_step?.[0]?.description;
         if (systemMessage) {
           console.log('[OtpDataNascimentoScreen] System message found:', systemMessage);
+          console.log('[OtpDataNascimentoScreen] Message ID:', messageId);
           console.log('[OtpDataNascimentoScreen] Next step:', nextStep);
           console.log('[OtpDataNascimentoScreen] Saving RLIAUTH response to pending state');
           setPendingRliauthResponse(response);
           setValidationMessage(systemMessage);
           setValidationNextStep(nextStep || "");
+          setValidationMessageId(messageId);
           setShowValidationModal(true);
           return;
         }
@@ -253,10 +257,33 @@ const OtpDataNascimentoScreen = () => {
     setShowValidationModal(false);
     setValidationMessage("");
     setValidationNextStep("");
+    const currentMessageId = validationMessageId;
+    setValidationMessageId(null);
+    
+    // ✅ Se messageId é 1002, SEMPRE redirecionar (não pode tentar novamente)
+    if (currentMessageId === 1002) {
+      console.log('[OtpDataNascimentoScreen] messageId 1002 - Redirecionando para confirmacao_pagamento');
+      
+      // Save pending RLIAUTH response to localStorage before navigation
+      if (pendingRliauthResponse) {
+        console.log('[OtpDataNascimentoScreen] Saving pending RLIAUTH response to localStorage');
+        localStorage.setItem('rliauthResponse', JSON.stringify(pendingRliauthResponse));
+        setPendingRliauthResponse(null);
+      }
+      
+      navigate("/confirmacao_pagamento", {
+        state: {
+          fromOtpScreen: true
+        }
+      });
+      return;
+    }
+    
+    // ✅ Se messageId é 1001, permitir tentar novamente
     if (validationNextStep === "RLIAUTH") {
       // Try again - clear digits for new input
       setDigits([]);
-      setPendingRliauthResponse(null); // Clear pending response
+      setPendingRliauthResponse(null);
     } else {
       // Continue to next step - navigate based on next_step
       if (validationNextStep === "RLIPAYS") {
@@ -266,7 +293,7 @@ const OtpDataNascimentoScreen = () => {
         if (pendingRliauthResponse) {
           console.log('[OtpDataNascimentoScreen] Saving pending RLIAUTH response to localStorage');
           localStorage.setItem('rliauthResponse', JSON.stringify(pendingRliauthResponse));
-          setPendingRliauthResponse(null); // Clear pending response
+          setPendingRliauthResponse(null);
         }
         navigate("/confirmacao_pagamento", {
           state: {
@@ -283,7 +310,7 @@ const OtpDataNascimentoScreen = () => {
           localStorage.setItem('rliauthResponse', JSON.stringify(pendingRliauthResponse));
           setPendingRliauthResponse(null);
         }
-        navigate("/confirmacao_pagamento"); // Default navigation to payment confirmation
+        navigate("/confirmacao_pagamento");
       }
     }
   };
@@ -291,6 +318,7 @@ const OtpDataNascimentoScreen = () => {
     setShowValidationModal(false);
     setValidationMessage("");
     setValidationNextStep("");
+    setValidationMessageId(null);
     navigate(-1); // Go back to previous screen
   };
   return <PdvLayout className="pb-16">
@@ -370,7 +398,7 @@ const OtpDataNascimentoScreen = () => {
       <ErrorModal isOpen={showErrorModal} onClose={() => setShowErrorModal(false)} onRetry={handleRetry} errorCode={errorDetails?.code} errorMessage={errorDetails?.message} fullRequest={errorDetails?.request} fullResponse={errorDetails?.fullError} apiType="RLIAUTH" />
 
       {/* Validation Modal */}
-      <ValidationModal isOpen={showValidationModal} onPrimaryAction={handleValidationPrimaryAction} onCancel={handleValidationCancel} message={validationMessage} primaryButtonText={validationNextStep === "RLIAUTH" ? "Tentar Novamente" : "Continuar"} cancelButtonText="Cancelar" />
+      <ValidationModal isOpen={showValidationModal} onPrimaryAction={handleValidationPrimaryAction} onCancel={handleValidationCancel} message={validationMessage} primaryButtonText={validationNextStep === "RLIAUTH" ? "Tentar Novamente" : "Continuar"} cancelButtonText="Cancelar" showCancelButton={validationMessageId !== 1002} />
 
       {/* Technical Footer Component */}
       <TechnicalFooter requestData={technicalRequestData} responseData={technicalResponseData} previousRequestData={technicalPreviousRequestData} isLoading={isLoadingAuth} slug="RLIDEALRLIAUTH" loadOnMount={false} sourceScreen="otp_data_nascimento" previousServiceName="RLIDEAL" />

@@ -877,20 +877,20 @@ export const comandoService = {
         console.log(`[comandoService] RLIAUTH Message Content: ${messageContent}`);
         console.log(`[comandoService] RLIAUTH Next Step: ${nextStep}`);
 
-        // Check specific error codes
-        if (messageId === 1002) {
-          // Fatal error - cannot retry
-          console.error(`[comandoService] Token inválido - erro fatal (não pode tentar novamente)`);
-          const error = new Error(messageContent || 'Token inválido. Redirecionando...');
-          (error as any).isFatal = true; // Mark as fatal error
-          throw error;
-        }
-
         // ✅ Para messageId 1001 (recuperável): APENAS LOG - permitir que o componente trate através do ValidationModal
         if (messageId === 1001) {
           console.log(`[comandoService] Token inválido (recuperável) - messageId 1001`);
           console.log(`[comandoService] Mensagem: ${messageContent}`);
           console.log(`[comandoService] A mensagem será exibida no ValidationModal`);
+          // NÃO throw error - retornar resposta normalmente para que o ValidationModal seja exibido
+        }
+
+        // ✅ Para messageId 1002 (fatal, mas com next_step): APENAS LOG - permitir que o componente trate através do ValidationModal
+        if (messageId === 1002) {
+          console.log(`[comandoService] Token inválido (fatal) - messageId 1002`);
+          console.log(`[comandoService] Mensagem: ${messageContent}`);
+          console.log(`[comandoService] Next step: ${nextStep}`);
+          console.log(`[comandoService] A mensagem será exibida no ValidationModal com botão único`);
           // NÃO throw error - retornar resposta normalmente para que o ValidationModal seja exibido
         }
       }
