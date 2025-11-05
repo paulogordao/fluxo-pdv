@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { comandoService } from '@/services/comandoService';
 import type { ComandoResponse } from '@/services/comandoService';
 
@@ -130,7 +130,7 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
     }
   };
 
-  const startPolling = () => {
+  const startPolling = useCallback(() => {
     if (!transactionId) {
       console.error('[useRliwaitPolling] Cannot start polling - no transaction ID');
       return;
@@ -183,9 +183,9 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
         }, 10000); // 10 segundos
       }
     });
-  };
+  }, [transactionId]);
 
-  const stopPolling = () => {
+  const stopPolling = useCallback(() => {
     console.log('[useRliwaitPolling] Parando polling');
     
     if (intervalRef.current) {
@@ -198,9 +198,9 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
       isPolling: false,
       status: prev.status === 'completed' ? 'completed' : 'cancelled'
     }));
-  };
+  }, []);
 
-  const sendCancelRequest = async () => {
+  const sendCancelRequest = useCallback(async () => {
     if (!transactionId) {
       console.error('[useRliwaitPolling] Cannot send cancel request - no transaction ID');
       return;
@@ -214,7 +214,7 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
     } catch (error) {
       console.error('[useRliwaitPolling] Error sending cancel request:', error);
     }
-  };
+  }, [transactionId]);
 
   // Cleanup on unmount - SEM DEPENDÊNCIAS para evitar loops
   useEffect(() => {

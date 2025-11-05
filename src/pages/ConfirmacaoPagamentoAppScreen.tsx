@@ -151,7 +151,10 @@ const ConfirmacaoPagamentoAppScreen = () => {
 
   // Start polling when component mounts (ONLINE flow only) - UMA VEZ APENAS
   useEffect(() => {
-    if (isOnlineFlow && transactionId && !pollingStartedRef.current) {
+    // ✅ Usar valores diretamente do escopo, não como dependências
+    const shouldStartPolling = isOnlineFlow && transactionId && !pollingStartedRef.current;
+    
+    if (shouldStartPolling) {
       console.log('[ConfirmacaoPagamentoAppScreen] Starting RLIWAIT polling for ONLINE flow (ONCE)');
       console.log('[ConfirmacaoPagamentoAppScreen] Transaction ID:', transactionId);
       pollingStartedRef.current = true;
@@ -166,7 +169,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
         pollingStartedRef.current = false;
       }
     };
-  }, [isOnlineFlow, transactionId, startPolling, stopPolling]);
+  }, []); // ✅ Array vazio - previne loop infinito
 
   // Monitor polling timeout
   useEffect(() => {
