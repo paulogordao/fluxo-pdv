@@ -154,6 +154,16 @@ const ConfirmacaoPagamentoAppScreen = () => {
     }
   }, [isOnlineFlow, transactionId]);
 
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      console.log('[ConfirmacaoPagamentoAppScreen] Component unmounting - stopping polling');
+      if (pollingStatus.isPolling) {
+        stopPolling();
+      }
+    };
+  }, []);
+
   // Monitor polling timeout
   useEffect(() => {
     if (pollingStatus.status === 'timeout') {

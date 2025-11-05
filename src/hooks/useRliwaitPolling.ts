@@ -114,6 +114,13 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
       return;
     }
 
+    // Prevenir múltiplos intervalos
+    if (intervalRef.current) {
+      console.warn('[useRliwaitPolling] Polling already running - stopping previous instance');
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
     console.log(`[useRliwaitPolling] Iniciando polling para transaction: ${transactionId}`);
     
     setPollingStatus(prev => ({
@@ -176,15 +183,18 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
     if (autoStart && transactionId) {
       startPolling();
     }
+  }, [autoStart, transactionId]);
 
-    // Cleanup on unmount
+  // Cleanup on unmount - SEM DEPENDÊNCIAS para evitar loops
+  useEffect(() => {
     return () => {
+      console.log('[useRliwaitPolling] Component unmounting - cleaning up interval');
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
     };
-  }, [transactionId, autoStart]);
+  }, []); // Array vazio - só executa no unmount
 
   return {
     pollingStatus,
