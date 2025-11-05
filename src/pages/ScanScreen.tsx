@@ -19,6 +19,7 @@ import { useFakeProducts } from '@/hooks/useFakeProducts';
 import { useToast } from "@/hooks/use-toast";
 import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
 import { getCartCache } from "@/utils/cacheUtils";
+import { truncateSku } from "@/utils/skuUtils";
 
 const ScanScreen = () => {
   const [barcode, setBarcode] = useState("");
@@ -347,7 +348,7 @@ const ScanScreen = () => {
               // Use complete data from API
               return {
                 ean: fakeProduct.ean,
-                sku: fakeProduct.sku,
+                sku: truncateSku(fakeProduct.sku),
                 unit_price: fakeProduct.unit_price,
                 discount: fakeProduct.discount,
                 quantity: product.quantity || 1,
@@ -366,7 +367,7 @@ const ScanScreen = () => {
               
               return {
                 ean: product.barcode,
-                sku: product.id,
+                sku: truncateSku(product.id),
                 unit_price: product.price,
                 discount: 0,
                 quantity: product.quantity || 1,

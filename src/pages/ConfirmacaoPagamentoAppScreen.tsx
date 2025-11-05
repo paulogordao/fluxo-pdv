@@ -14,6 +14,7 @@ import { buildApiUrl } from "@/config/api";
 import { useTokenPaymentEligibility } from "@/hooks/useTokenPaymentEligibility";
 import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
 import { comandoService } from "@/services/comandoService";
+import { truncateSku } from "@/utils/skuUtils";
 const ConfirmacaoPagamentoAppScreen = () => {
   const navigate = useNavigate();
   // Technical documentation states
@@ -265,7 +266,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
       // Converter cart para formato RLIFUND items
       const items = cart.map(product => ({
         ean: product.barcode,
-        sku: product.id,
+        sku: truncateSku(product.id),
         unit_price: product.price,
         discount: 0,
         quantity: product.quantity || 1,
