@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import PdvLayout from "@/components/PdvLayout";
-import UserProfileButton from "@/components/UserProfileButton";
+import UserProfileSelector from "@/components/UserProfileSelector";
 import TestUsersSidebar from "@/components/TestUsersSidebar";
 import { useUserSession } from "@/hooks/useUserSession";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,12 @@ const CpfScreen = () => {
   const [technicalRequestData, setTechnicalRequestData] = useState<string | undefined>();
   const [technicalResponseData, setTechnicalResponseData] = useState<string | undefined>();
   const navigate = useNavigate();
-  const { userName, companyName, tipo_simulacao, ambiente, userId, isLoading: sessionLoading } = useUserSession();
+  const { userName, companyName, tipo_simulacao, ambiente, userId, empresaId, userEmail, userUsername, isLoading: sessionLoading, refreshSession } = useUserSession();
+
+  const handleCompanyChange = () => {
+    console.log('[CpfScreen] Company changed, refreshing session...');
+    refreshSession();
+  };
 
   // Auto-generate RLIINFO request when page loads in ONLINE mode
   useEffect(() => {
@@ -639,11 +644,16 @@ curl --location 'https://uat-loyalty.dotznext.com/integration-router/api/default
       <TestUsersSidebar onCpfSelect={handleCpfSelect} tipoSimulacao={tipo_simulacao} />
 
       {/* User Profile Button - fixed position at top of page */}
-      <div className="fixed top-4 left-6 z-50">
-        <UserProfileButton 
+      <div className="fixed top-4 left-6 z-[9999]">
+        <UserProfileSelector 
           userName={sessionLoading ? "Carregando..." : userName}
           companyName={sessionLoading ? "Carregando..." : companyName}
+          companyId={empresaId || undefined}
           tipoSimulacao={tipo_simulacao}
+          userId={userId || undefined}
+          userEmail={userEmail}
+          userUsername={userUsername}
+          onCompanyChange={handleCompanyChange}
         />
       </div>
 
