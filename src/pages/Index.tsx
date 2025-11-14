@@ -3,21 +3,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PdvProvider } from "@/context/PdvContext";
 import { useNavigate } from "react-router-dom";
 import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
-import UserProfileButton from "@/components/UserProfileButton";
+import UserProfileSelector from "@/components/UserProfileSelector";
 import { useUserSession } from "@/hooks/useUserSession";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { userName, companyName, tipo_simulacao, isLoading } = useUserSession();
+  const { userName, companyName, tipo_simulacao, empresaId, userEmail, userUsername, userId, isLoading, refreshSession } = useUserSession();
+
+  const handleCompanyChange = () => {
+    console.log('[Index] Company changed, refreshing session...');
+    refreshSession();
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
       {/* User Profile Button - positioned in top left with larger size */}
-      <div className="absolute top-6 left-6">
-        <UserProfileButton 
+      <div className="absolute top-6 left-6 z-[9999]">
+        <UserProfileSelector 
           userName={isLoading ? "Carregando..." : userName}
           companyName={isLoading ? "Carregando..." : companyName}
+          companyId={empresaId || undefined}
           tipoSimulacao={tipo_simulacao}
+          userId={userId || undefined}
+          userEmail={userEmail}
+          userUsername={userUsername}
+          onCompanyChange={handleCompanyChange}
         />
       </div>
 
