@@ -1,14 +1,18 @@
 
 import { Button } from "@/components/ui/button";
 import PdvLayout from "@/components/PdvLayout";
-import UserProfileButton from "@/components/UserProfileButton";
+import UserProfileSelector from "@/components/UserProfileSelector";
 import { useUserSession } from "@/hooks/useUserSession";
 import { ArrowRight, Barcode } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const WelcomeScreen = () => {
   const navigate = useNavigate();
-  const { userName, companyName, tipo_simulacao, isLoading } = useUserSession();
+  const { userName, companyName, empresaId, tipo_simulacao, userId, userEmail, userUsername, isLoading, refreshSession } = useUserSession();
+  
+  const handleCompanyChange = () => {
+    refreshSession();
+  };
   
   const handleStart = () => {
     // Simular início de sessão antes de navegar
@@ -18,12 +22,17 @@ const WelcomeScreen = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 relative">
-      {/* User Profile Button - positioned in top left with larger size */}
+      {/* User Profile Selector - positioned in top left with larger size */}
       <div className="absolute top-6 left-6 z-10">
-        <UserProfileButton 
+        <UserProfileSelector 
           userName={isLoading ? "Carregando..." : userName}
           companyName={isLoading ? "Carregando..." : companyName}
-          tipoSimulacao={tipo_simulacao}
+          companyId={empresaId || undefined}
+          tipoSimulacao={tipo_simulacao || undefined}
+          userId={userId || undefined}
+          userEmail={userEmail || undefined}
+          userUsername={userUsername || undefined}
+          onCompanyChange={handleCompanyChange}
         />
       </div>
 
