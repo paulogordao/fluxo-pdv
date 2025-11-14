@@ -34,6 +34,7 @@ const UserProfileSelector = ({
   const [isLoadingEmpresas, setIsLoadingEmpresas] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -112,25 +113,56 @@ const UserProfileSelector = ({
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Card className="shadow-md border border-dotz-pessego hover:shadow-lg transition-shadow cursor-pointer">
-          <CardContent className="p-4">
+        <Card 
+          className="shadow-md border border-dotz-pessego hover:shadow-lg transition-all duration-300 ease-in-out cursor-pointer"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          style={{
+            width: isHovered ? 'auto' : '140px',
+            maxWidth: isHovered ? '450px' : '140px'
+          }}
+        >
+          <CardContent className={`transition-all duration-300 ${isHovered ? 'p-4' : 'p-3'}`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-dotz-laranja rounded-full">
+                <div className="p-2 bg-dotz-laranja rounded-full flex-shrink-0">
                   <Building2 className="h-6 w-6 text-white" />
                 </div>
-                <div className="flex flex-col text-left">
-                  <div className="flex items-center space-x-1 text-sm font-medium text-gray-900">
-                    <User className="h-4 w-4 text-dotz-laranja" />
-                    <span>{userName}</span>
+                <div className="flex flex-col text-left overflow-hidden">
+                  {/* Sempre visível */}
+                  <div className="flex items-center space-x-1 text-sm font-medium text-gray-900 whitespace-nowrap">
+                    <User className="h-4 w-4 text-dotz-laranja flex-shrink-0" />
+                    <span className={isHovered ? '' : 'truncate max-w-[60px]'}>{userName}</span>
                   </div>
-                  <div className="flex items-center space-x-1 text-xs text-gray-600">
-                    <Building2 className="h-3 w-3 text-dotz-laranja" />
-                    <span>{companyName}</span>
-                    <ChevronDown className="h-3 w-3 text-gray-400" />
+                  
+                  {/* Mostra apenas no hover com animação */}
+                  <div 
+                    className={`
+                      flex items-center space-x-1 text-xs text-gray-600 whitespace-nowrap
+                      transition-all duration-300 ease-in-out
+                      ${isHovered 
+                        ? 'opacity-100 max-h-6 mt-1' 
+                        : 'opacity-0 max-h-0 overflow-hidden'
+                      }
+                    `}
+                  >
+                    <Building2 className="h-3 w-3 text-dotz-laranja flex-shrink-0" />
+                    <span className="truncate">{companyName}</span>
+                    {isHovered && <ChevronDown className="h-3 w-3 text-gray-400 flex-shrink-0" />}
                   </div>
-                  <div className="flex items-center space-x-1 text-xs text-gray-600">
-                    <Play className="h-3 w-3 text-dotz-laranja" />
+                  
+                  {/* Mostra apenas no hover com animação */}
+                  <div 
+                    className={`
+                      flex items-center space-x-1 text-xs text-gray-600 whitespace-nowrap
+                      transition-all duration-300 ease-in-out
+                      ${isHovered 
+                        ? 'opacity-100 max-h-6 mt-1' 
+                        : 'opacity-0 max-h-0 overflow-hidden'
+                      }
+                    `}
+                  >
+                    <Play className="h-3 w-3 text-dotz-laranja flex-shrink-0" />
                     <span>Simulação: {formatSimulationType(tipoSimulacao)}</span>
                   </div>
                 </div>
@@ -140,7 +172,11 @@ const UserProfileSelector = ({
                 onClick={handleLogout}
                 variant="ghost"
                 size="sm"
-                className="p-2 hover:bg-gray-100 text-gray-600 hover:text-dotz-laranja"
+                className={`
+                  p-2 hover:bg-gray-100 text-gray-600 hover:text-dotz-laranja flex-shrink-0
+                  transition-all duration-300
+                  ${isHovered ? 'opacity-100' : 'opacity-0 w-0 p-0'}
+                `}
                 title="Sair"
               >
                 <LogOut className="h-4 w-4" />
