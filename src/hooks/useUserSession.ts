@@ -8,6 +8,9 @@ interface UserSessionData {
   userName: string;
   companyName: string;
   userId: string | null;
+  empresaId: string | null;
+  userEmail: string | null;
+  userUsername: string | null;
   tipo_simulacao: string | null;
   ambiente: string | null;
   isLoading: boolean;
@@ -19,6 +22,9 @@ export const useUserSession = () => {
     userName: "Usuário",
     companyName: "Empresa",
     userId: null,
+    empresaId: null,
+    userEmail: null,
+    userUsername: null,
     tipo_simulacao: null,
     ambiente: null,
     isLoading: true,
@@ -76,6 +82,9 @@ export const useUserSession = () => {
                 userName: parsed.userName,
                 companyName: parsed.companyName,
                 userId: parsed.userId,
+                empresaId: parsed.empresaId || null,
+                userEmail: parsed.userEmail || null,
+                userUsername: parsed.userUsername || null,
                 tipo_simulacao: parsed.tipo_simulacao,
                 ambiente: parsed.ambiente || null,
                 isLoading: false,
@@ -100,6 +109,8 @@ export const useUserSession = () => {
 
         const userName = userData.nome || "Usuário";
         const empresaId = userData.empresa_id;
+        const userEmail = userData.email || "";
+        const userUsername = userData.usuario || "";
 
         // If no company ID, use partial data
         if (!empresaId) {
@@ -107,6 +118,9 @@ export const useUserSession = () => {
             userName,
             companyName: userData.empresa || "Empresa",
             userId,
+            empresaId: null,
+            userEmail,
+            userUsername,
             tipo_simulacao: null,
             ambiente: null,
             isLoading: false,
@@ -161,6 +175,9 @@ export const useUserSession = () => {
           userName,
           companyName,
           userId,
+          empresaId,
+          userEmail,
+          userUsername,
           tipo_simulacao: tipoSimulacao,
           ambiente,
           isLoading: false,
@@ -192,6 +209,9 @@ export const useUserSession = () => {
             userName: fallbackUserName || "Usuário",
             companyName: fallbackCompanyName || "Empresa",
             userId,
+            empresaId: null,
+            userEmail: null,
+            userUsername: null,
             tipo_simulacao: null,
             ambiente: null,
             isLoading: false,
@@ -201,6 +221,9 @@ export const useUserSession = () => {
           setSessionData(prev => ({
             ...prev,
             userId,
+            empresaId: null,
+            userEmail: null,
+            userUsername: null,
             tipo_simulacao: null,
             ambiente: null,
             isLoading: false,
