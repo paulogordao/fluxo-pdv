@@ -13,6 +13,7 @@ import { comandoService, RlifundApiError } from "@/services/comandoService";
 import ErrorModal from "@/components/ErrorModal";
 import { usePdv } from "@/context/PdvContext";
 import { generateRandomPaymentType, generateRandomBin, getCartCache } from "@/utils/cacheUtils";
+import { createLogger } from '@/utils/logger';
 import {
   CreditCard,
   CreditCard as DebitCard,
@@ -24,6 +25,8 @@ import {
   ShoppingCart
 } from "lucide-react";
 import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
+
+const log = createLogger('ConfirmacaoPagamentoScreen');
 
 const ConfirmacaoPagamentoScreen = () => {
   const navigate = useNavigate();
@@ -89,7 +92,7 @@ const ConfirmacaoPagamentoScreen = () => {
         const stored = localStorage.getItem('rliauthResponse');
         if (stored) {
           const parsed = JSON.parse(stored);
-          console.log('[ConfirmacaoPagamento] RLIAUTH data loaded:', parsed);
+          log.info('RLIAUTH data loaded:', parsed);
           setRliauthData(parsed);
         }
       } catch (error) {
@@ -105,7 +108,7 @@ const ConfirmacaoPagamentoScreen = () => {
     if (sessionLoading) return;
 
     const isOfflineCompany = tipo_simulacao === "OFFLINE";
-    console.log('[ConfirmacaoPagamento] Company type check:', { 
+    log.debug('Company type check:', { 
       tipo_simulacao, 
       isOfflineCompany, 
       comingFromScanScreen,
@@ -122,7 +125,7 @@ const ConfirmacaoPagamentoScreen = () => {
           const rlidealResponse = JSON.parse(rlidealResponseStr);
           const order = rlidealResponse[0]?.response?.data?.order;
           
-          console.log('[ConfirmacaoPagamento] Using RLIDEAL order data from app flow:', order);
+          log.debug('Using RLIDEAL order data from app flow:', order);
           
           if (order) {
             const subtotal = order.value?.toFixed(2).replace('.', ',') || "0,00";
@@ -144,14 +147,14 @@ const ConfirmacaoPagamentoScreen = () => {
             
             setDocumentationSlug("RLIWAITRLIPAYS");
             
-            console.log('[ConfirmacaoPagamento] Using RLIDEAL values from app flow:', {
+            log.debug('Using RLIDEAL values from app flow:', {
               subtotal, desconto, paidOut, remainingValue
             });
             return;
           }
         }
-      } catch (error) {
-        console.error('[ConfirmacaoPagamento] Error reading rlidealResponse from localStorage:', error);
+        } catch (error) {
+        log.error('Error reading rlidealResponse from localStorage:', error);
       }
     }
 
@@ -213,7 +216,7 @@ const ConfirmacaoPagamentoScreen = () => {
       
       setDocumentationSlug("RLIDEALRLIPAYS");
       
-      console.log('[ConfirmacaoPagamento] Using real cart value from RLIDEAL flow:', {
+      log.debug('Using real cart value from RLIDEAL flow:', {
         totalAmount,
         totalAmountStr
       });
@@ -237,10 +240,10 @@ const ConfirmacaoPagamentoScreen = () => {
       });
       
       // Use RLIPAYS for FUND → RLIPAYS flow since RLIFUNDRLIPAYS may not exist
-      console.log('[ConfirmacaoPagamento] Setting documentation SLUG to RLIPAYS for FUND → RLIPAYS flow');
+      log.debug('Setting documentation SLUG to RLIPAYS for FUND → RLIPAYS flow');
       setDocumentationSlug("RLIPAYS");
       
-      console.log('[ConfirmacaoPagamento] Using real cart value from PdvContext:', {
+      log.debug('Using real cart value from PdvContext:', {
         totalAmount,
         totalAmountStr
       });
@@ -256,7 +259,7 @@ const ConfirmacaoPagamentoScreen = () => {
           const rlidealResponse = JSON.parse(rlidealResponseStr);
           const orderData = rlidealResponse[0]?.response?.data?.order;
           
-          console.log('[ConfirmacaoPagamento] Token validation failed, using RLIDEAL order data:', orderData);
+          log.debug('Token validation failed, using RLIDEAL order data:', orderData);
           
           if (orderData) {
             const subtotal = orderData.value?.toFixed(2).replace('.', ',') || "0,00";
@@ -277,14 +280,14 @@ const ConfirmacaoPagamentoScreen = () => {
             
             setDocumentationSlug("RLIAUTHRLIPAYS");
             
-            console.log('[ConfirmacaoPagamento] Using RLIDEAL values after token failure:', {
+            log.debug('Using RLIDEAL values after token failure:', {
               subtotal, desconto, remainingValue
             });
             return;
           }
         }
       } catch (error) {
-        console.error('[ConfirmacaoPagamento] Error reading RLIDEAL data for token failure:', error);
+        log.error('Error reading RLIDEAL data for token failure:', error);
       }
     }
 
@@ -307,7 +310,7 @@ const ConfirmacaoPagamentoScreen = () => {
         setPaymentAmount({ encargos: remainingValue, recebido });
         setDocumentationSlug("RLIAUTHRLIPAYS");
         
-        console.log('[ConfirmacaoPagamento] Using dynamic RLIAUTH data:', {
+        log.debug('Using dynamic RLIAUTH data:', {
           subtotal, desconto, recebido, remainingValue
         });
         return;
@@ -324,7 +327,7 @@ const ConfirmacaoPagamentoScreen = () => {
         showEncargos: true
       });
       setDocumentationSlug("RLIAUTHRLIPAYS");
-      console.log('[ConfirmacaoPagamento] Using static values for token/OTP flow');
+      log.debug('Using static values for token/OTP flow');
     } else if (selectedPaymentOption === "livelo") {
       setPaymentAmount({ encargos: "60,00", recebido: "60,00" });
       setDisplayValues({
@@ -333,7 +336,7 @@ const ConfirmacaoPagamentoScreen = () => {
         recebido: "60,00", 
         showEncargos: true
       });
-      console.log('[ConfirmacaoPagamento] Livelo option selected');
+      log.debug('Livelo option selected');
     } else if (selectedPaymentOption === "dotz") {
       setPaymentAmount({ encargos: "3,00", recebido: "3,00" });
       setDisplayValues({
@@ -345,7 +348,7 @@ const ConfirmacaoPagamentoScreen = () => {
       if (!comingFromTokenScreen && !comingFromOtpScreen) {
         setDocumentationSlug("RLIDEALRLIPAYS");
       }
-      console.log('[ConfirmacaoPagamento] Dotz option selected');
+      log.debug('Dotz option selected');
     } else {
       setPaymentAmount({ encargos: "68,93", recebido: "68,93" });
       setDisplayValues({
@@ -354,7 +357,7 @@ const ConfirmacaoPagamentoScreen = () => {
         recebido: "68,93",
         showEncargos: true
       });
-      console.log('[ConfirmacaoPagamento] Default option selected');
+      log.debug('Default option selected');
     }
   }, [selectedPaymentOption, comingFromTokenScreen, comingFromOtpScreen, comingFromScanScreen, comingFromScanScreenIdeal, comingFromAppScreen, comingFromRlidealNone, tipo_simulacao, sessionLoading, rliauthData, totalAmount, tokenValidationFailed]);
 
@@ -365,31 +368,31 @@ const ConfirmacaoPagamentoScreen = () => {
     if (comingFromScanScreen) {
       // Fluxo FUND → RLIPAYS
       previousServiceResponse = localStorage.getItem('rlifundResponse');
-      console.log('[ConfirmacaoPagamento] Loading RLIFUND response for technical data');
+      log.debug('Loading RLIFUND response for technical data');
     } else if (comingFromScanScreenIdeal) {
       // Fluxo RLIDEAL → RLIPAYS
       previousServiceResponse = localStorage.getItem('rlidealResponse');
-      console.log('[ConfirmacaoPagamento] Loading RLIDEAL response for technical data');
+      log.debug('Loading RLIDEAL response for technical data');
     } else if (comingFromRlidealNone) {
       // Fluxo RLIDEAL → RLIPAYS (opção "nenhum")
       previousServiceResponse = localStorage.getItem('rlidealResponse');
-      console.log('[ConfirmacaoPagamento] Loading RLIDEAL response for technical data (none option)');
+      log.debug('Loading RLIDEAL response for technical data (none option)');
     } else if (!comingFromTokenScreen && !comingFromOtpScreen && !comingFromAppScreen) {
       // Fluxo RLIDEAL → RLIPAYS (vindo de meios de pagamento)
       previousServiceResponse = localStorage.getItem('rlidealResponse');
-      console.log('[ConfirmacaoPagamento] Loading RLIDEAL response for technical data');
+      log.debug('Loading RLIDEAL response for technical data');
     } else if (comingFromTokenScreen || comingFromOtpScreen) {
       // Para token/OTP, usar rliauthData se disponível
       if (rliauthData?.length > 0) {
         previousServiceResponse = JSON.stringify(rliauthData[0]?.response, null, 2);
-        console.log('[ConfirmacaoPagamento] Using RLIAUTH response for technical data');
+        log.debug('Using RLIAUTH response for technical data');
       }
     } else if (comingFromAppScreen) {
       // Fluxo RLIWAIT → RLIPAYS
       const rliwaitResponse = localStorage.getItem('rliwaitResponse');
       if (rliwaitResponse) {
         previousServiceResponse = rliwaitResponse;
-        console.log('[ConfirmacaoPagamento] Loading RLIWAIT response for technical data');
+        log.debug('Loading RLIWAIT response for technical data');
       }
     }
     

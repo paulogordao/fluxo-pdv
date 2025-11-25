@@ -10,6 +10,10 @@ import ErrorModal from "@/components/ErrorModal";
 import ValidationModal from "@/components/ValidationModal";
 import { toast } from "sonner";
 import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('OtpDataNascimentoScreen');
+
 const OtpDataNascimentoScreen = () => {
   const [digits, setDigits] = useState<string[]>([]);
   const [isLoadingAuth, setIsLoadingAuth] = useState(false);
@@ -45,7 +49,7 @@ const OtpDataNascimentoScreen = () => {
           }
         }
       } catch (error) {
-        console.error('Erro ao parsear rlidealResponse:', error);
+        log.error('Erro ao parsear rlidealResponse:', error);
       }
     }
 
@@ -65,7 +69,7 @@ const OtpDataNascimentoScreen = () => {
         
         toast.success('Data de nascimento pré-preenchida!');
       } catch (error) {
-        console.error('Erro ao processar data de nascimento:', error);
+        log.error('Erro ao processar data de nascimento:', error);
         localStorage.removeItem('selectedUserBirthDate');
       }
     }
@@ -95,7 +99,7 @@ const OtpDataNascimentoScreen = () => {
       };
       setTechnicalRequestData(JSON.stringify(currentRequest, null, 2));
     } catch (error) {
-      console.error('Error generating current request:', error);
+      log.error('Error generating current request:', error);
     }
   };
 
@@ -154,19 +158,19 @@ const OtpDataNascimentoScreen = () => {
 
         // Send date in DDMMYYYY format directly
         const birthDate = digits.join('');
-        console.log('[OtpDataNascimentoScreen] Sending birth date in DDMMYYYY format:', birthDate);
+        log.info('Sending birth date in DDMMYYYY format:', birthDate);
         const response = await comandoService.enviarComandoRliauth(transactionId, birthDate);
-        console.log('[OtpDataNascimentoScreen] RLIAUTH Response:', response);
+        log.debug('RLIAUTH Response:', response);
 
         // Check if there's a system message to show the user
         const systemMessage = response?.[0]?.response?.data?.message?.content;
         const messageId = response?.[0]?.response?.data?.message?.id;
         const nextStep = response?.[0]?.response?.data?.next_step?.[0]?.description;
         if (systemMessage) {
-          console.log('[OtpDataNascimentoScreen] System message found:', systemMessage);
-          console.log('[OtpDataNascimentoScreen] Message ID:', messageId);
-          console.log('[OtpDataNascimentoScreen] Next step:', nextStep);
-          console.log('[OtpDataNascimentoScreen] Saving RLIAUTH response to pending state');
+          log.info('System message found:', systemMessage);
+          log.debug('Message ID:', messageId);
+          log.debug('Next step:', nextStep);
+          log.debug('Saving RLIAUTH response to pending state');
           setPendingRliauthResponse(response);
           setValidationMessage(systemMessage);
           setValidationNextStep(nextStep || "");
@@ -185,7 +189,7 @@ const OtpDataNascimentoScreen = () => {
           }
         });
       } catch (error: any) {
-        console.error('[OtpDataNascimentoScreen] Erro RLIAUTH:', error);
+        log.error('Erro RLIAUTH:', error);
         let errorCode = 'RLIAUTH_ERROR';
         let errorMessage = "Erro ao validar token. Tente novamente.";
         let technicalError = error.message;
@@ -262,11 +266,11 @@ const OtpDataNascimentoScreen = () => {
     
     // ✅ Se messageId é 1002, SEMPRE redirecionar (não pode tentar novamente)
     if (currentMessageId === 1002) {
-      console.log('[OtpDataNascimentoScreen] messageId 1002 - Redirecionando para confirmacao_pagamento');
+      log.info('messageId 1002 - Redirecionando para confirmacao_pagamento');
       
       // Save pending RLIAUTH response to localStorage before navigation
       if (pendingRliauthResponse) {
-        console.log('[OtpDataNascimentoScreen] Saving pending RLIAUTH response to localStorage');
+        log.debug('Saving pending RLIAUTH response to localStorage');
         localStorage.setItem('rliauthResponse', JSON.stringify(pendingRliauthResponse));
         setPendingRliauthResponse(null);
       }
@@ -287,11 +291,11 @@ const OtpDataNascimentoScreen = () => {
     } else {
       // Continue to next step - navigate based on next_step
       if (validationNextStep === "RLIPAYS") {
-        console.log('[OtpDataNascimentoScreen] Navigating to confirmacao_pagamento for RLIPAYS');
+        log.info('Navigating to confirmacao_pagamento for RLIPAYS');
 
         // Save pending RLIAUTH response to localStorage before navigation
         if (pendingRliauthResponse) {
-          console.log('[OtpDataNascimentoScreen] Saving pending RLIAUTH response to localStorage');
+          log.debug('Saving pending RLIAUTH response to localStorage');
           localStorage.setItem('rliauthResponse', JSON.stringify(pendingRliauthResponse));
           setPendingRliauthResponse(null);
         }
@@ -302,11 +306,11 @@ const OtpDataNascimentoScreen = () => {
         });
       } else {
         // Handle other next steps as needed
-        console.log('[OtpDataNascimentoScreen] Unknown next step:', validationNextStep);
+        log.warn('Unknown next step:', validationNextStep);
 
         // Save pending response for any other navigation too
         if (pendingRliauthResponse) {
-          console.log('[OtpDataNascimentoScreen] Saving pending RLIAUTH response to localStorage for unknown step');
+          log.debug('Saving pending RLIAUTH response to localStorage for unknown step');
           localStorage.setItem('rliauthResponse', JSON.stringify(pendingRliauthResponse));
           setPendingRliauthResponse(null);
         }

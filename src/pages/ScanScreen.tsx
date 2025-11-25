@@ -20,6 +20,9 @@ import { useToast } from "@/hooks/use-toast";
 import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
 import { getCartCache } from "@/utils/cacheUtils";
 import { truncateSku } from "@/utils/skuUtils";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('ScanScreen');
 
 const ScanScreen = () => {
   const [barcode, setBarcode] = useState("");
@@ -88,15 +91,15 @@ const ScanScreen = () => {
     const restoreFromCache = location.state?.restoreFromCache;
     
     if (restoreFromCache) {
-      console.log('[ScanScreen] Restore flag detected, loading cart from cache');
+      log.info('Restore flag detected, loading cart from cache');
       
       const cartCache = getCartCache();
       if (cartCache && cartCache.cart && cartCache.cart.length > 0) {
-        console.log('[ScanScreen] Restoring cart from cache:', cartCache);
+        log.debug('Restoring cart from cache:', cartCache);
         setInitialCart(cartCache.cart);
-        console.log('[ScanScreen] Cart restored successfully');
+        log.info('Cart restored successfully');
       } else {
-        console.warn('[ScanScreen] No cart cache found or cache is empty');
+        log.warn('No cart cache found or cache is empty');
       }
       
       // Clear the state flag to prevent re-triggering
@@ -114,7 +117,7 @@ const ScanScreen = () => {
         
         // Fallback if CPF is not available
         if (!cpf) {
-          console.error('CPF não encontrado. Redirecionando para a etapa de identificação.');
+          log.error('CPF não encontrado. Redirecionando para a etapa de identificação.');
           navigate('/cpf');
           return;
         }
@@ -122,12 +125,12 @@ const ScanScreen = () => {
         const data = await consultaFluxoService.consultarFluxo(cpf, 'RLIFUND');
         if (data && data.SLUG) {
           setApiSlug(data.SLUG);
-          console.log("API Slug fetched:", data.SLUG);
+          log.info("API Slug fetched:", data.SLUG);
         } else {
-          console.error("No SLUG in response:", data);
+          log.error("No SLUG in response:", data);
         }
       } catch (error) {
-        console.error("Error fetching slug:", error);
+        log.error("Error fetching slug:", error);
       }
     };
     
@@ -140,12 +143,12 @@ const ScanScreen = () => {
       try {
         setIsLoading(true);
         // Use the dynamic slug determined from the source page
-        console.log(`Fetching flow details with slug: ${detailSlug}`);
+        log.debug(`Fetching flow details with slug: ${detailSlug}`);
         
         const data = await consultaFluxoService.consultarFluxoDetalhe(detailSlug);
         setApiData(data);
       } catch (error) {
-        console.error("Error fetching API data:", error);
+        log.error("Error fetching API data:", error);
       } finally {
         setIsLoading(false);
       }
@@ -183,7 +186,7 @@ const ScanScreen = () => {
             setHeaderContent("Informações de pagamento disponíveis");
           }
           
-          console.log('Previous response from telefone screen loaded:', parsedData);
+          log.debug('Previous response from telefone screen loaded:', parsedData);
         }
       } else {
         // Coming from cpf screen - get RLIINFO response
@@ -211,14 +214,14 @@ const ScanScreen = () => {
             setHeaderContent("Informações de pagamento disponíveis");
           }
           
-          console.log('Previous response from cpf screen loaded:', parsedData);
+          log.debug('Previous response from cpf screen loaded:', parsedData);
         }
       }
       
       // Generate current RLIFUND request
       generateCurrentRequest();
     } catch (error) {
-      console.error('Error loading previous response from localStorage:', error);
+      log.error('Error loading previous response from localStorage:', error);
       setHeaderContent("Informações de pagamento disponíveis");
     }
   }, [from, cart, totalAmount]);
@@ -260,7 +263,7 @@ const ScanScreen = () => {
 
       setTechnicalRequestData(JSON.stringify(currentRequest, null, 2));
     } catch (error) {
-      console.error('Error generating current request:', error);
+      log.error('Error generating current request:', error);
     }
   };
 
@@ -403,7 +406,7 @@ const ScanScreen = () => {
             rlifundItems
           );
           
-          console.log("[ScanScreen] RLIFUND response:", response);
+          log.debug("[ScanScreen] RLIFUND response:", response);
           
           // Store RLIFUND response in localStorage for technical documentation
           localStorage.setItem('rlifundResponse', JSON.stringify(response));
@@ -411,20 +414,20 @@ const ScanScreen = () => {
           // Check payment_options in RLIFUND response (inside data object)
           const paymentOptions = response[0]?.response?.data?.payment_options;
           const messageContent = response[0]?.response?.data?.message?.content;
-          console.log("[ScanScreen] Payment options from RLIFUND:", paymentOptions);
-          console.log("[ScanScreen] Message content from RLIFUND:", messageContent);
-          console.log("[ScanScreen] Full response structure:", JSON.stringify(response[0]?.response, null, 2));
+          log.debug("Payment options from RLIFUND:", paymentOptions);
+          log.debug("Message content from RLIFUND:", messageContent);
+          log.debug("Full response structure:", JSON.stringify(response[0]?.response, null, 2));
           
           if (Array.isArray(paymentOptions)) {
             if (paymentOptions.length === 0) {
               // payment_options is empty array - check if message exists
               if (messageContent) {
-                console.log("[ScanScreen] payment_options is empty with message - showing no payment options modal");
+                log.info("payment_options is empty with message - showing no payment options modal");
                 setNoPaymentOptionsMessage(messageContent);
                 setShowNoPaymentOptionsModal(true);
               } else {
                 // No message - go directly to payment confirmation
-                console.log("[ScanScreen] payment_options is empty - redirecting to confirmacao_pagamento");
+                log.info("payment_options is empty - redirecting to confirmacao_pagamento");
                 navigate('/confirmacao_pagamento', { state: { fromScanScreenFund: true } });
               }
             } else {
