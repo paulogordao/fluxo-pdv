@@ -36,7 +36,6 @@ const ScanScreen = () => {
     addToCart,
     increaseQuantity,
     decreaseQuantity,
-    findProductByBarcode,
     cart,
     totalAmount,
     setInitialCart
@@ -930,14 +929,31 @@ const ScanScreen = () => {
 
     // Simular um pequeno atraso como aconteceria em um ambiente real
     setTimeout(() => {
-      console.log(`API Call: GET /api/products/${barcode} - Buscando produto pelo código de barras`);
-      const product = findProductByBarcode(barcode);
-      if (product) {
+      log.info(`API Call: GET /api/products/${barcode} - Buscando produto pelo código de barras`);
+      
+      // Find product by EAN (barcode) from fake products
+      const foundProduct = fakeProducts.find(p => p.ean === barcode);
+      
+      if (foundProduct) {
+        // Convert FakeProduct to Product format for cart
+        const product: Product = {
+          id: foundProduct.ean, // Using EAN as ID
+          name: foundProduct.name,
+          price: foundProduct.unit_price,
+          barcode: foundProduct.ean,
+          quantity: 1
+        };
+        
         addToCart(product);
         setLastScanned(product);
-        console.log(`Produto encontrado: ${product.name}`);
+        log.info(`Produto encontrado: ${product.name}`);
       } else {
-        console.log("Produto não encontrado");
+        log.warn("Produto não encontrado");
+        toast({
+          title: "Produto não encontrado",
+          description: `Nenhum produto com código ${barcode} foi encontrado`,
+          variant: "destructive"
+        });
       }
       setBarcode("");
       setScanning(false);

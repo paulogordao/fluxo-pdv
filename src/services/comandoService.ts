@@ -179,255 +179,227 @@ export class RlifundApiError extends Error {
   }
 }
 
-// Função para fazer parse de erros RLIFUND
-function parseRlifundError(responseString: string): RlifundErrorResponse | null {
+// ===== HELPER FUNCTIONS =====
+
+/**
+ * Parse RLIFUND error from response string
+ */
+function parseRlifundErrorString(responseString: string): RlifundErrorResponse | null {
   try {
     log.debug('Parsing RLIFUND error string:', responseString);
     
-    // Extrair JSON do formato "400 - "{...}""
+    // Extract JSON from format "400 - "{...}""
     const jsonMatch = responseString.match(/^[\d\s-]*"(.+)"$/);
-    log.debug('JSON match result:', jsonMatch);
     
     if (jsonMatch) {
       const jsonString = jsonMatch[1].replace(/\\"/g, '"');
-      log.debug('Extracted JSON string:', jsonString);
       const parsed = JSON.parse(jsonString) as RlifundErrorResponse;
       log.debug('Parsed error response:', parsed);
       return parsed;
     }
     
-    // Tentar parse direto se já for JSON
-    log.debug('Trying direct JSON parse');
+    // Try direct parse if already JSON
     return JSON.parse(responseString) as RlifundErrorResponse;
   } catch (error) {
-    log.error('Erro ao fazer parse do erro RLIFUND:', error);
-    log.error('Failed to parse responseString:', responseString);
+    log.error('Error parsing RLIFUND error:', error);
     return null;
   }
 }
 
-export const comandoService = {
-  async enviarComando(comando: string, cpf: string, version?: string): Promise<ComandoResponse> {
-    log.info(`Enviando comando: ${comando}, CPF: ${cpf}, Version: ${version || 'não especificada'}`);
+/**
+ * Parse response text to JSON
+ */
+function parseResponseText(responseText: string, comando: string): any {
+  log.debug(`[${comando}] Raw response text:`, responseText);
+  
+  try {
+    const parsedData = JSON.parse(responseText);
+    log.debug(`[${comando}] Parsed JSON data:`, parsedData);
+    return parsedData;
+  } catch (parseError) {
+    log.error(`[${comando}] JSON parse error:`, parseError);
+    throw new Error(`Failed to parse JSON response: ${parseError.message}`);
+  }
+}
+
+/**
+ * Normalize response to array format (adaptive parsing)
+ */
+function normalizeToArray(parsedData: any, comando: string): ComandoResponse {
+  if (Array.isArray(parsedData)) {
+    log.debug(`[${comando}] Response is already an array`);
+    return parsedData;
+  } else if (parsedData && typeof parsedData === 'object') {
+    log.debug(`[${comando}] Response is an object, converting to array`);
+    return [parsedData];
+  } else {
+    log.error(`[${comando}] Unexpected response format:`, parsedData);
+    throw new Error(`Unexpected response format: expected object or array`);
+  }
+}
+
+/**
+ * Validate response structure
+ */
+function validateResponse(data: ComandoResponse, comando: string): void {
+  log.debug(`[${comando}] Validating response structure`);
+  
+  if (!Array.isArray(data)) {
+    throw new Error('Response is not an array');
+  }
+  
+  if (!data[0]) {
+    throw new Error('Response array is empty');
+  }
+  
+  if (!data[0].response) {
+    throw new Error('Response does not contain response field');
+  }
+}
+
+/**
+ * Handle string response (potential error format)
+ */
+function handleStringResponse(data: ComandoResponse, comando: string, requestBody: any): void {
+  if (typeof data[0].response === 'string') {
+    log.warn(`[${comando}] Response is string, checking for errors:`, data[0].response);
     
-    // Get user ID for header
-    const userId = getUserId();
-    if (!userId) {
-      throw new Error('ID do usuário não encontrado no localStorage. Faça login novamente.');
+    const errorData = parseRlifundErrorString(data[0].response);
+    if (errorData && !errorData.success && errorData.errors?.length > 0) {
+      const firstError = errorData.errors[0];
+      log.error(`[${comando}] Error detected:`, errorData);
+      
+      throw new RlifundApiError(
+        firstError.code,
+        firstError.message,
+        requestBody,
+        data[0]
+      );
     }
     
-    const url = buildApiUrl('comando?=');
+    throw new Error(`Unexpected string response format: ${data[0].response}`);
+  }
+}
+
+/**
+ * Validate success status
+ */
+function validateSuccess(data: ComandoResponse, comando: string): void {
+  if (data[0].response.success !== true) {
+    throw new Error(`Response indicates failure: success=${data[0].response.success}`);
+  }
+}
+
+/**
+ * Execute comando request (generic function for all commands)
+ */
+async function executeComandoRequest(
+  requestBody: any,
+  comando: string,
+  options?: {
+    timeout?: number;
+    validateStringResponse?: boolean;
+    customValidation?: (data: ComandoResponse) => void;
+  }
+): Promise<ComandoResponse> {
+  const userId = getUserId();
+  if (!userId) {
+    throw new Error('User ID not found in localStorage. Please login again.');
+  }
+
+  const timeout = options?.timeout || 30000;
+  const url = buildApiUrl('comando?=');
+  
+  log.info(`Sending command ${comando}:`, requestBody);
+  log.debug(`URL: ${url}`);
+  log.debug(`User ID: ${userId}`);
+  
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        ...API_CONFIG.defaultHeaders,
+        'id_usuario': userId
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    log.debug(`[${comando}] Response status: ${response.status}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const responseText = await response.text();
+    const parsedData = parseResponseText(responseText, comando);
+    const data = normalizeToArray(parsedData, comando);
+    
+    validateResponse(data, comando);
+    
+    // Handle string response (potential error)
+    if (options?.validateStringResponse !== false) {
+      handleStringResponse(data, comando, requestBody);
+    }
+    
+    // Validate success
+    validateSuccess(data, comando);
+    
+    // Custom validation if provided
+    if (options?.customValidation) {
+      options.customValidation(data);
+    }
+    
+    log.info(`[${comando}] Request successful`);
+    return data;
+    
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error.name === 'AbortError') {
+      log.error(`[${comando}] Request timeout`);
+      throw new Error('TIMEOUT');
+    }
+    
+    log.error(`[${comando}] Request error:`, error);
+    throw error;
+  }
+}
+
+// ===== SERVICE METHODS =====
+
+export const comandoService = {
+  async enviarComando(comando: string, cpf: string, version?: string): Promise<ComandoResponse> {
     const requestBody: ComandoRequest = {
       comando,
       cpf,
       ...(version && { version })
     };
     
-    log.debug(`URL: ${url}`);
-    log.debug(`Request body:`, requestBody);
-    log.debug(`User ID sendo usado: ${userId}`);
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
-    
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          ...API_CONFIG.defaultHeaders,
-          'id_usuario': userId
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      log.debug(`Response status: ${response.status}`);
-      log.debug(`Response ok:`, response.ok);
-      log.debug(`Response headers:`, Object.fromEntries(response.headers.entries()));
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      // Log raw response text before parsing
-      const responseText = await response.text();
-      log.debug(`Raw response text:`, responseText);
-      log.debug(`Response text length:`, responseText.length);
-      log.debug(`Response text type:`, typeof responseText);
-
-      let parsedData: any;
-      try {
-        parsedData = JSON.parse(responseText);
-        log.debug(`Parsed JSON data:`, parsedData);
-        log.debug(`Parsed data type:`, typeof parsedData);
-      } catch (parseError) {
-        log.error(`JSON parse error:`, parseError);
-        log.error(`Failed to parse:`, responseText.substring(0, 500));
-        throw new Error(`Falha ao fazer parse da resposta JSON: ${parseError.message}`);
-      }
-      
-      // Adaptive parsing: handle both object and array responses
-      let data: ComandoResponse;
-      if (Array.isArray(parsedData)) {
-        log.debug(`Response is already an array`);
-        data = parsedData;
-      } else if (parsedData && typeof parsedData === 'object') {
-        log.debug(`Response is an object, converting to array`);
-        data = [parsedData];
-      } else {
-        log.error(`Unexpected response format:`, parsedData);
-        throw new Error(`Formato de resposta inesperado: esperado objeto ou array`);
-      }
-      
-      // Debug validation step by step
-      log.debug(`Final data (normalized to array):`, data);
-      log.debug(`Array check:`, Array.isArray(data));
-      log.debug(`First item exists:`, !!data[0]);
-      log.debug(`Response exists:`, !!data[0]?.response);
-      log.debug(`Success value:`, data[0]?.response?.success);
-      log.debug(`Success type:`, typeof data[0]?.response?.success);
-      
-      if (!Array.isArray(data)) {
-        throw new Error('Resposta não é um array');
-      }
-      
-      if (!data[0]) {
-        throw new Error('Array de resposta está vazio');
-      }
-      
-      if (!data[0].response) {
-        throw new Error('Resposta não contém campo response');
-      }
-      
-      if (data[0].response.success !== true) {
-        throw new Error(`Resposta indica falha: success=${data[0].response.success}`);
-      }
-      
-      return data;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      log.error('Erro ao enviar comando:', error);
-      throw error;
-    }
+    return executeComandoRequest(requestBody, comando);
   },
 
   async enviarComandoRlicell(telefone: string, transactionId: string): Promise<ComandoResponse> {
-    log.info(`Enviando comando RLICELL: telefone=${telefone}, transaction_id=${transactionId}`);
-    
-    // Get user ID for header
-    const userId = getUserId();
-    if (!userId) {
-      throw new Error('ID do usuário não encontrado no localStorage. Faça login novamente.');
-    }
-    
-    const url = buildApiUrl('comando?=');
     const requestBody: ComandoRlicellRequest = {
       comando: "RLICELL",
       telefone,
       id_transaction: transactionId
     };
     
-    log.debug(`URL: ${url}`);
-    log.debug(`Request body:`, requestBody);
-    log.debug(`User ID sendo usado: ${userId}`);
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
-    
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          ...API_CONFIG.defaultHeaders,
-          'id_usuario': userId
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      console.log(`[comandoService] Response status: ${response.status}`);
-      console.log(`[comandoService] Response ok:`, response.ok);
-      console.log(`[comandoService] Response headers:`, Object.fromEntries(response.headers.entries()));
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      // Log raw response text before parsing
-      const responseText = await response.text();
-      console.log(`[comandoService] Raw response text:`, responseText);
-      console.log(`[comandoService] Response text length:`, responseText.length);
-      console.log(`[comandoService] Response text type:`, typeof responseText);
-
-      let parsedData: any;
-      try {
-        parsedData = JSON.parse(responseText);
-        console.log(`[comandoService] Parsed JSON data:`, parsedData);
-        console.log(`[comandoService] Parsed data type:`, typeof parsedData);
-      } catch (parseError) {
-        console.error(`[comandoService] JSON parse error:`, parseError);
-        console.error(`[comandoService] Failed to parse:`, responseText.substring(0, 500));
-        throw new Error(`Falha ao fazer parse da resposta JSON: ${parseError.message}`);
-      }
-      
-      // Adaptive parsing: handle both object and array responses
-      let data: ComandoResponse;
-      if (Array.isArray(parsedData)) {
-        console.log(`[comandoService] Response is already an array`);
-        data = parsedData;
-      } else if (parsedData && typeof parsedData === 'object') {
-        console.log(`[comandoService] Response is an object, converting to array`);
-        data = [parsedData];
-      } else {
-        console.error(`[comandoService] Unexpected response format:`, parsedData);
-        throw new Error(`Formato de resposta inesperado: esperado objeto ou array`);
-      }
-      
-      // Debug validation step by step
-      console.log(`[comandoService] Final data (normalized to array):`, data);
-      console.log(`[comandoService] Array check:`, Array.isArray(data));
-      console.log(`[comandoService] First item exists:`, !!data[0]);
-      console.log(`[comandoService] Response exists:`, !!data[0]?.response);
-      console.log(`[comandoService] Success value:`, data[0]?.response?.success);
-      console.log(`[comandoService] Success type:`, typeof data[0]?.response?.success);
-      
-      if (!Array.isArray(data)) {
-        throw new Error('Resposta não é um array');
-      }
-      
-      if (!data[0]) {
-        throw new Error('Array de resposta está vazio');
-      }
-      
-      if (!data[0].response) {
-        throw new Error('Resposta não contém campo response');
-      }
-      
-      if (data[0].response.success !== true) {
-        throw new Error(`Resposta indica falha: success=${data[0].response.success}`);
-      }
-      
-      return data;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      console.error('[comandoService] Erro ao enviar comando RLICELL:', error);
-      throw error;
-    }
+    return executeComandoRequest(requestBody, "RLICELL");
   },
 
-  async enviarComandoRlifund(transactionId: string, paymentOptionType: string, valueTotal: string, items: RlifundItem[]): Promise<ComandoResponse> {
-    console.log(`[comandoService] Enviando comando RLIFUND: transaction_id=${transactionId}, payment_option_type=${paymentOptionType}, value_total=${valueTotal}`);
-    console.log(`[comandoService] Items:`, items);
-    
-    // Get user ID for header
-    const userId = getUserId();
-    if (!userId) {
-      throw new Error('ID do usuário não encontrado no localStorage. Faça login novamente.');
-    }
-    
-    const url = buildApiUrl('comando?=');
+  async enviarComandoRlifund(
+    transactionId: string, 
+    paymentOptionType: string, 
+    valueTotal: string, 
+    items: RlifundItem[]
+  ): Promise<ComandoResponse> {
     const requestBody: ComandoRlifundRequest = {
       comando: "RLIFUND",
       id_transaction: transactionId,
@@ -436,134 +408,15 @@ export const comandoService = {
       items
     };
     
-    console.log(`[comandoService] URL: ${url}`);
-    console.log(`[comandoService] Request body:`, requestBody);
-    console.log(`[comandoService] User ID sendo usado: ${userId}`);
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
-    
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          ...API_CONFIG.defaultHeaders,
-          'id_usuario': userId
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      console.log(`[comandoService] Response status: ${response.status}`);
-      console.log(`[comandoService] Response ok:`, response.ok);
-      console.log(`[comandoService] Response headers:`, Object.fromEntries(response.headers.entries()));
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      // Log raw response text before parsing
-      const responseText = await response.text();
-      console.log(`[comandoService] Raw response text:`, responseText);
-      console.log(`[comandoService] Response text length:`, responseText.length);
-      console.log(`[comandoService] Response text type:`, typeof responseText);
-
-      let parsedData: any;
-      try {
-        parsedData = JSON.parse(responseText);
-        console.log(`[comandoService] Parsed JSON data:`, parsedData);
-        console.log(`[comandoService] Parsed data type:`, typeof parsedData);
-      } catch (parseError) {
-        console.error(`[comandoService] JSON parse error:`, parseError);
-        console.error(`[comandoService] Failed to parse:`, responseText.substring(0, 500));
-        throw new Error(`Falha ao fazer parse da resposta JSON: ${parseError.message}`);
-      }
-      
-      // Adaptive parsing: handle both object and array responses
-      let data: ComandoResponse;
-      if (Array.isArray(parsedData)) {
-        console.log(`[comandoService] Response is already an array`);
-        data = parsedData;
-      } else if (parsedData && typeof parsedData === 'object') {
-        console.log(`[comandoService] Response is an object, converting to array`);
-        data = [parsedData];
-      } else {
-        console.error(`[comandoService] Unexpected response format:`, parsedData);
-        throw new Error(`Formato de resposta inesperado: esperado objeto ou array`);
-      }
-      
-      // Debug validation step by step
-      console.log(`[comandoService] Final data (normalized to array):`, data);
-      console.log(`[comandoService] Array check:`, Array.isArray(data));
-      console.log(`[comandoService] First item exists:`, !!data[0]);
-      console.log(`[comandoService] Response exists:`, !!data[0]?.response);
-      console.log(`[comandoService] Success value:`, data[0]?.response?.success);
-      console.log(`[comandoService] Success type:`, typeof data[0]?.response?.success);
-      
-      if (!Array.isArray(data)) {
-        throw new Error('Resposta não é um array');
-      }
-      
-      if (!data[0]) {
-        throw new Error('Array de resposta está vazio');
-      }
-      
-      if (!data[0].response) {
-        throw new Error('Resposta não contém campo response');
-      }
-      
-      // Tratamento específico para RLIFUND: response pode ser string quando há erro
-      console.log('[comandoService] Checking response type:', typeof data[0].response);
-      console.log('[comandoService] Response value:', data[0].response);
-      
-      if (typeof data[0].response === 'string') {
-        console.log(`[comandoService] RLIFUND response é string, tentando parse de erro:`, data[0].response);
-        
-        const errorData = parseRlifundError(data[0].response);
-        console.log('[comandoService] Parse result:', errorData);
-        
-        if (errorData && !errorData.success && errorData.errors?.length > 0) {
-          const firstError = errorData.errors[0];
-          console.error(`[comandoService] Erro RLIFUND detectado:`, errorData);
-          console.log('[comandoService] Throwing RlifundApiError with code:', firstError.code, 'message:', firstError.message);
-          
-          throw new RlifundApiError(
-            firstError.code,
-            firstError.message,
-            requestBody,
-            data[0]
-          );
-        }
-        
-        // Se não conseguir parsear como erro, tratar como falha genérica
-        console.error('[comandoService] Could not parse as RLIFUND error, throwing generic error');
-        throw new Error(`Resposta RLIFUND em formato inesperado: ${data[0].response}`);
-      }
-      
-      if (data[0].response.success !== true) {
-        throw new Error(`Resposta indica falha: success=${data[0].response.success}`);
-      }
-      
-      return data;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      console.error('[comandoService] Erro ao enviar comando RLIFUND:', error);
-      throw error;
-    }
+    log.info(`Sending RLIFUND with ${items.length} items, total: ${valueTotal}`);
+    return executeComandoRequest(requestBody, "RLIFUND");
   },
 
-  async enviarComandoRlidealUatV1(transactionId: string, order: ComandoRlidealUatV1Request['order'], useProductDz: number = 1): Promise<ComandoResponse> {
-    console.log(`[comandoService] Enviando comando RLIDEAL UAT V1: transaction_id=${transactionId}`);
-    console.log(`[comandoService] Order data:`, order);
-    
-    // Get user ID for header
-    const userId = getUserId();
-    if (!userId) {
-      throw new Error('ID do usuário não encontrado no localStorage. Faça login novamente.');
-    }
-    
-    const url = buildApiUrl('comando?=');
+  async enviarComandoRlidealUatV1(
+    transactionId: string, 
+    order: ComandoRlidealUatV1Request['order'], 
+    useProductDz: number = 1
+  ): Promise<ComandoResponse> {
     const requestBody: ComandoRlidealUatV1Request = {
       comando: "RLIDEAL",
       id_transaction: transactionId,
@@ -571,679 +424,87 @@ export const comandoService = {
       order
     };
     
-    console.log(`[comandoService] URL: ${url}`);
-    console.log(`[comandoService] Request body:`, requestBody);
-    console.log(`[comandoService] User ID sendo usado: ${userId}`);
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
-    
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          ...API_CONFIG.defaultHeaders,
-          'id_usuario': userId
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      console.log(`[comandoService] Response status: ${response.status}`);
-      console.log(`[comandoService] Response ok:`, response.ok);
-      console.log(`[comandoService] Response headers:`, Object.fromEntries(response.headers.entries()));
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      // Log raw response text before parsing
-      const responseText = await response.text();
-      console.log(`[comandoService] Raw response text:`, responseText);
-      console.log(`[comandoService] Response text length:`, responseText.length);
-      console.log(`[comandoService] Response text type:`, typeof responseText);
-
-      let parsedData: any;
-      try {
-        parsedData = JSON.parse(responseText);
-        console.log(`[comandoService] Parsed JSON data:`, parsedData);
-        console.log(`[comandoService] Parsed data type:`, typeof parsedData);
-      } catch (parseError) {
-        console.error(`[comandoService] JSON parse error:`, parseError);
-        console.error(`[comandoService] Failed to parse:`, responseText.substring(0, 500));
-        throw new Error(`Falha ao fazer parse da resposta JSON: ${parseError.message}`);
-      }
-      
-      // Adaptive parsing: handle both object and array responses
-      let data: ComandoResponse;
-      if (Array.isArray(parsedData)) {
-        console.log(`[comandoService] Response is already an array`);
-        data = parsedData;
-      } else if (parsedData && typeof parsedData === 'object') {
-        console.log(`[comandoService] Response is an object, converting to array`);
-        data = [parsedData];
-      } else {
-        console.error(`[comandoService] Unexpected response format:`, parsedData);
-        throw new Error(`Formato de resposta inesperado: esperado objeto ou array`);
-      }
-      
-      // Debug validation step by step
-      console.log(`[comandoService] Final data (normalized to array):`, data);
-      console.log(`[comandoService] Array check:`, Array.isArray(data));
-      console.log(`[comandoService] First item exists:`, !!data[0]);
-      console.log(`[comandoService] Response exists:`, !!data[0]?.response);
-      console.log(`[comandoService] Success value:`, data[0]?.response?.success);
-      console.log(`[comandoService] Success type:`, typeof data[0]?.response?.success);
-      
-      if (!Array.isArray(data)) {
-        throw new Error('Resposta não é um array');
-      }
-      
-      if (!data[0]) {
-        throw new Error('Array de resposta está vazio');
-      }
-      
-      if (!data[0].response) {
-        throw new Error('Resposta não contém campo response');
-      }
-      
-      if (data[0].response.success !== true) {
-        throw new Error(`Resposta indica falha: success=${data[0].response.success}`);
-      }
-      
-      return data;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      console.error('[comandoService] Erro ao enviar comando RLIDEAL UAT V1:', error);
-      throw error;
-    }
+    log.info(`Sending RLIDEAL UAT V1 with ${order.items.length} items`);
+    return executeComandoRequest(requestBody, "RLIDEAL");
   },
 
-  // RLIDEAL command method
-  async enviarComandoRlideal(transactionId: string, paymentOption: string, version?: string): Promise<ComandoResponse> {
-    // Get user ID for header
-    const userId = getUserId();
-    if (!userId) {
-      throw new Error('ID do usuário não encontrado no localStorage. Faça login novamente.');
-    }
-
+  async enviarComandoRlideal(
+    transactionId: string, 
+    paymentOption: string, 
+    version?: string
+  ): Promise<ComandoResponse> {
     const requestBody: ComandoRlidealRequest = {
       comando: 'RLIDEAL',
       payment_option: paymentOption,
       id_transaction: transactionId,
       ...(version && { version })
     };
-
-    console.log(`[comandoService] Enviando comando RLIDEAL:`, requestBody);
-    console.log(`[comandoService] User ID sendo usado: ${userId}`);
-
-    const timeoutId = setTimeout(() => {
-      throw new Error('TIMEOUT');
-    }, 30000);
-
-    try {
-      const url = buildApiUrl('comando?=');
-      console.log(`[comandoService] RLIDEAL URL: ${url}`);
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          ...API_CONFIG.defaultHeaders,
-          'id_usuario': userId
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      clearTimeout(timeoutId);
-
-      console.log(`[comandoService] RLIDEAL Response status:`, response.status);
-      console.log(`[comandoService] RLIDEAL Response headers:`, Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const responseText = await response.text();
-      console.log(`[comandoService] RLIDEAL Raw response:`, responseText);
-
-      let parsedData;
-      try {
-        parsedData = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error(`[comandoService] RLIDEAL JSON parse error:`, parseError);
-        throw new Error(`Invalid JSON response: ${responseText}`);
-      }
-
-      // Adaptive parsing: handle both object and array responses
-      let data: ComandoResponse;
-      if (Array.isArray(parsedData)) {
-        console.log(`[comandoService] RLIDEAL Response is already an array`);
-        data = parsedData;
-      } else if (parsedData && typeof parsedData === 'object') {
-        console.log(`[comandoService] RLIDEAL Response is an object, converting to array`);
-        data = [parsedData];
-      } else {
-        console.error(`[comandoService] RLIDEAL Unexpected response format:`, parsedData);
-        throw new Error(`Formato de resposta inesperado: esperado objeto ou array`);
-      }
-
-      console.log(`[comandoService] RLIDEAL Final data:`, data);
-
-      if (!Array.isArray(data)) {
-        throw new Error('Resposta não é um array');
-      }
-
-      if (!data[0]) {
-        throw new Error('Array de resposta está vazio');
-      }
-
-      if (!data[0].response) {
-        throw new Error('Resposta não contém campo response');
-      }
-
-      // Check if response is a string (possible error format)
-      if (typeof data[0].response === 'string') {
-        console.log(`[comandoService] RLIDEAL Response is string, checking for errors:`, data[0].response);
-        
-        // Try to parse RLIDEAL error from string response
-        const errorResponse = parseRlifundError(data[0].response);
-        if (errorResponse && !errorResponse.success && errorResponse.errors?.length > 0) {
-          const error = errorResponse.errors[0];
-          throw new RlifundApiError(error.code, error.message, data[0].request, data[0].response);
-        }
-        
-        // If it's a string but not a structured error, throw generic error
-        throw new Error(`Resposta em formato string inesperado: ${data[0].response}`);
-      }
-
-      if (data[0].response.success !== true) {
-        throw new Error(`Resposta indica falha: success=${data[0].response.success}`);
-      }
-
-      return data;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      console.error('[comandoService] Erro ao enviar comando RLIDEAL:', error);
-      throw error;
-    }
+    
+    return executeComandoRequest(requestBody, 'RLIDEAL');
   },
 
-  // RLIAUTH command method
   async enviarComandoRliauth(transactionId: string, token: string): Promise<ComandoResponse> {
-    // Get user ID for header
-    const userId = getUserId();
-    if (!userId) {
-      throw new Error('ID do usuário não encontrado no localStorage. Faça login novamente.');
-    }
-
     const requestBody: ComandoRliauthRequest = {
       comando: 'RLIAUTH',
       id_transaction: transactionId,
       token: token,
       cancel: false
     };
+    
+    return executeComandoRequest(requestBody, 'RLIAUTH', {
+      customValidation: (data) => {
+        // Special validation for RLIAUTH - handle token validation messages
+        const responseData = data[0].response.data;
+        if (responseData) {
+          const messageId = responseData.message?.id;
+          const messageContent = responseData.message?.content || '';
+          const nextStep = responseData.next_step?.[0]?.description;
 
-    console.log(`[comandoService] Enviando comando RLIAUTH:`, requestBody);
-    console.log(`[comandoService] User ID sendo usado: ${userId}`);
+          log.debug(`RLIAUTH Message ID: ${messageId}`);
+          log.debug(`RLIAUTH Message Content: ${messageContent}`);
+          log.debug(`RLIAUTH Next Step: ${nextStep}`);
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
-
-    try {
-      const url = buildApiUrl('comando?=');
-      console.log(`[comandoService] RLIAUTH URL: ${url}`);
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          ...API_CONFIG.defaultHeaders,
-          'id_usuario': userId
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-      console.log(`[comandoService] RLIAUTH Response status:`, response.status);
-      console.log(`[comandoService] RLIAUTH Response headers:`, Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const responseText = await response.text();
-      console.log(`[comandoService] RLIAUTH Raw response:`, responseText);
-
-      let parsedData;
-      try {
-        parsedData = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error(`[comandoService] RLIAUTH JSON parse error:`, parseError);
-        throw new Error(`Invalid JSON response: ${responseText}`);
-      }
-
-      // Adaptive parsing: handle both object and array responses
-      let data: ComandoResponse;
-      if (Array.isArray(parsedData)) {
-        console.log(`[comandoService] RLIAUTH Response is already an array`);
-        data = parsedData;
-      } else if (parsedData && typeof parsedData === 'object') {
-        console.log(`[comandoService] RLIAUTH Response is an object, converting to array`);
-        data = [parsedData];
-      } else {
-        console.error(`[comandoService] RLIAUTH Unexpected response format:`, parsedData);
-        throw new Error(`Formato de resposta inesperado: esperado objeto ou array`);
-      }
-
-      console.log(`[comandoService] RLIAUTH Final data:`, data);
-
-      if (!Array.isArray(data)) {
-        throw new Error('Resposta não é um array');
-      }
-
-      if (!data[0]) {
-        throw new Error('Array de resposta está vazio');
-      }
-
-      if (!data[0].response) {
-        throw new Error('Resposta não contém campo response');
-      }
-
-      // Check if response is a string (possible error format)
-      if (typeof data[0].response === 'string') {
-        console.log(`[comandoService] RLIAUTH Response is string, checking for errors:`, data[0].response);
-        
-        // Try to parse RLIAUTH error from string response
-        const errorResponse = parseRlifundError(data[0].response);
-        if (errorResponse && !errorResponse.success && errorResponse.errors?.length > 0) {
-          const error = errorResponse.errors[0];
-          throw new RlifundApiError(error.code, error.message, requestBody, data[0]);
-        }
-        
-        // If it's a string but not a structured error, throw generic error
-        throw new Error(`Resposta em formato string inesperado: ${data[0].response}`);
-      }
-
-      if (data[0].response.success !== true) {
-        throw new Error(`Resposta indica falha: success=${data[0].response.success}`);
-      }
-
-      // Validate RLIAUTH specific response - check for token validation errors
-      const responseData = data[0].response.data;
-      if (responseData) {
-        const messageId = responseData.message?.id;
-        const messageContent = responseData.message?.content || '';
-        const nextStep = responseData.next_step?.[0]?.description;
-
-        console.log(`[comandoService] RLIAUTH Message ID: ${messageId}`);
-        console.log(`[comandoService] RLIAUTH Message Content: ${messageContent}`);
-        console.log(`[comandoService] RLIAUTH Next Step: ${nextStep}`);
-
-        // ✅ Para messageId 1001 (recuperável): APENAS LOG - permitir que o componente trate através do ValidationModal
-        if (messageId === 1001) {
-          console.log(`[comandoService] Token inválido (recuperável) - messageId 1001`);
-          console.log(`[comandoService] Mensagem: ${messageContent}`);
-          console.log(`[comandoService] A mensagem será exibida no ValidationModal`);
-          // NÃO throw error - retornar resposta normalmente para que o ValidationModal seja exibido
-        }
-
-        // ✅ Para messageId 1002 (fatal, mas com next_step): APENAS LOG - permitir que o componente trate através do ValidationModal
-        if (messageId === 1002) {
-          console.log(`[comandoService] Token inválido (fatal) - messageId 1002`);
-          console.log(`[comandoService] Mensagem: ${messageContent}`);
-          console.log(`[comandoService] Next step: ${nextStep}`);
-          console.log(`[comandoService] A mensagem será exibida no ValidationModal com botão único`);
-          // NÃO throw error - retornar resposta normalmente para que o ValidationModal seja exibido
+          // For messageId 1001 (recoverable) or 1002 (fatal): log only, let component handle via ValidationModal
+          if (messageId === 1001) {
+            log.info('Invalid token (recoverable) - messageId 1001');
+          } else if (messageId === 1002) {
+            log.info('Invalid token (fatal) - messageId 1002');
+          }
         }
       }
-
-      return data;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      console.error('[comandoService] Erro ao enviar comando RLIAUTH:', error);
-      
-      if (error.name === 'AbortError') {
-        throw new Error('TIMEOUT');
-      }
-      
-      throw error;
-    }
+    });
   },
 
-  // RLIPAYS command method
   async enviarComandoRlipays(transactionId: string, payments?: PaymentItem[]): Promise<ComandoResponse> {
-    // Get user ID for header
-    const userId = getUserId();
-    if (!userId) {
-      throw new Error('ID do usuário não encontrado no localStorage. Faça login novamente.');
-    }
-
     const requestBody: ComandoRlipaysRequest = {
       comando: 'RLIPAYS',
       id_transaction: transactionId,
       ...(payments && payments.length > 0 && { payments })
     };
-
-    console.log(`[comandoService] Enviando comando RLIPAYS:`, requestBody);
-    console.log(`[comandoService] Payments array:`, payments);
-    console.log(`[comandoService] User ID sendo usado: ${userId}`);
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
-
-    try {
-      const url = buildApiUrl('comando?=');
-      console.log(`[comandoService] RLIPAYS URL: ${url}`);
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          ...API_CONFIG.defaultHeaders,
-          'id_usuario': userId
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-      console.log(`[comandoService] RLIPAYS Response status:`, response.status);
-      console.log(`[comandoService] RLIPAYS Response headers:`, Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const responseText = await response.text();
-      console.log(`[comandoService] RLIPAYS Raw response:`, responseText);
-
-      let parsedData;
-      try {
-        parsedData = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error(`[comandoService] RLIPAYS JSON parse error:`, parseError);
-        throw new Error(`Invalid JSON response: ${responseText}`);
-      }
-
-      // Adaptive parsing: handle both object and array responses
-      let data: ComandoResponse;
-      if (Array.isArray(parsedData)) {
-        console.log(`[comandoService] RLIPAYS Response is already an array`);
-        data = parsedData;
-      } else if (parsedData && typeof parsedData === 'object') {
-        console.log(`[comandoService] RLIPAYS Response is an object, converting to array`);
-        data = [parsedData];
-      } else {
-        console.error(`[comandoService] RLIPAYS Unexpected response format:`, parsedData);
-        throw new Error(`Formato de resposta inesperado: esperado objeto ou array`);
-      }
-
-      console.log(`[comandoService] RLIPAYS Final data:`, data);
-
-      if (!Array.isArray(data)) {
-        throw new Error('Resposta não é um array');
-      }
-
-      if (!data[0]) {
-        throw new Error('Array de resposta está vazio');
-      }
-
-      if (!data[0].response) {
-        throw new Error('Resposta não contém campo response');
-      }
-
-      // Check if response is a string (possible error format)
-      if (typeof data[0].response === 'string') {
-        console.log(`[comandoService] RLIPAYS Response is string, checking for errors:`, data[0].response);
-        
-        // Try to parse RLIPAYS error from string response
-        const errorResponse = parseRlifundError(data[0].response);
-        if (errorResponse && !errorResponse.success && errorResponse.errors?.length > 0) {
-          const error = errorResponse.errors[0];
-          throw new RlifundApiError(error.code, error.message, requestBody, data[0]);
-        }
-        
-        // If it's a string but not a structured error, throw generic error
-        throw new Error(`Resposta em formato string inesperado: ${data[0].response}`);
-      }
-
-      if (data[0].response.success !== true) {
-        throw new Error(`Resposta indica falha: success=${data[0].response.success}`);
-      }
-
-      return data;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      console.error('[comandoService] Erro ao enviar comando RLIPAYS:', error);
-      
-      if (error.name === 'AbortError') {
-        throw new Error('TIMEOUT');
-      }
-      
-      throw error;
+    
+    if (payments) {
+      log.info(`Sending RLIPAYS with ${payments.length} payment(s)`);
     }
+    
+    return executeComandoRequest(requestBody, 'RLIPAYS');
   },
 
-  // RLIWAIT command method
   async enviarComandoRliwait(transactionId: string, cancel: boolean = false): Promise<ComandoResponse> {
-    // Get user ID for header
-    const userId = getUserId();
-    if (!userId) {
-      throw new Error('ID do usuário não encontrado no localStorage. Faça login novamente.');
-    }
-
     const requestBody: ComandoRliwaitRequest = {
       comando: 'RLIWAIT',
       id_transaction: transactionId,
-      cancel
+      cancel: cancel
     };
-
-    console.log(`[comandoService] Enviando comando RLIWAIT (cancel=${cancel}):`, requestBody);
-    console.log(`[comandoService] User ID sendo usado: ${userId}`);
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
-
-    try {
-      const url = buildApiUrl('comando?=');
-      console.log(`[comandoService] RLIWAIT URL: ${url}`);
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          ...API_CONFIG.defaultHeaders,
-          'id_usuario': userId
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-      console.log(`[comandoService] RLIWAIT Response status:`, response.status);
-      console.log(`[comandoService] RLIWAIT Response headers:`, Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const responseText = await response.text();
-      console.log(`[comandoService] RLIWAIT Raw response:`, responseText);
-
-      let parsedData;
-      try {
-        parsedData = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error(`[comandoService] RLIWAIT JSON parse error:`, parseError);
-        throw new Error(`Invalid JSON response: ${responseText}`);
-      }
-
-      // Adaptive parsing: handle both object and array responses
-      let data: ComandoResponse;
-      if (Array.isArray(parsedData)) {
-        console.log(`[comandoService] RLIWAIT Response is already an array`);
-        data = parsedData;
-      } else if (parsedData && typeof parsedData === 'object') {
-        console.log(`[comandoService] RLIWAIT Response is an object, converting to array`);
-        data = [parsedData];
-      } else {
-        console.error(`[comandoService] RLIWAIT Unexpected response format:`, parsedData);
-        throw new Error(`Formato de resposta inesperado: esperado objeto ou array`);
-      }
-
-      console.log(`[comandoService] RLIWAIT Final data:`, data);
-
-      if (!Array.isArray(data)) {
-        throw new Error('Resposta não é um array');
-      }
-
-      if (!data[0]) {
-        throw new Error('Array de resposta está vazio');
-      }
-
-      if (!data[0].response) {
-        throw new Error('Resposta não contém campo response');
-      }
-
-      // Check if response is a string (possible error format)
-      if (typeof data[0].response === 'string') {
-        console.log(`[comandoService] RLIWAIT Response is string, checking for errors:`, data[0].response);
-        
-        // Try to parse RLIWAIT error from string response
-        const errorResponse = parseRlifundError(data[0].response);
-        if (errorResponse && !errorResponse.success && errorResponse.errors?.length > 0) {
-          const error = errorResponse.errors[0];
-          throw new RlifundApiError(error.code, error.message, requestBody, data[0]);
-        }
-        
-        // If it's a string but not a structured error, throw generic error
-        throw new Error(`Resposta em formato string inesperado: ${data[0].response}`);
-      }
-
-      if (data[0].response.success !== true) {
-        throw new Error(`Resposta indica falha: success=${data[0].response.success}`);
-      }
-
-      return data;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      console.error('[comandoService] Erro ao enviar comando RLIWAIT:', error);
-      
-      if (error.name === 'AbortError') {
-        throw new Error('TIMEOUT');
-      }
-      
-      throw error;
-    }
+    
+    return executeComandoRequest(requestBody, 'RLIWAIT');
   },
 
-  // RLIQUIT command method
   async enviarComandoRliquit(transactionId: string): Promise<ComandoResponse> {
-    // Get user ID for header
-    const userId = getUserId();
-    if (!userId) {
-      throw new Error('ID do usuário não encontrado no localStorage. Faça login novamente.');
-    }
-
     const requestBody: ComandoRliquitRequest = {
       comando: 'RLIQUIT',
       id_transaction: transactionId
     };
-
-    console.log(`[comandoService] Enviando comando RLIQUIT:`, requestBody);
-    console.log(`[comandoService] User ID sendo usado: ${userId}`);
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
-
-    try {
-      const url = buildApiUrl('comando?=');
-      console.log(`[comandoService] RLIQUIT URL: ${url}`);
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          ...API_CONFIG.defaultHeaders,
-          'id_usuario': userId
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-      console.log(`[comandoService] RLIQUIT Response status:`, response.status);
-      console.log(`[comandoService] RLIQUIT Response headers:`, Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const responseText = await response.text();
-      console.log(`[comandoService] RLIQUIT Raw response:`, responseText);
-
-      let parsedData;
-      try {
-        parsedData = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error(`[comandoService] RLIQUIT JSON parse error:`, parseError);
-        throw new Error(`Invalid JSON response: ${responseText}`);
-      }
-
-      // Adaptive parsing: handle both object and array responses
-      let data: ComandoResponse;
-      if (Array.isArray(parsedData)) {
-        console.log(`[comandoService] RLIQUIT Response is already an array`);
-        data = parsedData;
-      } else if (parsedData && typeof parsedData === 'object') {
-        console.log(`[comandoService] RLIQUIT Response is an object, converting to array`);
-        data = [parsedData];
-      } else {
-        console.error(`[comandoService] RLIQUIT Unexpected response format:`, parsedData);
-        throw new Error(`Formato de resposta inesperado: esperado objeto ou array`);
-      }
-
-      console.log(`[comandoService] RLIQUIT Final data:`, data);
-
-      if (!Array.isArray(data)) {
-        throw new Error('Resposta não é um array');
-      }
-
-      if (!data[0]) {
-        throw new Error('Array de resposta está vazio');
-      }
-
-      if (!data[0].response) {
-        throw new Error('Resposta não contém campo response');
-      }
-
-      // Check if response is a string (possible error format)
-      if (typeof data[0].response === 'string') {
-        console.log(`[comandoService] RLIQUIT Response is string, checking for errors:`, data[0].response);
-        
-        // Try to parse RLIQUIT error from string response
-        const errorResponse = parseRlifundError(data[0].response);
-        if (errorResponse && !errorResponse.success && errorResponse.errors?.length > 0) {
-          const error = errorResponse.errors[0];
-          throw new RlifundApiError(error.code, error.message, requestBody, data[0]);
-        }
-        
-        // If it's a string but not a structured error, throw generic error
-        throw new Error(`Resposta em formato string inesperado: ${data[0].response}`);
-      }
-
-      if (data[0].response.success !== true) {
-        throw new Error(`Resposta indica falha: success=${data[0].response.success}`);
-      }
-
-      return data;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      console.error('[comandoService] Erro ao enviar comando RLIQUIT:', error);
-      
-      if (error.name === 'AbortError') {
-        throw new Error('TIMEOUT');
-      }
-      
-      throw error;
-    }
-  }
+    
+    return executeComandoRequest(requestBody, 'RLIQUIT');
+  },
 };

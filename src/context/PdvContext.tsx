@@ -1,5 +1,8 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('PdvContext');
 
 // Tipos para os produtos
 export interface Product {
@@ -11,34 +14,6 @@ export interface Product {
   quantity?: number;
 }
 
-// Mock de produtos
-export const MOCK_PRODUCTS: Product[] = [
-  {
-    id: '1',
-    name: 'Água Mineral 500ml',
-    price: 2.50,
-    barcode: '7891000315507',
-  },
-  {
-    id: '2',
-    name: 'Barra de Chocolate',
-    price: 4.99,
-    barcode: '7891008086697',
-  },
-  {
-    id: '3',
-    name: 'Pão Integral',
-    price: 7.90,
-    barcode: '7896002301428',
-  },
-  {
-    id: '4',
-    name: 'Sabonete Líquido',
-    price: 12.50,
-    barcode: '7896085867560',
-  },
-];
-
 // Interface do contexto
 interface PdvContextType {
   cart: Product[];
@@ -47,7 +22,6 @@ interface PdvContextType {
   decreaseQuantity: (productId: string) => void;
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
-  findProductByBarcode: (barcode: string) => Product | undefined;
   totalAmount: number;
   setInitialCart: (products: Product[]) => void;
 }
@@ -80,7 +54,7 @@ export const PdvProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
     
     // Simular log de chamada à API
-    console.log('API Call: POST /api/cart/items', {
+    log.info('API Call: POST /api/cart/items', {
       product_id: product.id,
       quantity: 1
     });
@@ -101,7 +75,7 @@ export const PdvProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return updatedCart;
     });
     
-    console.log('API Call: PATCH /api/cart/items/' + productId, {
+    log.info('API Call: PATCH /api/cart/items/' + productId, {
       action: 'increase',
       quantity: 1
     });
@@ -118,7 +92,7 @@ export const PdvProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       if (currentQuantity <= 1) {
         // Se quantidade é 1, remove o produto do carrinho
-        console.log('API Call: DELETE /api/cart/items/' + productId);
+        log.info('API Call: DELETE /api/cart/items/' + productId);
         return currentCart.filter(item => item.id !== productId);
       } else {
         // Se quantidade é maior que 1, diminui em 1
@@ -127,7 +101,7 @@ export const PdvProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...product,
           quantity: currentQuantity - 1,
         };
-        console.log('API Call: PATCH /api/cart/items/' + productId, {
+        log.info('API Call: PATCH /api/cart/items/' + productId, {
           action: 'decrease',
           quantity: -1
         });
@@ -140,26 +114,22 @@ export const PdvProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCart(currentCart => currentCart.filter(item => item.id !== productId));
     
     // Simular log de chamada à API
-    console.log('API Call: DELETE /api/cart/items/' + productId);
+    log.info('API Call: DELETE /api/cart/items/' + productId);
   };
 
   const clearCart = () => {
     setCart([]);
     
     // Simular log de chamada à API
-    console.log('API Call: DELETE /api/cart');
+    log.info('API Call: DELETE /api/cart');
   };
 
-  // Adicionar função para definir o carrinho inicial com produtos mockados
+  // Adicionar função para definir o carrinho inicial
   // Memoizado para prevenir loops infinitos
   const setInitialCart = useCallback((products: Product[]) => {
-    console.log('[PdvContext] setInitialCart called with', products.length, 'products');
+    log.debug('setInitialCart called with', products.length, 'products');
     setCart(products);
   }, []); // Dependências vazias = referência estável
-
-  const findProductByBarcode = (barcode: string): Product | undefined => {
-    return MOCK_PRODUCTS.find(p => p.barcode === barcode);
-  };
 
   // Calcular valor total do carrinho
   const totalAmount = cart.reduce(
@@ -176,7 +146,6 @@ export const PdvProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         decreaseQuantity,
         removeFromCart,
         clearCart,
-        findProductByBarcode,
         totalAmount,
         setInitialCart,
       }}
