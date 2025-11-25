@@ -7,6 +7,7 @@ Sistema de Ponto de Venda (PDV) desenvolvido com React, TypeScript e Tailwind CS
 - **[Arquitetura do Sistema](docs/ARCHITECTURE.md)** - Visão geral completa da arquitetura refatorada
 - **[Guia de Validação](docs/VALIDATION_GUIDE.md)** - Como usar validações com Zod
 - **[Guia de Retry Logic](docs/RETRY_GUIDE.md)** - Sistema de tentativas automáticas
+- **[Guia de Testes](docs/TESTING_GUIDE.md)** - Testes unitários com Vitest
 
 ## 🚀 Tecnologias
 
@@ -184,16 +185,31 @@ try {
 
 ## 🧪 Testing
 
+### Executar Testes
+
 ```bash
-# Rodar testes
+# Rodar todos os testes
 npm test
 
-# Testes em watch mode
+# Modo watch (re-executa ao salvar)
 npm run test:watch
 
-# Coverage report
+# Relatório de cobertura
 npm run test:coverage
+
+# Interface visual no navegador
+npm run test:ui
 ```
+
+### Cobertura de Testes
+
+- **~117 casos de teste** implementados
+- **Schemas de validação**: 70+ testes (CPF, telefone, email, CNPJ, EAN, etc.)
+- **Retry logic**: 16 testes (exponential backoff, error handling, callbacks)
+- **Error handling**: 21 testes (network, timeout, authentication, validation)
+- **Hooks otimizados**: 10 testes (usePaymentOptions com memoização)
+
+**Documentação completa:** [Guia de Testes](docs/TESTING_GUIDE.md)
 
 ## 🎨 Code Patterns
 
