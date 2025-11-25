@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { comandoService } from '@/services/comandoService';
 import type { ComandoResponse } from '@/services/comandoService';
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('useRliwaitPolling');
 
 export interface PollingStatus {
   isPolling: boolean;
@@ -31,14 +34,14 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
-      console.log('[useRliwaitPolling] isMountedRef cleanup - forcing stop');
+      log.debug('isMountedRef cleanup - forcing stop');
       isMountedRef.current = false;
       
       // ✅ FORÇAR LIMPEZA IMEDIATA DO INTERVALO
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
-        console.log('[useRliwaitPolling] Interval forcefully cleared on unmount');
+        log.debug('Interval forcefully cleared on unmount');
       }
     };
   }, []);
@@ -53,7 +56,7 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
     if (pollingStatus.startTime) {
       const elapsedSeconds = (currentTime.getTime() - pollingStatus.startTime.getTime()) / 1000;
       if (elapsedSeconds >= 300) { // 5 minutos
-        console.log(`[useRliwaitPolling] Timeout de 5 minutos atingido - parando polling`);
+        log.info(`Timeout de 5 minutos atingido - parando polling`);
         setPollingStatus(prev => ({
           ...prev,
           isPolling: false,
@@ -64,7 +67,7 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
     }
 
     try {
-      console.log(`[useRliwaitPolling] Tentativa ${pollingStatus.attempts + 1} - Enviando RLIWAIT ${cancel ? '(CANCEL)' : ''} para transaction: ${transactionId}`);
+      log.debug(`Tentativa ${pollingStatus.attempts + 1} - Enviando RLIWAIT ${cancel ? '(CANCEL)' : ''} para transaction: ${transactionId}`);
       
       const response: ComandoResponse = await comandoService.enviarComandoRliwait(transactionId, cancel);
       
@@ -72,8 +75,8 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
 
       const nextStep = response[0]?.response?.data?.next_step?.[0];
       const responseData = response[0]?.response?.data;
-      console.log(`[useRliwaitPolling] Next step recebido:`, nextStep);
-      console.log(`[useRliwaitPolling] Complete response data:`, responseData);
+      log.debug(`Next step recebido:`, nextStep);
+      log.debug(`Complete response data:`, responseData);
 
       setPollingStatus(prev => ({
         ...prev,

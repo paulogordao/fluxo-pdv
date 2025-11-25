@@ -2,6 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { buscarProdutosFakes } from '@/services/produtoService';
 import { API_CONFIG } from '@/config/api';
 import type { FakeProduct } from '@/services/produtoService';
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('useFakeProducts');
 
 const CACHE_RELOAD_INTERVAL = 15; // Recarregar a cada 15 acessos
 const COUNTER_KEY = 'fake_products_access_count';
@@ -31,7 +34,7 @@ export const useFakeProducts = () => {
   const query = useQuery({
     queryKey: CACHE_KEY,
     queryFn: async () => {
-      console.log('[useFakeProducts] Buscando produtos do backend...');
+      log.info('Buscando produtos do backend...');
       
       // Fetch the original fake products data with full structure
       const response = await fetch(`${API_CONFIG.baseUrl}/produtosFakes`, {
@@ -49,7 +52,7 @@ export const useFakeProducts = () => {
         throw new Error('Resposta da API inválida: propriedade "items" não encontrada ou não é um array');
       }
       
-      console.log('[useFakeProducts] Produtos carregados:', data.items.length);
+      log.info('Produtos carregados:', data.items.length);
       return data.items as FakeProduct[];
     },
     staleTime: shouldRefetch ? 0 : 30 * 60 * 1000, // 30 minutes if not forcing refresh

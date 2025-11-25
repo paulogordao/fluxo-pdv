@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { comandoService } from '@/services/comandoService';
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('useEncerrarAtendimento');
 
 export const useEncerrarAtendimento = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,11 +33,11 @@ export const useEncerrarAtendimento = () => {
     setError(null);
 
     try {
-      console.log('[useEncerrarAtendimento] Encerrando atendimento para transactionId:', transactionId);
+      log.info('Encerrando atendimento para transactionId:', transactionId);
       
       await comandoService.enviarComandoRliquit(transactionId);
       
-      console.log('[useEncerrarAtendimento] Atendimento encerrado com sucesso');
+      log.info('Atendimento encerrado com sucesso');
       
       // Limpar dados da sessão
       localStorage.removeItem('transactionId');
@@ -49,7 +52,7 @@ export const useEncerrarAtendimento = () => {
       // Redirecionar para a página inicial
       navigate('/index');
     } catch (error) {
-      console.error('[useEncerrarAtendimento] Erro ao encerrar atendimento:', error);
+      log.error('Erro ao encerrar atendimento:', error);
       setError(error instanceof Error ? error.message : 'Erro ao encerrar atendimento');
     } finally {
       setIsLoading(false);

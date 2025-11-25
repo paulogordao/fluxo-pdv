@@ -1,6 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger('useTokenPaymentEligibility');
 
 export const useTokenPaymentEligibility = () => {
   const [showTokenPaymentButton, setShowTokenPaymentButton] = useState(false);
@@ -11,13 +13,13 @@ export const useTokenPaymentEligibility = () => {
       try {
         setTokenButtonLoading(true);
         
-        console.log("Verificando elegibilidade para pagamento com token usando resposta RLIDEAL");
+        log.debug("Verificando elegibilidade para pagamento com token usando resposta RLIDEAL");
         
         // Get RLIDEAL response from localStorage
         const rlidealResponseStr = localStorage.getItem('rlidealResponse');
         
         if (!rlidealResponseStr) {
-          console.log('Resposta RLIDEAL não encontrada no localStorage ➝ Botão oculto');
+          log.info('Resposta RLIDEAL não encontrada no localStorage ➝ Botão oculto');
           setShowTokenPaymentButton(false);
           return;
         }
@@ -27,15 +29,15 @@ export const useTokenPaymentEligibility = () => {
           const otpPaymentEnabled = rlidealResponse[0]?.response?.data?.otp_payment_enabled === true;
           setShowTokenPaymentButton(otpPaymentEnabled);
           
-          console.log(`otp_payment_enabled = ${otpPaymentEnabled ? 'true ➝ Botão exibido' : 'false ➝ Botão oculto'}`);
+          log.debug(`otp_payment_enabled = ${otpPaymentEnabled ? 'true ➝ Botão exibido' : 'false ➝ Botão oculto'}`);
           
         } catch (parseError) {
-          console.error("Erro ao fazer parse da resposta RLIDEAL:", parseError);
+          log.error("Erro ao fazer parse da resposta RLIDEAL:", parseError);
           setShowTokenPaymentButton(false);
         }
         
       } catch (error) {
-        console.error("Error checking token payment eligibility:", error);
+        log.error("Error checking token payment eligibility:", error);
         setShowTokenPaymentButton(false);
       } finally {
         setTokenButtonLoading(false);

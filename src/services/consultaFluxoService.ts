@@ -1,6 +1,8 @@
-
 import { API_CONFIG, buildApiUrl } from "@/config/api";
 import { getUserId } from "@/utils/userUtils";
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger('consultaFluxoService');
 
 export interface ConsultaFluxoResponse {
   identificacao_usuario?: number;
@@ -22,7 +24,7 @@ export interface ConsultaFluxoDetalheResponse {
 
 export const consultaFluxoService = {
   async consultarFluxo(cpf: string, slug: string): Promise<ConsultaFluxoResponse> {
-    console.log(`[consultarFluxo] Iniciando consulta com CPF: ${cpf}, SLUG: ${slug}`);
+    log.info(`Iniciando consulta com CPF: ${cpf}, SLUG: ${slug}`);
     
     // Get user ID for header
     const userId = getUserId();
@@ -37,41 +39,41 @@ export const consultaFluxoService = {
     };
     
     const url = buildApiUrl('consultaFluxo', { cpf, SLUG: slug });
-    console.log(`[consultarFluxo] URL final: ${url}`);
-    console.log(`[consultarFluxo] User ID sendo usado: ${userId}`);
-    console.log('[consultarFluxo] Headers sendo enviados:', headers);
+    log.debug(`URL final: ${url}`);
+    log.debug(`User ID sendo usado: ${userId}`);
+    log.debug('Headers sendo enviados:', headers);
     
     try {
-      console.log('[consultarFluxo] Fazendo fetch...');
+      log.debug('Fazendo fetch...');
       const response = await fetch(url, {
         method: 'GET',
         headers
       });
       
-      console.log('[consultarFluxo] Response recebido:');
-      console.log('- Status:', response.status);
-      console.log('- Status text:', response.statusText);
-      console.log('- OK:', response.ok);
-      console.log('- Headers:', Object.fromEntries(response.headers.entries()));
+      log.debug('Response recebido:');
+      log.debug('- Status:', response.status);
+      log.debug('- Status text:', response.statusText);
+      log.debug('- OK:', response.ok);
+      log.debug('- Headers:', Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
-        console.error(`[consultarFluxo] Erro na requisição: ${response.status} - ${response.statusText}`);
+        log.error(`Erro na requisição: ${response.status} - ${response.statusText}`);
         throw new Error(`Erro na requisição: ${response.status}`);
       }
       
       const data = await response.json();
-      console.log("[consultarFluxo] Dados recebidos:", data);
+      log.debug("Dados recebidos:", data);
       return data;
     } catch (error) {
-      console.error('[consultarFluxo] Erro capturado:', error);
-      console.error('[consultarFluxo] Tipo do erro:', typeof error);
-      console.error('[consultarFluxo] Message do erro:', error instanceof Error ? error.message : 'Erro desconhecido');
+      log.error('Erro capturado:', error);
+      log.error('Tipo do erro:', typeof error);
+      log.error('Message do erro:', error instanceof Error ? error.message : 'Erro desconhecido');
       throw error;
     }
   },
 
   async consultarFluxoDetalhe(slug: string): Promise<ConsultaFluxoDetalheResponse> {
-    console.log(`[consultarFluxoDetalhe] Iniciando consulta com SLUG: ${slug}`);
+    log.info(`Iniciando consulta com SLUG: ${slug}`);
     
     // Get user ID for header
     const userId = getUserId();
@@ -86,9 +88,9 @@ export const consultaFluxoService = {
     };
     
     const url = buildApiUrl('consultaFluxoDetalhe', { SLUG: slug });
-    console.log(`[consultarFluxoDetalhe] URL final: ${url}`);
-    console.log(`[consultarFluxoDetalhe] User ID sendo usado: ${userId}`);
-    console.log('[consultarFluxoDetalhe] Headers sendo enviados:', headers);
+    log.debug(`URL final: ${url}`);
+    log.debug(`User ID sendo usado: ${userId}`);
+    log.debug('Headers sendo enviados:', headers);
     
     const response = await fetch(url, {
       method: 'GET',
@@ -100,7 +102,7 @@ export const consultaFluxoService = {
     }
     
     const data = await response.json();
-    console.log("Resposta da API consultaFluxoDetalhe:", data);
+    log.debug("Resposta da API consultaFluxoDetalhe:", data);
     return data;
   }
 };

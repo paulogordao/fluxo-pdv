@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger('useFundPaymentOptions');
 
 export interface FundPaymentOption {
   option: string;
@@ -25,10 +28,10 @@ export const useFundPaymentOptions = () => {
       try {
         // Recuperar dados do FUND do localStorage
         const rlifundResponseString = localStorage.getItem('rlifundResponse');
-        console.log('[useFundPaymentOptions] Raw RLIFUND response:', rlifundResponseString);
+        log.debug('Raw RLIFUND response:', rlifundResponseString);
         
         if (!rlifundResponseString) {
-          console.log('[useFundPaymentOptions] No RLIFUND data found, using default options');
+          log.info('No RLIFUND data found, using default options');
           setIsOnlineMode(false);
           setPaymentOptions(getDefaultOptions());
           setLoading(false);
@@ -36,20 +39,20 @@ export const useFundPaymentOptions = () => {
         }
 
         const rlifundResponse = JSON.parse(rlifundResponseString);
-        console.log('[useFundPaymentOptions] Parsed RLIFUND response:', rlifundResponse);
+        log.debug('Parsed RLIFUND response:', rlifundResponse);
         
         // Verificar se tem payment_options (indicativo de modo ONLINE)
         // A estrutura real é: rlifundResponse[0]?.response?.data?.payment_options
         const fundPaymentOptions = rlifundResponse[0]?.response?.data?.payment_options;
         if (!fundPaymentOptions || !Array.isArray(fundPaymentOptions)) {
-          console.log('[useFundPaymentOptions] No payment_options found, using default options');
+          log.info('No payment_options found, using default options');
           setIsOnlineMode(false);
           setPaymentOptions(getDefaultOptions());
           setLoading(false);
           return;
         }
 
-        console.log('[useFundPaymentOptions] Found payment_options:', fundPaymentOptions);
+        log.info('Found payment_options:', fundPaymentOptions);
         setIsOnlineMode(true);
         
         // Mapear as opções do FUND para o formato esperado
@@ -57,7 +60,7 @@ export const useFundPaymentOptions = () => {
         setPaymentOptions(mappedOptions);
         
       } catch (error) {
-        console.error('[useFundPaymentOptions] Error loading FUND payment options:', error);
+        log.error('Error loading FUND payment options:', error);
         setIsOnlineMode(false);
         setPaymentOptions(getDefaultOptions());
       } finally {
@@ -72,7 +75,7 @@ export const useFundPaymentOptions = () => {
   const mapFundOptions = (fundOptions: FundPaymentOption[]): MappedPaymentOption[] => {
     const mappedOptions: MappedPaymentOption[] = [];
     
-    console.log('[useFundPaymentOptions] All available fund options:', fundOptions.map(opt => opt.option));
+    log.debug('All available fund options:', fundOptions.map(opt => opt.option));
     
     // Buscar cada tipo de opção
     const appOption = fundOptions.find(opt => opt.option === 'app');
@@ -114,7 +117,7 @@ export const useFundPaymentOptions = () => {
       available: true
     });
     
-    console.log('[useFundPaymentOptions] Mapped options:', mappedOptions);
+    log.debug('Mapped options:', mappedOptions);
     return mappedOptions;
   };
 
