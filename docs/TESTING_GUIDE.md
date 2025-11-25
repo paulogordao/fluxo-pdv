@@ -619,6 +619,181 @@ it('should complete async operation', async () => {
 
 ---
 
+## CI/CD Integration
+
+### GitHub Actions Workflow
+
+O projeto possui um pipeline automatizado configurado em `.github/workflows/ci.yml` que executa em **cada push e pull request**.
+
+#### Pipeline Stages
+
+```
+┌─────────────┐
+│   Commit    │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────────────────────┐
+│  Test Job (Node 18.x & 20.x)   │
+│  ├─ Checkout código             │
+│  ├─ Setup Node.js               │
+│  ├─ Install dependencies        │
+│  ├─ Run linter                  │
+│  ├─ Run unit tests              │
+│  ├─ Generate coverage           │
+│  └─ Upload artifacts            │
+└──────────┬──────────────────────┘
+           │
+           ▼
+    ┌─────────────────┐
+    │   Build Job     │
+    │  ├─ Build app   │
+    │  └─ Archive     │
+    └─────────────────┘
+```
+
+#### O que é executado automaticamente?
+
+1. **Instalação de Dependências**
+   - Usa `npm ci` para instalação determinística
+   - Cache de `node_modules` para velocidade
+
+2. **Linting** (se configurado)
+   - Valida code style e padrões
+   - Continua mesmo com avisos
+
+3. **Testes Unitários**
+   - Executa todos os ~117 casos de teste
+   - Testa em Node.js 18.x e 20.x (matrix)
+   - Falha o build se testes falharem
+
+4. **Cobertura de Código**
+   - Gera relatório completo com v8
+   - Upload opcional para Codecov
+   - Artifacts mantidos por 30 dias
+
+5. **Build de Produção**
+   - Verifica se o build funciona
+   - Arquiva artefatos por 7 dias
+
+#### Configuração do Workflow
+
+```yaml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test
+      - run: npm run test:coverage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+```
+
+### Visualizando Resultados
+
+#### No GitHub
+
+1. Acesse a aba **Actions** no repositório
+2. Clique em qualquer workflow run
+3. Veja logs detalhados de cada step
+4. Baixe artifacts (coverage reports)
+
+#### Status Badges
+
+Adicione ao README.md:
+
+```markdown
+![CI](https://github.com/seu-usuario/seu-repo/workflows/CI/badge.svg)
+```
+
+### Troubleshooting CI/CD
+
+#### Testes passam localmente mas falham no CI
+
+**Possíveis causas:**
+
+1. **Timezones diferentes**
+   ```typescript
+   // ❌ Evite
+   const today = new Date().toLocaleDateString();
+   
+   // ✅ Use UTC
+   const today = new Date().toISOString().split('T')[0];
+   ```
+
+2. **Variáveis de ambiente faltando**
+   ```yaml
+   # Adicione no workflow
+   env:
+     VITE_API_URL: ${{ secrets.API_URL }}
+   ```
+
+3. **Dependências devDependencies não instaladas**
+   ```bash
+   # Use npm ci ao invés de npm install --production
+   npm ci
+   ```
+
+4. **Node.js version mismatch**
+   - Verifique versão local: `node --version`
+   - Atualize matrix no workflow
+
+#### Testes muito lentos no CI
+
+```typescript
+// Reduza delays em testes
+await withRetry(fn, { 
+  initialDelay: 10,    // Ao invés de 1000
+  maxAttempts: 2       // Ao invés de 3
+});
+```
+
+#### Coverage não aparece no Codecov
+
+1. Adicione token do Codecov nos secrets
+2. Verifique formato do arquivo de coverage
+3. Certifique-se que `coverage/coverage-final.json` existe
+
+### Best Practices
+
+#### ✅ DO
+
+- Mantenha testes rápidos (<10s total)
+- Use matrix para testar múltiplas versões Node.js
+- Cache de dependências para velocidade
+- Artifacts importantes (coverage, builds)
+- Fail fast: pare na primeira falha crítica
+
+#### ❌ DON'T
+
+- Não commite arquivos de coverage
+- Não use `npm install` (use `npm ci`)
+- Não ignore falhas de teste
+- Não rode testes E2E no CI básico (muito lentos)
+- Não exponha secrets em logs
+
+---
+
 ## Recursos Adicionais
 
 - [Vitest Documentation](https://vitest.dev/)
@@ -631,6 +806,6 @@ it('should complete async operation', async () => {
 
 - [ ] Adicionar testes de integração
 - [ ] Testes E2E com Playwright
-- [ ] CI/CD com testes automáticos
+- [x] **CI/CD com testes automáticos** ✅
 - [ ] Snapshot testing para componentes UI
 - [ ] Testes de performance

@@ -211,6 +211,52 @@ npm run test:ui
 
 **Documentação completa:** [Guia de Testes](docs/TESTING_GUIDE.md)
 
+## 🚀 CI/CD Pipeline
+
+### GitHub Actions
+
+O projeto possui um pipeline automatizado que executa em cada commit e pull request:
+
+#### Workflow Stages
+
+```
+┌─────────────┐
+│   Commit    │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────────────────────────┐
+│  Test Job (Node 18.x & 20.x)   │
+│  ├─ Install Dependencies        │
+│  ├─ Run Linter                  │
+│  ├─ Execute Tests               │
+│  ├─ Generate Coverage           │
+│  └─ Upload Artifacts            │
+└──────────┬──────────────────────┘
+           │
+           ▼
+    ┌─────────────┐
+    │  Build Job  │
+    │  ├─ Build   │
+    │  └─ Archive │
+    └─────────────┘
+```
+
+#### O que é testado automaticamente?
+
+- ✅ **Testes Unitários**: Todos os ~117 casos de teste
+- ✅ **Cobertura de Código**: Relatório completo gerado
+- ✅ **Linting**: Validação de code style
+- ✅ **Build de Produção**: Verifica se o build funciona
+- ✅ **Compatibilidade**: Node.js 18.x e 20.x
+
+#### Artifacts
+
+- 📊 **Coverage Reports**: Mantidos por 30 dias
+- 📦 **Build Artifacts**: Mantidos por 7 dias
+
+**Ver status:** [GitHub Actions](../../actions)
+
 ## 🎨 Code Patterns
 
 ### Service Pattern
