@@ -65,7 +65,12 @@ const Index = () => {
           
           <div className="flex justify-center">
             <PdvProvider>
-              <Button size="lg" className="px-8 py-6 text-lg bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" onClick={() => navigate('/welcome')}>
+              <Button 
+                size="lg" 
+                className="px-8 py-6 text-lg bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" 
+                onClick={() => navigate('/welcome')}
+                data-testid="start-button"
+              >
                 Iniciar Simulação
               </Button>
             </PdvProvider>

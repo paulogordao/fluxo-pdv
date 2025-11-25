@@ -1024,7 +1024,11 @@ const ScanScreen = () => {
                 ) : (
                   <div className="space-y-2">
                     {fakeProducts.map((product) => (
-                      <div key={product.ean} className="p-2 border rounded hover:bg-gray-50">
+                      <div 
+                        key={product.ean} 
+                        className="p-2 border rounded hover:bg-gray-50"
+                        data-testid="product-list-item"
+                      >
                         <div className="font-medium text-xs mb-1 truncate" title={product.name}>
                           {product.name}
                         </div>
@@ -1155,6 +1159,7 @@ const ScanScreen = () => {
                 ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-60' 
                 : `bg-emerald-500 text-white cursor-pointer ${isProcessingPayment ? 'opacity-70' : 'hover:bg-emerald-600'}`
             }`}
+            data-testid="confirm-product-button"
           >
             {isProcessingPayment ? "PROCESSANDO..." : "PAGAMENTO"}
           </div>

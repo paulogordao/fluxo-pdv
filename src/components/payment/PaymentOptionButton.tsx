@@ -5,12 +5,14 @@ interface PaymentOptionButtonProps {
   selected: boolean;
   onClick: () => void;
   label: string;
+  'data-testid'?: string;
 }
 
 const PaymentOptionButton = ({ 
   selected, 
   onClick, 
-  label 
+  label,
+  'data-testid': dataTestId
 }: PaymentOptionButtonProps) => {
   return (
     <Button 
@@ -21,6 +23,7 @@ const PaymentOptionButton = ({
           ? "bg-dotz-laranja hover:bg-dotz-laranja/90 text-white" 
           : "bg-gray-300 hover:bg-gray-400 text-black"
       }`}
+      data-testid={dataTestId}
     >
       {label}
     </Button>

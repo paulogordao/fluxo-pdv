@@ -611,6 +611,7 @@ curl --location 'https://uat-loyalty.dotznext.com/integration-router/api/default
                 className="h-16 bg-dotz-laranja hover:bg-dotz-laranja/90 text-white"
                 disabled={cpf.length !== 11 || isLoading}
                 onClick={handleSubmit}
+                data-testid="continue-button"
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
@@ -722,6 +723,7 @@ curl --location 'https://uat-loyalty.dotznext.com/integration-router/api/default
                   placeholder="Digite seu CPF"
                   maxLength={14}
                   autoFocus
+                  data-testid="cpf-input"
                 />
                 <Button
                   variant="ghost"
