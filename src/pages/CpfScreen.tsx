@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import PdvLayout from "@/components/PdvLayout";
+import { createLogger } from '@/utils/logger';
 import UserProfileSelector from "@/components/UserProfileSelector";
 import TestUsersSidebar from "@/components/TestUsersSidebar";
 import { useUserSession } from "@/hooks/useUserSession";
@@ -19,7 +20,7 @@ import { comandoService } from "@/services/comandoService";
 import { empresaService } from "@/services/empresaService";
 import { API_CONFIG, buildApiUrl } from "@/config/api";
 
-
+const log = createLogger('CpfScreen');
 
 const CpfScreen = () => {
   const [cpf, setCpf] = useState("");
@@ -40,7 +41,7 @@ const CpfScreen = () => {
   const { userName, companyName, tipo_simulacao, ambiente, userId, empresaId, userEmail, userUsername, isLoading: sessionLoading, refreshSession } = useUserSession();
 
   const handleCompanyChange = () => {
-    console.log('[CpfScreen] Company changed, refreshing session...');
+    log.info('Company changed, refreshing session...');
     refreshSession();
   };
 
@@ -69,14 +70,14 @@ const CpfScreen = () => {
         const parsedData = JSON.parse(onlineResponse);
         setTechnicalResponseData(JSON.stringify(parsedData, null, 2));
       } catch (error) {
-        console.error('Erro ao parsear onlineResponse:', error);
+        log.error('Erro ao parsear onlineResponse:', error);
       }
     } else if (offlineResponse) {
       try {
         const parsedData = JSON.parse(offlineResponse);
         setTechnicalResponseData(JSON.stringify(parsedData, null, 2));
       } catch (error) {
-        console.error('Erro ao parsear offlineResponse:', error);
+        log.error('Erro ao parsear offlineResponse:', error);
       }
     }
   }, [cpf]);
@@ -199,7 +200,7 @@ const CpfScreen = () => {
   // Handle navigation logic
   const handleNavigation = (responseData: any, tipoSimulacao?: string) => {
     const nextStep = responseData.response.data.next_step[0];
-    console.log("Next step encontrado:", nextStep);
+    log.info("Next step encontrado:", nextStep);
     
     // Store relevant data in localStorage for the next screen
     localStorage.setItem('transaction_id', responseData.response.data.transaction_id || '');
@@ -254,14 +255,14 @@ const CpfScreen = () => {
     setApiDebugInfo(null);
     
     const startTime = Date.now();
-    console.log(`Cliente identificado com CPF: ${formatCPF(cpf)}`);
+    log.info(`Cliente identificado com CPF: ${formatCPF(cpf)}`);
     
     try {
       // Clear cache from previous transaction
       localStorage.removeItem('cartCache');
       localStorage.removeItem('rlifundRequest');
       localStorage.removeItem('rlifundResponse');
-      console.log('[CpfScreen] Cache limpo para nova transação');
+      log.info('Cache limpo para nova transação');
       
       // Store the CPF in localStorage for future use
       localStorage.setItem('cpfDigitado', cpf);
@@ -281,11 +282,11 @@ const CpfScreen = () => {
             : "homologação"; // fallback
         
         setLoadingMessage(`Processando CPF no ambiente de ${ambienteTexto}...`);
-        console.log(`Modo ONLINE detectado - usando serviço de comando - Tipo: ${tipo_simulacao}`);
+        log.info(`Modo ONLINE detectado - usando serviço de comando - Tipo: ${tipo_simulacao}`);
         
         // Calculate version based on tipo_simulacao
         const version = getVersionFromSimulationType(tipo_simulacao);
-        console.log(`Versão calculada: ${version} para tipo_simulacao: ${tipo_simulacao}`);
+        log.info(`Versão calculada: ${version} para tipo_simulacao: ${tipo_simulacao}`);
         
         const requestData = { comando: 'RLIINFO', cpf, version };
         const requestTime = new Date().toISOString();
@@ -327,14 +328,14 @@ const CpfScreen = () => {
         // Show success toast with response time
         toast.success(`CPF processado com sucesso! (${responseTime}ms)`);
         
-        console.log("Response completo da API:", response);
-        console.log("Response data:", response[0]?.response?.data);
+        log.debug("Response completo da API:", response);
+        log.debug("Response data:", response[0]?.response?.data);
         
         // Check if we have the expected response structure
         if (response && response[0] && response[0].response && response[0].response.data && response[0].response.data.next_step) {
           // Check if UAT Version 1 and has message to show modal
           if (tipo_simulacao === "Versão 1" && response[0].response.data.message?.content) {
-            console.log("UAT Versão 1 detectada com mensagem - mostrando modal");
+            log.info("UAT Versão 1 detectada com mensagem - mostrando modal");
             setMessageContent(response[0].response.data.message.content);
             setPendingNavigation(response[0]);
             setShowMessageModal(true);
@@ -343,7 +344,7 @@ const CpfScreen = () => {
             handleNavigation(response[0], tipo_simulacao);
           }
         } else {
-          console.error("Estrutura de resposta inesperada:", response);
+          log.error("Estrutura de resposta inesperada:", response);
           toast.error("Resposta do servidor em formato inesperado. Verifique os logs para mais detalhes.");
         }
       } else {
