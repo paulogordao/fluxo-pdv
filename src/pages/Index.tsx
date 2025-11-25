@@ -5,13 +5,16 @@ import { useNavigate } from "react-router-dom";
 import GuiaDeNavegacaoAPI from "@/components/GuiaDeNavegacaoAPI";
 import UserProfileSelector from "@/components/UserProfileSelector";
 import { useUserSession } from "@/hooks/useUserSession";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('Index');
 
 const Index = () => {
   const navigate = useNavigate();
   const { userName, companyName, tipo_simulacao, empresaId, userEmail, userUsername, userId, isLoading, refreshSession } = useUserSession();
 
   const handleCompanyChange = () => {
-    console.log('[Index] Company changed, refreshing session...');
+    log.info('Company changed, refreshing session...');
     refreshSession();
   };
 

@@ -16,6 +16,9 @@ import {
 import PermissionModal from "@/components/PermissionModal";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { userService, UsuarioData } from "@/services/userService";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('ConfigUsuarioEditScreen');
 
 const ConfigUsuarioEditScreen = () => {
   const navigate = useNavigate();
@@ -41,10 +44,10 @@ const ConfigUsuarioEditScreen = () => {
         return;
       }
 
-      console.log("Buscando usuários...");
+      log.info("Buscando usuários...");
       
       const data = await userService.getUsers(userUUID);
-      console.log("Dados recebidos:", data);
+      log.debug("Dados recebidos:", data);
       
       if (data.data && Array.isArray(data.data)) {
         setUsuarios(data.data);
@@ -54,7 +57,7 @@ const ConfigUsuarioEditScreen = () => {
       }
       
     } catch (error) {
-      console.error("Erro ao buscar usuários:", error);
+      log.error("Erro ao buscar usuários:", error);
       toast.error("Erro ao carregar usuários. Tente novamente.");
       setUsuarios([]);
     } finally {
@@ -87,7 +90,7 @@ const ConfigUsuarioEditScreen = () => {
   };
 
   const handleDelete = (usuario: string) => {
-    console.log("Excluir usuário:", usuario);
+    log.info("Excluir usuário:", usuario);
     toast.info("Funcionalidade de exclusão será implementada em breve.");
   };
 

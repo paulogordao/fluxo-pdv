@@ -31,6 +31,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('RelatorioEstornosScreen');
 
 const RelatorioEstornosScreen = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -57,7 +60,7 @@ const RelatorioEstornosScreen = () => {
         success,
       };
     } catch (error) {
-      console.error('Erro ao fazer parse dos dados:', error);
+      log.error('Erro ao fazer parse dos dados:', error);
       return {
         transactionId: 'N/A',
         customerInfoId: 'N/A',

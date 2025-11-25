@@ -14,6 +14,9 @@ import { empresaService, Empresa } from "@/services/empresaService";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { credentialsService } from "@/services/credentialsService";
 import { clearUserSessionCache } from "@/utils/cacheUtils";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('ConfigUsuarioEditIndividualScreen');
 
 const ConfigUsuarioEditIndividualScreen = () => {
   const navigate = useNavigate();
@@ -54,10 +57,10 @@ const ConfigUsuarioEditIndividualScreen = () => {
         return;
       }
 
-      console.log("Buscando dados do usuário:", userId);
+      log.info("Buscando dados do usuário:", userId);
       
       const data = await userService.getUserById(userId, userUUID);
-      console.log("Dados do usuário recebidos:", data);
+      log.debug("Dados do usuário recebidos:", data);
       
       setUserData(data);
       setFormData({
@@ -68,7 +71,7 @@ const ConfigUsuarioEditIndividualScreen = () => {
       });
       
     } catch (error) {
-      console.error("Erro ao buscar dados do usuário:", error);
+      log.error("Erro ao buscar dados do usuário:", error);
       toast.error("Erro ao carregar dados do usuário. Tente novamente.");
     } finally {
       setIsLoading(false);
@@ -83,19 +86,19 @@ const ConfigUsuarioEditIndividualScreen = () => {
       const userUUID = sessionStorage.getItem("user.uuid");
       
       if (!userEmail || !userUUID) {
-        console.error("Sessão expirada para buscar empresas");
+        log.error("Sessão expirada para buscar empresas");
         return;
       }
 
-      console.log("Buscando empresas...");
+      log.info("Buscando empresas...");
       
       const data = await empresaService.getEmpresas(userUUID);
-      console.log("Dados das empresas recebidos:", data);
+      log.debug("Dados das empresas recebidos:", data);
       
       setEmpresas(data);
       
     } catch (error) {
-      console.error("Erro ao buscar empresas:", error);
+      log.error("Erro ao buscar empresas:", error);
       toast.error("Erro ao carregar empresas. Tente novamente.");
     } finally {
       setIsLoadingEmpresas(false);

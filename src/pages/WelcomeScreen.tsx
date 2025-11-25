@@ -5,6 +5,9 @@ import UserProfileSelector from "@/components/UserProfileSelector";
 import { useUserSession } from "@/hooks/useUserSession";
 import { ArrowRight, Barcode } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('WelcomeScreen');
 
 const WelcomeScreen = () => {
   const navigate = useNavigate();
@@ -16,7 +19,7 @@ const WelcomeScreen = () => {
   
   const handleStart = () => {
     // Simular início de sessão antes de navegar
-    console.log('API Call: POST /api/sessions/start - Iniciando nova sessão de atendimento');
+    log.info('API Call: POST /api/sessions/start - Iniciando nova sessão de atendimento');
     navigate('/start');
   };
 

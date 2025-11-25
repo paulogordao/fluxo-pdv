@@ -408,12 +408,12 @@ const ConfirmacaoPagamentoAppScreen = () => {
 
   // Handler for timeout modal actions
   const handleTimeoutRestart = () => {
-    console.log('[ConfirmacaoPagamentoAppScreen] Restarting polling after timeout');
+    log.info('Restarting polling after timeout');
     setTimeoutModalOpen(false);
     startPolling();
   };
   const handleTimeoutCancel = () => {
-    console.log('[ConfirmacaoPagamentoAppScreen] User cancelled after timeout');
+    log.info('User cancelled after timeout');
     setTimeoutModalOpen(false);
     navigate('/meios_de_pagamento');
   };
