@@ -1,6 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { transacaoService } from '@/services/transacaoService';
 import { useToast } from '@/hooks/use-toast';
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('useEstornoTransacao');
 
 interface EstornoParams {
   id: string;
@@ -27,7 +30,7 @@ export const useEstornoTransacao = () => {
       queryClient.invalidateQueries({ queryKey: ['transacoes-pays'] });
     },
     onError: (error: Error) => {
-      console.error('[useEstornoTransacao] Erro:', error);
+      log.error('Erro:', error);
       toast({
         title: "Erro ao realizar estorno",
         description: error.message || "Ocorreu um erro ao tentar estornar a transação.",

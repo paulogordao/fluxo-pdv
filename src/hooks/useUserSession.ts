@@ -1,8 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { userService } from '@/services/userService';
 import { empresaService } from '@/services/empresaService';
 import { credentialsService } from '@/services/credentialsService';
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('useUserSession');
 
 interface UserSessionData {
   userName: string;
@@ -49,7 +51,7 @@ export const useUserSession = () => {
         // 1. Get user ID from localStorage
         const userId = localStorage.getItem("userId");
         if (!userId) {
-          console.warn("[useUserSession] No user ID found in localStorage");
+          log.warn("No user ID found in localStorage");
           setSessionData(prev => ({ 
             ...prev, 
             userId: null,
