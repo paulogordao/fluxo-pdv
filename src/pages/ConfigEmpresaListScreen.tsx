@@ -7,6 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ArrowLeft, Edit, Trash2 } from "lucide-react";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { empresaService, type Empresa } from "@/services/empresaService";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('ConfigEmpresaListScreen');
 
 const ConfigEmpresaListScreen = () => {
   const navigate = useNavigate();
@@ -17,7 +20,7 @@ const ConfigEmpresaListScreen = () => {
   useEffect(() => {
     const fetchEmpresas = async () => {
       try {
-        console.log('Iniciando busca de empresas...');
+        log.info('Iniciando busca de empresas...');
         
         const userId = sessionStorage.getItem('user.uuid');
         
@@ -27,14 +30,14 @@ const ConfigEmpresaListScreen = () => {
           return;
         }
 
-        console.log('Fazendo requisição para buscar empresas...');
+        log.debug('Fazendo requisição para buscar empresas...');
         const data = await empresaService.getEmpresas(userId);
-        console.log('Dados das empresas recebidos:', data);
+        log.debug('Dados das empresas recebidos:', data);
         
         setEmpresas(data);
         setLoading(false);
       } catch (err) {
-        console.error('Erro ao buscar empresas:', err);
+        log.error('Erro ao buscar empresas:', err);
         setError('Erro ao carregar a lista de empresas');
         setLoading(false);
       }
@@ -44,12 +47,12 @@ const ConfigEmpresaListScreen = () => {
   }, []);
 
   const handleEdit = (empresa: Empresa) => {
-    console.log('Editar empresa:', empresa.id);
+    log.info('Editar empresa:', empresa.id);
     // Funcionalidade será implementada posteriormente
   };
 
   const handleDelete = (empresa: Empresa) => {
-    console.log('Apagar empresa:', empresa.id);
+    log.info('Apagar empresa:', empresa.id);
     // Funcionalidade será implementada posteriormente
   };
 

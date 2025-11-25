@@ -4,22 +4,26 @@ import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useState } from "react";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('StartScreen');
+
 const StartScreen = () => {
   const navigate = useNavigate();
   const [showDialog, setShowDialog] = useState(true);
   const handleContinue = () => {
     // Simular preparação de sessão para leitura de produtos
-    console.log('API Call: POST /api/sessions/customer/identify - Sessão pronta para leitura de produtos');
-    console.log('Cliente optou por não participar do programa de fidelidade');
+    log.info('API Call: POST /api/sessions/customer/identify - Sessão pronta para leitura de produtos');
+    log.info('Cliente optou por não participar do programa de fidelidade');
     navigate('/scan');
   };
   const handleYes = () => {
-    console.log('Cliente optou por participar do programa de fidelidade');
+    log.info('Cliente optou por participar do programa de fidelidade');
     navigate('/cpf');
   };
   const handleNo = () => {
     setShowDialog(false);
-    console.log('Cliente optou por não participar do programa de fidelidade');
+    log.info('Cliente optou por não participar do programa de fidelidade');
   };
   return <PdvLayout className="flex flex-col items-center justify-center text-center" apiCall={{
     endpoint: "/api/sessions/customer/identify",

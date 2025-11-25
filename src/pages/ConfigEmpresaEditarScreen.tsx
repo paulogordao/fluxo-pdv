@@ -13,6 +13,9 @@ import {
 } from "@/components/ui/table";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { empresaService, type Empresa } from "@/services/empresaService";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('ConfigEmpresaEditarScreen');
 
 const ConfigEmpresaEditarScreen = () => {
   const navigate = useNavigate();
@@ -27,21 +30,21 @@ const ConfigEmpresaEditarScreen = () => {
 
       const idUsuario = sessionStorage.getItem('user.uuid');
 
-      console.log('ID Usuário encontrado:', idUsuario ? 'Sim' : 'Não');
-      console.log('ID Usuário valor:', idUsuario);
+      log.debug('ID Usuário encontrado:', idUsuario ? 'Sim' : 'Não');
+      log.debug('ID Usuário valor:', idUsuario);
 
       if (!idUsuario) {
         throw new Error('Usuário não autenticado. Faça login novamente.');
       }
 
-      console.log('Fazendo requisição para listar todas as empresas...');
+      log.info('Fazendo requisição para listar todas as empresas...');
       
       const empresas = await empresaService.getEmpresas(idUsuario);
-      console.log('Dados das empresas recebidos:', empresas);
+      log.debug('Dados das empresas recebidos:', empresas);
       
       setEmpresas(empresas);
     } catch (err) {
-      console.error('Erro ao buscar empresas:', err);
+      log.error('Erro ao buscar empresas:', err);
       setError('Erro ao carregar a lista de empresas. Verifique sua autenticação.');
     } finally {
       setLoading(false);
@@ -53,12 +56,12 @@ const ConfigEmpresaEditarScreen = () => {
   }, []);
 
   const handleEdit = (empresa: Empresa) => {
-    console.log('Editar empresa:', empresa);
+    log.info('Editar empresa:', empresa);
     navigate(`/config_empresa_edit/${empresa.id}`);
   };
 
   const handleDelete = (empresa: Empresa) => {
-    console.log('Apagar empresa:', empresa);
+    log.info('Apagar empresa:', empresa);
     // Funcionalidade será implementada posteriormente
   };
 

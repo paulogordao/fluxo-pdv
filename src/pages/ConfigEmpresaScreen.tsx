@@ -17,6 +17,9 @@ import { empresaService, type CreateEmpresaData } from "@/services/empresaServic
 import { credentialsService, type CredentialListItem } from "@/services/credentialsService";
 import { brasilApiService } from "@/services/brasilApiService";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('ConfigEmpresaScreen');
 
 const empresaSchema = z.object({
   nome: z.string().min(1, "Nome da empresa é obrigatório"),
@@ -61,7 +64,7 @@ const ConfigEmpresaScreen = () => {
         const credentialsData = await credentialsService.getCredentials();
         setCredentials(credentialsData);
       } catch (error) {
-        console.error("Erro ao carregar credenciais:", error);
+        log.error("Erro ao carregar credenciais:", error);
         toast.error("Erro ao carregar credenciais");
       } finally {
         setIsLoadingCredentials(false);

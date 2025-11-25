@@ -18,6 +18,9 @@ import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { credentialsService } from "@/services/credentialsService";
 import { getUserId } from "@/utils/userUtils";
 import PermissionModal from "@/components/PermissionModal";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('ConfigUsuarioNovoScreen');
 
 const ConfigUsuarioNovoScreen = () => {
   const navigate = useNavigate();
@@ -69,7 +72,7 @@ const ConfigUsuarioNovoScreen = () => {
       }
     },
     onError: (error) => {
-      console.error('Error creating user:', error);
+      log.error('Error creating user:', error);
       toast({
         title: "Erro ao cadastrar usuário",
         description: "Verifique os dados e tente novamente.",

@@ -96,7 +96,7 @@ const ConfirmacaoPagamentoScreen = () => {
           setRliauthData(parsed);
         }
       } catch (error) {
-        console.error('[ConfirmacaoPagamento] Error loading RLIAUTH data:', error);
+        log.error('Error loading RLIAUTH data:', error);
       }
     };
 
@@ -166,7 +166,7 @@ const ConfirmacaoPagamentoScreen = () => {
           const rlidealResponse = JSON.parse(rlidealResponseStr);
           const orderData = rlidealResponse[0]?.response?.data?.order;
           
-          console.log('[ConfirmacaoPagamento] Using RLIDEAL data for none option:', orderData);
+          log.debug('Using RLIDEAL data for none option:', orderData);
           
           if (orderData) {
             const subtotal = orderData.value?.toFixed(2).replace('.', ',') || "0,00";
@@ -187,14 +187,14 @@ const ConfirmacaoPagamentoScreen = () => {
             
             setDocumentationSlug("RLIDEALRLIPAYS");
             
-            console.log('[ConfirmacaoPagamento] Using RLIDEAL values for none option:', {
+            log.debug('Using RLIDEAL values for none option:', {
               subtotal, desconto, residual
             });
             return;
           }
         }
       } catch (error) {
-        console.error('[ConfirmacaoPagamento] Error reading RLIDEAL data for none option:', error);
+        log.error('Error reading RLIDEAL data for none option:', error);
       }
     }
 
@@ -412,7 +412,7 @@ const ConfirmacaoPagamentoScreen = () => {
           setTechnicalResponseData(JSON.stringify(parsedData, null, 2));
         }
       } catch (error) {
-        console.error('Error parsing previous service response:', error);
+        log.error('Error parsing previous service response:', error);
         setTechnicalResponseData(previousServiceResponse);
       }
     }
@@ -452,15 +452,15 @@ const ConfirmacaoPagamentoScreen = () => {
       try {
         // Only call API if we don't have dynamic data and need fallback
         if (!technicalRequestData && !technicalResponseData) {
-          console.log(`[ConfirmacaoPagamento] Loading technical docs for ${documentationSlug}`);
+          log.debug(`Loading technical docs for ${documentationSlug}`);
           const data = await consultaFluxoService.consultarFluxoDetalhe(documentationSlug);
           setApiData(data);
-          console.log('[ConfirmacaoPagamento] API data loaded:', data);
+          log.debug('API data loaded:', data);
         } else {
-          console.log('[ConfirmacaoPagamento] Using dynamic technical data, skipping API call');
+          log.debug('Using dynamic technical data, skipping API call');
         }
       } catch (error) {
-        console.error('[ConfirmacaoPagamento] Error fetching API data:', error);
+        log.error('Error fetching API data:', error);
         toast.error("Erro ao carregar detalhes técnicos");
       } finally {
         setIsLoading(false);
@@ -485,12 +485,12 @@ const ConfirmacaoPagamentoScreen = () => {
           const order = orderData.order;
           if (order) {
             const remainingAmount = parseFloat((order.value - order.paid_out).toFixed(2));
-            console.log('[ConfirmacaoPagamento] Using RLIWAIT remaining amount for RLIPAYS:', remainingAmount);
+            log.debug('Using RLIWAIT remaining amount for RLIPAYS:', remainingAmount);
             return remainingAmount;
           }
         }
       } catch (error) {
-        console.error('[ConfirmacaoPagamento] Error reading orderData for calculation:', error);
+        log.error('Error reading orderData for calculation:', error);
       }
     }
     
@@ -503,19 +503,19 @@ const ConfirmacaoPagamentoScreen = () => {
           const residual = rlidealResponse[0]?.response?.data?.order?.residual;
           if (residual !== undefined) {
             const result = parseFloat(residual.toFixed(2));
-            console.log('[ConfirmacaoPagamento] Using RLIDEAL residual for none option RLIPAYS:', result);
+            log.debug('Using RLIDEAL residual for none option RLIPAYS:', result);
             return result;
           }
         }
       } catch (error) {
-        console.error('[ConfirmacaoPagamento] Error reading RLIDEAL response for none option:', error);
+        log.error('Error reading RLIDEAL response for none option:', error);
       }
     }
     
     // If coming directly from ScanScreen (FUND -> RLIPAYS flow), return the real cart total
     if (comingFromScanScreen && totalAmount > 0) {
       const result = parseFloat(totalAmount.toFixed(2));
-      console.log('[ConfirmacaoPagamento] Using real cart total for RLIPAYS:', result);
+      log.debug('Using real cart total for RLIPAYS:', result);
       return result;
     }
     
@@ -528,18 +528,18 @@ const ConfirmacaoPagamentoScreen = () => {
           const residual = rlidealResponse[0]?.response?.data?.order?.residual;
           if (residual !== undefined) {
             const result = parseFloat(residual.toFixed(2));
-            console.log('[ConfirmacaoPagamento] Using RLIDEAL residual amount for RLIPAYS:', result);
+            log.debug('Using RLIDEAL residual amount for RLIPAYS:', result);
             return result;
           }
         }
       } catch (error) {
-        console.error('[ConfirmacaoPagamento] Error reading RLIDEAL response:', error);
+        log.error('Error reading RLIDEAL response:', error);
       }
       
       // Fallback to totalAmount if residual not available
       if (totalAmount > 0) {
         const result = parseFloat(totalAmount.toFixed(2));
-        console.log('[ConfirmacaoPagamento] Using real cart total for RLIDEAL RLIPAYS (fallback):', result);
+        log.debug('Using real cart total for RLIDEAL RLIPAYS (fallback):', result);
         return result;
       }
     }
@@ -549,7 +549,7 @@ const ConfirmacaoPagamentoScreen = () => {
     
     // Apply toFixed(2) to avoid floating point precision errors
     const result = parseFloat((subtotalValue - recebidoValue).toFixed(2));
-    console.log('[ConfirmacaoPagamento] Calculated amount - subtotal:', subtotalValue, 'recebido:', recebidoValue, 'result:', result);
+    log.debug('Calculated amount - subtotal:', subtotalValue, 'recebido:', recebidoValue, 'result:', result);
     
     return result;
   };
