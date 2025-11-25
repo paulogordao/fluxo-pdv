@@ -1,46 +1,49 @@
 import { buildApiUrl, API_CONFIG } from '@/config/api';
 import { TransacaoResponse, TransacaoEstornoResponse } from '@/types/transacao';
 import { getUserId } from '@/utils/userUtils';
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('transacaoService');
 
 export const transacaoService = {
   async buscarTransacoes(): Promise<TransacaoResponse> {
     try {
       const userId = getUserId();
-      console.log('[transacaoService] User ID obtido:', userId);
+      log.info('User ID obtido:', userId);
       
       if (!userId) {
         throw new Error("ID do usuário não encontrado");
       }
 
       const url = buildApiUrl('transacoes');
-      console.log('[transacaoService] URL construída:', url);
+      log.info('URL construída:', url);
       
       const headers = {
         ...API_CONFIG.defaultHeaders,
         'User-Agent': 'SimuladorPDV/1.0',
         'id_usuario': userId,
       };
-      console.log('[transacaoService] Headers enviados:', headers);
+      log.debug('Headers enviados:', headers);
       
-      console.log('[transacaoService] Iniciando fetch para:', url);
+      log.info('Iniciando fetch para:', url);
       const response = await fetch(url, {
         method: 'GET',
         headers,
       });
 
-      console.log('[transacaoService] Response status:', response.status);
-      console.log('[transacaoService] Response headers:', Object.fromEntries(response.headers.entries()));
+      log.info('Response status:', response.status);
+      log.debug('Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
-        console.error('[transacaoService] Response não OK:', response.status, response.statusText);
+        log.error('Response não OK:', response.status, response.statusText);
         throw new Error(`Erro HTTP: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('[transacaoService] Dados recebidos:', data);
+      log.info('Dados recebidos:', data);
       return data;
     } catch (error) {
-      console.error('[transacaoService] Erro detalhado:', {
+      log.error('Erro detalhado:', {
         message: error.message,
         stack: error.stack,
         name: error.name
@@ -52,41 +55,41 @@ export const transacaoService = {
   async buscarTransacoesPays(): Promise<TransacaoEstornoResponse> {
     try {
       const userId = getUserId();
-      console.log('[transacaoService] User ID obtido para Pays:', userId);
+      log.info('User ID obtido para Pays:', userId);
       
       if (!userId) {
         throw new Error("ID do usuário não encontrado");
       }
 
       const url = buildApiUrl('transacoes/pays');
-      console.log('[transacaoService] URL construída para Pays:', url);
+      log.info('URL construída para Pays:', url);
       
       const headers = {
         ...API_CONFIG.defaultHeaders,
         'User-Agent': 'SimuladorPDV/1.0',
         'id_usuario': userId,
       };
-      console.log('[transacaoService] Headers enviados para Pays:', headers);
+      log.debug('Headers enviados para Pays:', headers);
       
-      console.log('[transacaoService] Iniciando fetch para Pays:', url);
+      log.info('Iniciando fetch para Pays:', url);
       const response = await fetch(url, {
         method: 'GET',
         headers,
       });
 
-      console.log('[transacaoService] Response status Pays:', response.status);
-      console.log('[transacaoService] Response headers Pays:', Object.fromEntries(response.headers.entries()));
+      log.info('Response status Pays:', response.status);
+      log.debug('Response headers Pays:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
-        console.error('[transacaoService] Response não OK Pays:', response.status, response.statusText);
+        log.error('Response não OK Pays:', response.status, response.statusText);
         throw new Error(`Erro HTTP: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('[transacaoService] Dados recebidos Pays:', data);
+      log.info('Dados recebidos Pays:', data);
       return data;
     } catch (error) {
-      console.error('[transacaoService] Erro detalhado Pays:', {
+      log.error('Erro detalhado Pays:', {
         message: error.message,
         stack: error.stack,
         name: error.name
@@ -98,14 +101,14 @@ export const transacaoService = {
   async estornarTransacao(id: string, transactionId: string, cpf: string): Promise<any> {
     try {
       const userId = getUserId();
-      console.log('[transacaoService] Estornando transação:', { id, transactionId, cpf, userId });
+      log.info('Estornando transação:', { id, transactionId, cpf, userId });
       
       if (!userId) {
         throw new Error("ID do usuário não encontrado");
       }
 
       const url = buildApiUrl('transacoes/estorno');
-      console.log('[transacaoService] URL construída para estorno:', url);
+      log.info('URL construída para estorno:', url);
       
       const headers = {
         ...API_CONFIG.defaultHeaders,
@@ -119,7 +122,7 @@ export const transacaoService = {
         cpf
       };
 
-      console.log('[transacaoService] Dados do estorno:', body);
+      log.info('Dados do estorno:', body);
       
       const response = await fetch(url, {
         method: 'POST',
@@ -127,27 +130,27 @@ export const transacaoService = {
         body: JSON.stringify(body),
       });
 
-      console.log('[transacaoService] Response status estorno:', response.status);
+      log.info('Response status estorno:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('[transacaoService] Erro no estorno:', response.status, errorData);
+        log.error('Erro no estorno:', response.status, errorData);
         throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('[transacaoService] Resposta do estorno:', data);
+      log.info('Resposta do estorno:', data);
       
       // Verificar se o estorno foi bem-sucedido
       if (data.response?.success === false) {
         const errorMessage = data.response?.errors?.[0]?.message || 'Erro desconhecido ao processar estorno';
-        console.error('[transacaoService] Erro retornado pela API:', errorMessage);
+        log.error('Erro retornado pela API:', errorMessage);
         throw new Error(errorMessage);
       }
       
       return data;
     } catch (error) {
-      console.error('[transacaoService] Erro detalhado no estorno:', {
+      log.error('Erro detalhado no estorno:', {
         message: error.message,
         stack: error.stack,
         name: error.name

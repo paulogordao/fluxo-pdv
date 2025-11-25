@@ -1,3 +1,7 @@
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('skuUtils');
+
 /**
  * Trunca o SKU para no máximo 10 caracteres
  * Retorna os últimos 10 caracteres para preservar a parte única do identificador
@@ -20,6 +24,6 @@ export const truncateSku = (sku: string): string => {
   
   // Pegar os últimos 10 caracteres para preservar a parte única
   const truncated = sku.slice(-10);
-  console.log(`[skuUtils] SKU truncado: "${sku}" -> "${truncated}"`);
+  log.info(`SKU truncado: "${sku}" -> "${truncated}"`);
   return truncated;
 };
