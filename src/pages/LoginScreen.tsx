@@ -337,6 +337,7 @@ const LoginScreen = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Digite seu email"
                 disabled={isLoading}
+                data-testid="email-input"
               />
             </div>
             
@@ -349,6 +350,7 @@ const LoginScreen = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Digite sua senha"
                 disabled={isLoading}
+                data-testid="password-input"
               />
             </div>
             
@@ -358,6 +360,7 @@ const LoginScreen = () => {
               variant="dotz" 
               className="mt-6"
               disabled={isLoading}
+              data-testid="login-button"
             >
               {isLoading ? "Entrando..." : "Entrar"}
             </Button>

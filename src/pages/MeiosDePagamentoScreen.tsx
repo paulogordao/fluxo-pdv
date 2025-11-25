@@ -382,6 +382,7 @@ const MeiosDePagamentoScreen = () => {
                     selected={selectedOption === option.id}
                     onClick={() => handleOptionSelect(option.id)}
                     label={option.label}
+                    data-testid="payment-option"
                   />
                 ))
               ) : (
@@ -391,21 +392,25 @@ const MeiosDePagamentoScreen = () => {
                     selected={selectedOption === "app"}
                     onClick={() => handleOptionSelect("app")}
                     label="Pagar pelo App"
+                    data-testid="payment-option"
                   />
                   <PaymentOptionButton
                     selected={selectedOption === "livelo"}
                     onClick={() => handleOptionSelect("livelo")}
                     label="Livelo"
+                    data-testid="payment-option"
                   />
                   <PaymentOptionButton
                     selected={selectedOption === "dotz"}
                     onClick={() => handleOptionSelect("dotz")}
                     label="Dotz"
+                    data-testid="payment-option"
                   />
                   <PaymentOptionButton
                     selected={selectedOption === "none"}
                     onClick={() => handleOptionSelect("none")}
                     label="Não desejo usar nenhum programa"
+                    data-testid="payment-option"
                   />
                 </>
               )}
