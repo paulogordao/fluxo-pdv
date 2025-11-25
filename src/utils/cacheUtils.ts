@@ -1,4 +1,7 @@
 // Utility functions for managing user session cache
+import { createLogger } from './logger';
+
+const log = createLogger('cacheUtils');
 
 /**
  * Clears all user session cache from localStorage and sessionStorage
@@ -13,9 +16,9 @@ export const clearUserSessionCache = (): void => {
     sessionStorage.removeItem("user_name");
     sessionStorage.removeItem("company_name");
     
-    console.log("[cacheUtils] User session cache cleared successfully");
+    log.info("User session cache cleared successfully");
   } catch (error) {
-    console.error("[cacheUtils] Error clearing user session cache:", error);
+    log.error("Error clearing user session cache:", error);
   }
 };
 
@@ -26,7 +29,7 @@ export const hasUserSessionCache = (): boolean => {
   try {
     return localStorage.getItem("user_session_cache") !== null;
   } catch (error) {
-    console.error("[cacheUtils] Error checking user session cache:", error);
+    log.error("Error checking user session cache:", error);
     return false;
   }
 };
@@ -53,9 +56,9 @@ export const clearRlifundCache = (): void => {
   try {
     localStorage.removeItem("rlifundRequest");
     localStorage.removeItem("rlifundResponse");
-    console.log("[cacheUtils] RLIFUND cache cleared successfully");
+    log.info("RLIFUND cache cleared successfully");
   } catch (error) {
-    console.error("[cacheUtils] Error clearing RLIFUND cache:", error);
+    log.error("Error clearing RLIFUND cache:", error);
   }
 };
 
@@ -67,7 +70,7 @@ export const getRlifundRequest = (): any | null => {
     const data = localStorage.getItem("rlifundRequest");
     return data ? JSON.parse(data) : null;
   } catch (error) {
-    console.error("[cacheUtils] Error getting RLIFUND request:", error);
+    log.error("Error getting RLIFUND request:", error);
     return null;
   }
 };
@@ -83,9 +86,9 @@ export const setCartCache = (cart: any[], totalAmount: number): void => {
       timestamp: Date.now()
     };
     localStorage.setItem("cartCache", JSON.stringify(cartCache));
-    console.log("[cacheUtils] Cart cache stored:", cartCache);
+    log.info("Cart cache stored:", cartCache);
   } catch (error) {
-    console.error("[cacheUtils] Error storing cart cache:", error);
+    log.error("Error storing cart cache:", error);
   }
 };
 
@@ -97,7 +100,7 @@ export const getCartCache = (): { cart: any[], totalAmount: number, timestamp: n
     const data = localStorage.getItem("cartCache");
     return data ? JSON.parse(data) : null;
   } catch (error) {
-    console.error("[cacheUtils] Error getting cart cache:", error);
+    log.error("Error getting cart cache:", error);
     return null;
   }
 };
@@ -108,8 +111,8 @@ export const getCartCache = (): { cart: any[], totalAmount: number, timestamp: n
 export const clearCartCache = (): void => {
   try {
     localStorage.removeItem("cartCache");
-    console.log("[cacheUtils] Cart cache cleared");
+    log.info("Cart cache cleared");
   } catch (error) {
-    console.error("[cacheUtils] Error clearing cart cache:", error);
+    log.error("Error clearing cart cache:", error);
   }
 };

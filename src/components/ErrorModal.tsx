@@ -9,6 +9,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('ErrorModal');
 
 interface ErrorModalProps {
   isOpen: boolean;
@@ -59,7 +62,7 @@ const ErrorModal = ({
       await navigator.clipboard.writeText(JSON.stringify(details, null, 2));
       // Poderia adicionar um toast aqui para confirmar que foi copiado
     } catch (error) {
-      console.error('Erro ao copiar para clipboard:', error);
+      log.error('Erro ao copiar para clipboard:', error);
     }
   };
 

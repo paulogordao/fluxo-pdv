@@ -1,42 +1,45 @@
 // Utility function to extract specific error messages from various error formats
+import { createLogger } from './logger';
+
+const log = createLogger('errorUtils');
 
 export const extractErrorMessage = (error: unknown): string => {
   // Handle Error objects
   if (error instanceof Error) {
     const message = error.message;
-    console.log('[DEBUG] Processing error message:', message);
+    log.debug('Processing error message:', message);
     
     // Handle "STATUS_CODE - JSON_STRING" pattern like "400 - "{\"detail\":\"...\"}"
     const statusJsonMatch = message.match(/^\d+\s*-\s*"(.+)"$/);
     if (statusJsonMatch) {
       try {
-        console.log('[DEBUG] Matched status-json pattern, captured:', statusJsonMatch[1]);
+        log.debug('Matched status-json pattern, captured:', statusJsonMatch[1]);
         
         // The captured group has the JSON with escaped quotes - need double unescaping
         let jsonString = statusJsonMatch[1];
         
         // First level: unescape the outer quotes
         jsonString = jsonString.replace(/\\"/g, '"');
-        console.log('[DEBUG] After first unescape:', jsonString);
+        log.debug('After first unescape:', jsonString);
         
         // Second level: if it's still escaped JSON, parse and re-stringify to clean it
         if (jsonString.startsWith('\\')) {
           jsonString = JSON.parse('"' + jsonString + '"');
-          console.log('[DEBUG] After second unescape:', jsonString);
+          log.debug('After second unescape:', jsonString);
         }
         
         const parsedJson = JSON.parse(jsonString);
-        console.log('[DEBUG] Parsed JSON:', parsedJson);
+        log.debug('Parsed JSON:', parsedJson);
         
         if (parsedJson.detail) {
-          console.log('[DEBUG] Returning detail:', parsedJson.detail);
+          log.debug('Returning detail:', parsedJson.detail);
           return parsedJson.detail;
         } else if (parsedJson.message) {
-          console.log('[DEBUG] Returning message:', parsedJson.message);
+          log.debug('Returning message:', parsedJson.message);
           return parsedJson.message;
         }
       } catch (parseError) {
-        console.log('[DEBUG] Parse error:', parseError);
+        log.debug('Parse error:', parseError);
         // Continue with fallback parsing
       }
     }

@@ -8,6 +8,9 @@ import { empresaService, Empresa } from "@/services/empresaService";
 import { userService } from "@/services/userService";
 import { toast } from "sonner";
 import { clearUserSessionCache } from "@/utils/cacheUtils";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('UserProfileSelector');
 
 interface UserProfileSelectorProps {
   userName?: string;
@@ -51,7 +54,7 @@ const UserProfileSelector = ({
       const data = await empresaService.getEmpresas(userId);
       setEmpresas(data);
     } catch (error) {
-      console.error("Erro ao carregar empresas:", error);
+      log.error("Erro ao carregar empresas:", error);
       toast.error("Erro ao carregar empresas");
     } finally {
       setIsLoadingEmpresas(false);
@@ -82,7 +85,7 @@ const UserProfileSelector = ({
       }
       
     } catch (error) {
-      console.error("Erro ao trocar empresa:", error);
+      log.error("Erro ao trocar empresa:", error);
       toast.error("Erro ao trocar empresa. Tente novamente.");
     } finally {
       setIsSwitching(false);

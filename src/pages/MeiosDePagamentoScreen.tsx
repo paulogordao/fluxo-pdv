@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import PdvLayout from "@/components/PdvLayout";
 import PaymentOptionButton from "@/components/payment/PaymentOptionButton";
+import { createLogger } from '@/utils/logger';
 import TechnicalFooter from "@/components/TechnicalFooter";
 import { usePaymentOptions } from "@/hooks/usePaymentOptions";
 import { useFundPaymentOptions } from "@/hooks/useFundPaymentOptions";
@@ -31,6 +32,8 @@ import ErrorModal from "@/components/ErrorModal";
 import { comandoService, RlifundApiError } from "@/services/comandoService";
 import { Loader2 } from "lucide-react";
 import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
+
+const log = createLogger('MeiosDePagamentoScreen');
 
 const MeiosDePagamentoScreen = () => {
   const [selectedOption, setSelectedOption] = useState("app");
@@ -101,7 +104,7 @@ const MeiosDePagamentoScreen = () => {
           }
         }
       } catch (error) {
-        console.error('Erro ao parsear rlifundResponse:', error);
+        log.error('Erro ao parsear rlifundResponse:', error);
         // Fallback to raw data if parsing fails
         setTechnicalResponseData(rlifundResponse);
       }
@@ -140,7 +143,7 @@ const MeiosDePagamentoScreen = () => {
             }
           }
         } catch (error) {
-          console.error('Erro ao parsear rlifundResponse:', error);
+          log.error('Erro ao parsear rlifundResponse:', error);
           // Fallback to raw data if parsing fails
           setTechnicalResponseData(rlifundResponse);
         }
@@ -156,7 +159,7 @@ const MeiosDePagamentoScreen = () => {
     setSelectedOption(option);
     setSelectedPaymentOption(option as any);
     
-    console.log(`Opção selecionada: ${option === "app" ? "1" : option === "livelo" ? "2" : option === "dotz" ? "3" : "4"} – Aplicando valores na confirmação.`);
+    log.info(`Opção selecionada: ${option === "app" ? "1" : option === "livelo" ? "2" : option === "dotz" ? "3" : "4"} – Aplicando valores na confirmação.`);
     
     // If in ONLINE mode, call RLIDEAL service first
     if (isOnlineMode) {
@@ -172,7 +175,7 @@ const MeiosDePagamentoScreen = () => {
   const handleRlidealCall = async (option: string) => {
     const transactionId = localStorage.getItem('transactionId');
     if (!transactionId) {
-      console.error('Transaction ID não encontrado');
+      log.error('Transaction ID não encontrado');
       navigate('/cpf');
       return;
     }
@@ -182,18 +185,18 @@ const MeiosDePagamentoScreen = () => {
     // Determinar a versão baseada no tipo de simulação
     const version = getVersionFromTipo(sessionData?.tipo_simulacao);
     
-    console.log(`[DEBUG] tipo_simulacao: ${sessionData?.tipo_simulacao}`);
-    console.log(`[DEBUG] version detectada: ${version}`);
-    console.log(`[DEBUG] option recebida: "${option}"`);
-    console.log(`[DEBUG] Condição none+v2: ${option === "none" && version === "2"}`);
+    log.debug(`tipo_simulacao: ${sessionData?.tipo_simulacao}`);
+    log.debug(`version detectada: ${version}`);
+    log.debug(`option recebida: "${option}"`);
+    log.debug(`Condição none+v2: ${option === "none" && version === "2"}`);
     
     // Mapear "none" para string vazia apenas na versão 2
     let paymentOptionValue = option;
     if (option === "none" && version === "2") {
       paymentOptionValue = "";
-      console.log(`[DEBUG] ✅ Mapeamento executado: "none" → ""`);
+      log.debug(`✅ Mapeamento executado: "none" → ""`);
     } else {
-      console.log(`[DEBUG] ❌ Mapeamento NÃO executado`);
+      log.debug(`❌ Mapeamento NÃO executado`);
     }
     
     try {
@@ -202,41 +205,41 @@ const MeiosDePagamentoScreen = () => {
         setTimeout(() => reject(new Error('TIMEOUT')), 30000);
       });
 
-      console.log(`[MeiosDePagamentoScreen] Enviando RLIDEAL com versão: ${version} (tipo_simulacao: ${sessionData?.tipo_simulacao})`);
-      console.log(`[MeiosDePagamentoScreen] Opção original: ${option}, Valor enviado: ${paymentOptionValue}`);
+      log.info(`Enviando RLIDEAL com versão: ${version} (tipo_simulacao: ${sessionData?.tipo_simulacao})`);
+      log.info(`Opção original: ${option}, Valor enviado: ${paymentOptionValue}`);
       
       const response = await Promise.race([
         comandoService.enviarComandoRlideal(transactionId, paymentOptionValue, version),
         timeoutPromise
       ]) as any;
 
-      console.log('[MeiosDePagamentoScreen] RLIDEAL response:', response);
+      log.debug('RLIDEAL response:', response);
       
       // Store RLIDEAL response
       localStorage.setItem('rlidealResponse', JSON.stringify(response));
 
       // Navigate based on payment option and token requirements
       const tokenInfo = response[0]?.response?.data?.token;
-      console.log('[MeiosDePagamentoScreen] Token info:', tokenInfo);
+      log.debug('Token info:', tokenInfo);
       if (tokenInfo?.required === true && tokenInfo?.type?.toLowerCase() === 'birthdate') {
-        console.log('[MeiosDePagamentoScreen] Redirecting to /otp_data_nascimento for birthdate token');
+        log.info('Redirecting to /otp_data_nascimento for birthdate token');
         navigate('/otp_data_nascimento');
       } else if (tokenInfo?.required === true && tokenInfo?.type?.toLowerCase() === 'otp') {
-        console.log('[MeiosDePagamentoScreen] Redirecting to /confirmacao_pagamento_token for OTP token');
+        log.info('Redirecting to /confirmacao_pagamento_token for OTP token');
         navigate('/confirmacao_pagamento_token');
       } else if (option === "app") {
-        console.log('[MeiosDePagamentoScreen] Redirecting to /confirmacao_pagamento_app for app option');
+        log.info('Redirecting to /confirmacao_pagamento_app for app option');
         navigate('/confirmacao_pagamento_app');
       } else {
         // Default navigation for other cases (none option)
-        console.log('[MeiosDePagamentoScreen] Redirecting to /confirmacao_pagamento for none option');
+        log.info('Redirecting to /confirmacao_pagamento for none option');
         navigate('/confirmacao_pagamento', {
           state: { fromRlidealNoneOption: true }
         });
       }
 
     } catch (error: any) {
-      console.error('[MeiosDePagamentoScreen] Erro RLIDEAL:', error);
+      log.error('Erro RLIDEAL:', error);
       
       let errorCode = 'RLIDEAL_ERROR';
       let errorMessage = "Erro ao processar opção de pagamento. Tente novamente.";
@@ -325,7 +328,6 @@ const MeiosDePagamentoScreen = () => {
   // Handle cancel from the second dotz dialog (Option 3 - Dotz)
   const handleDotzConfirmCancel = () => {
     setShowDotzConfirmDialog(false);
-    // No further action needed - just close the dialog
   };
 
   // Handle retry for RLIDEAL call

@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('TechnicalDocumentation');
 
 interface TechnicalDocumentationProps {
   slug?: string;
@@ -84,7 +87,7 @@ const TechnicalDocumentation = ({
       
       setIsLoading(true);
       try {
-        console.log("Fetching technical documentation for:", slug);
+        log.info("Fetching technical documentation for:", slug);
         const data = await consultaFluxoService.consultarFluxoDetalhe(slug);
         
         setApiData({
@@ -93,9 +96,9 @@ const TechnicalDocumentation = ({
           request_servico: data.request_servico || "",
           response_servico_anterior: data.response_servico_anterior || ""
         });
-        console.log("Technical documentation data fetched:", data);
+        log.info("Technical documentation data fetched:", data);
       } catch (err) {
-        console.error("Error fetching documentation:", err);
+        log.error("Error fetching documentation:", err);
         setError("Documentação técnica indisponível no momento.");
       } finally {
         setIsLoading(false);
