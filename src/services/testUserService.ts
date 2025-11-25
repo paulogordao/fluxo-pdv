@@ -1,5 +1,7 @@
-
 import { API_CONFIG } from "@/config/api";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('testUserService');
 
 export interface UsuarioTeste {
   id: string;
@@ -19,7 +21,7 @@ export interface UsuarioTeste {
 export const testUserService = {
   async getUsuariosTeste(userId: string): Promise<UsuarioTeste[]> {
     const url = `${API_CONFIG.baseUrl}/usuarios_teste`;
-    console.log('Fetching usuarios teste from URL:', url);
+    log.info('Fetching usuarios teste from URL:', url);
     
     const response = await fetch(url, {
       method: "GET",
@@ -34,33 +36,33 @@ export const testUserService = {
     }
 
     const responseData = await response.json();
-    console.log("Resposta completa da API:", responseData);
+    log.info("Resposta completa da API:", responseData);
     
     // A API agora retorna um objeto com o campo 'data' contendo o array de usuários
     if (responseData && responseData.data && Array.isArray(responseData.data)) {
-      console.log("Dados dos usuários encontrados:", responseData.data);
+      log.info("Dados dos usuários encontrados:", responseData.data);
       return responseData.data;
     }
     
     // Fallback: se não há campo 'data', mas há um array direto
     if (Array.isArray(responseData)) {
-      console.log("Dados diretos (array):", responseData);
+      log.info("Dados diretos (array):", responseData);
       return responseData;
     }
     
     // Fallback: se é um objeto único, transformar em array
     if (responseData && typeof responseData === 'object' && !Array.isArray(responseData) && responseData.identificacao_usuario) {
-      console.log("Objeto único transformado em array:", [responseData]);
+      log.info("Objeto único transformado em array:", [responseData]);
       return [responseData];
     }
     
-    console.log("Nenhum dado válido encontrado, retornando array vazio");
+    log.info("Nenhum dado válido encontrado, retornando array vazio");
     return [];
   },
 
   async createUsuarioTeste(cpf: string, userId: string): Promise<void> {
     const url = `${API_CONFIG.baseUrl}/usuarios_teste`;
-    console.log('Creating usuario teste at URL:', url);
+    log.info('Creating usuario teste at URL:', url);
     
     const response = await fetch(url, {
       method: "POST",
@@ -85,7 +87,7 @@ export const testUserService = {
 
   async updateUsuarioTeste(usuario: UsuarioTeste, userId: string): Promise<void> {
     const url = `${API_CONFIG.baseUrl}/usuarios_teste`;
-    console.log('Updating usuario teste at URL:', url);
+    log.info('Updating usuario teste at URL:', url);
     
     const response = await fetch(url, {
       method: "PUT",

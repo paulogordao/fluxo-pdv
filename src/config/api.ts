@@ -1,3 +1,6 @@
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('api');
 
 export const API_CONFIG = {
   baseUrl: 'https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV',
@@ -10,13 +13,13 @@ export const API_CONFIG = {
 
 // Helper function to build API URLs
 export const buildApiUrl = (endpoint: string, params?: Record<string, string>) => {
-  console.log(`[buildApiUrl] Endpoint recebido: "${endpoint}"`);
-  console.log(`[buildApiUrl] Params recebidos:`, params);
-  console.log(`[buildApiUrl] Base URL: "${API_CONFIG.baseUrl}"`);
+  log.debug(`Endpoint recebido: "${endpoint}"`);
+  log.debug(`Params recebidos:`, params);
+  log.debug(`Base URL: "${API_CONFIG.baseUrl}"`);
   
   // Remove leading slash from endpoint if present to avoid double slashes
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
-  console.log(`[buildApiUrl] Clean endpoint: "${cleanEndpoint}"`);
+  log.debug(`Clean endpoint: "${cleanEndpoint}"`);
   
   // Construir a URL completa usando concatenação manual para preservar o path
   let url = `${API_CONFIG.baseUrl}/${cleanEndpoint}`;
@@ -27,6 +30,6 @@ export const buildApiUrl = (endpoint: string, params?: Record<string, string>) =
     url = `${url}?${searchParams.toString()}`;
   }
   
-  console.log(`[buildApiUrl] URL final construída: "${url}"`);
+  log.debug(`URL final construída: "${url}"`);
   return url;
 };
