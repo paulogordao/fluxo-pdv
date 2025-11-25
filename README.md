@@ -211,6 +211,51 @@ npm run test:ui
 
 **Documentação completa:** [Guia de Testes](docs/TESTING_GUIDE.md)
 
+## 🎭 Testes E2E (Playwright)
+
+### Pré-requisitos
+
+Instalar os navegadores do Playwright (apenas na primeira vez):
+
+```bash
+npx playwright install
+```
+
+### Executar Testes E2E
+
+```bash
+# Executar todos os testes E2E
+npx playwright test
+
+# Executar com interface visual interativa (recomendado para debug)
+npx playwright test --ui
+
+# Executar com navegador visível
+npx playwright test --headed
+
+# Ver relatório HTML após execução
+npx playwright show-report
+```
+
+### Cenários de Teste Implementados
+
+#### Fluxo de Pagamento com Token - Versão 2 Online
+
+**Cenário 1: Rejeição de Token Inválido** ✅
+- Login com usuário de teste UAT V2
+- Navegação: Index → CPF → Scan → Meios de Pagamento
+- Seleção de "Pagar com APP"
+- Inserção de token inválido: `182101`
+- Verificação de modal de erro
+
+**Cenário 2: Cancelamento Durante Entrada de Token** ✅
+- Navegação até tela de token
+- Inserção de token parcial
+- Clique em "Cancelar"
+- Verificação de retorno para tela de meios de pagamento
+
+**Documentação completa:** [E2E Tests Guide](e2e/README.md)
+
 ## 🚀 CI/CD Pipeline
 
 ### GitHub Actions
@@ -229,7 +274,7 @@ O projeto possui um pipeline automatizado que executa em cada commit e pull requ
 │  Test Job (Node 18.x & 20.x)   │
 │  ├─ Install Dependencies        │
 │  ├─ Run Linter                  │
-│  ├─ Execute Tests               │
+│  ├─ Execute Unit Tests          │
 │  ├─ Generate Coverage           │
 │  └─ Upload Artifacts            │
 └──────────┬──────────────────────┘
@@ -239,12 +284,21 @@ O projeto possui um pipeline automatizado que executa em cada commit e pull requ
     │  Build Job  │
     │  ├─ Build   │
     │  └─ Archive │
-    └─────────────┘
+    └──────┬──────┘
+           │
+           ▼
+    ┌─────────────────────┐
+    │  E2E Tests Job      │
+    │  ├─ Playwright      │
+    │  ├─ Payment Flow    │
+    │  └─ Artifacts       │
+    └─────────────────────┘
 ```
 
 #### O que é testado automaticamente?
 
 - ✅ **Testes Unitários**: Todos os ~117 casos de teste
+- ✅ **Testes E2E**: Fluxos críticos com Playwright
 - ✅ **Cobertura de Código**: Relatório completo gerado
 - ✅ **Linting**: Validação de code style
 - ✅ **Build de Produção**: Verifica se o build funciona
@@ -254,6 +308,7 @@ O projeto possui um pipeline automatizado que executa em cada commit e pull requ
 
 - 📊 **Coverage Reports**: Mantidos por 30 dias
 - 📦 **Build Artifacts**: Mantidos por 7 dias
+- 🎭 **Playwright Reports**: Screenshots e vídeos em caso de falha
 
 **Ver status:** [GitHub Actions](../../actions)
 
