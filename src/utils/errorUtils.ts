@@ -3,7 +3,28 @@ import { createLogger } from './logger';
 
 const log = createLogger('errorUtils');
 
-export const extractErrorMessage = (error: unknown): string => {
+/**
+ * Error context to provide more actionable error messages
+ */
+interface ErrorContext {
+  operation?: string;
+  suggestion?: string;
+  userMessage?: string;
+}
+
+/**
+ * Enhanced error message with context
+ */
+export interface EnhancedError {
+  message: string;
+  context?: ErrorContext;
+  originalError?: unknown;
+}
+
+/**
+ * Extract error message with context
+ */
+export const extractErrorMessage = (error: unknown, context?: ErrorContext): string => {
   // Handle Error objects
   if (error instanceof Error) {
     const message = error.message;
@@ -82,7 +103,95 @@ export const extractErrorMessage = (error: unknown): string => {
   }
 
   // Fallback for unknown error types
-  return 'Ocorreu um erro inesperado';
+  const baseMessage = 'Ocorreu um erro inesperado';
+  
+  if (context?.userMessage) {
+    return `${baseMessage}: ${context.userMessage}`;
+  }
+  
+  return baseMessage;
+};
+
+/**
+ * Get user-friendly error message with suggestions
+ */
+export const getUserFriendlyError = (error: unknown, operation?: string): EnhancedError => {
+  const baseMessage = extractErrorMessage(error);
+  
+  // Network errors
+  if (baseMessage.includes('Failed to fetch') || baseMessage.includes('Network')) {
+    return {
+      message: 'Erro de conexão',
+      context: {
+        operation,
+        suggestion: 'Verifique sua conexão com a internet e tente novamente',
+        userMessage: 'Não foi possível conectar ao servidor'
+      },
+      originalError: error
+    };
+  }
+  
+  // Timeout errors
+  if (baseMessage.includes('TIMEOUT') || baseMessage.includes('timeout')) {
+    return {
+      message: 'Tempo de resposta excedido',
+      context: {
+        operation,
+        suggestion: 'O servidor demorou muito para responder. Tente novamente em alguns instantes',
+        userMessage: 'Operação demorou muito tempo'
+      },
+      originalError: error
+    };
+  }
+  
+  // Authentication errors
+  if (baseMessage.includes('401') || baseMessage.includes('Unauthorized')) {
+    return {
+      message: 'Sessão expirada',
+      context: {
+        operation,
+        suggestion: 'Faça login novamente para continuar',
+        userMessage: 'Sua sessão expirou'
+      },
+      originalError: error
+    };
+  }
+  
+  // Validation errors
+  if (baseMessage.includes('inválid') || baseMessage.includes('validation')) {
+    return {
+      message: 'Dados inválidos',
+      context: {
+        operation,
+        suggestion: 'Verifique os dados informados e tente novamente',
+        userMessage: 'Os dados fornecidos são inválidos'
+      },
+      originalError: error
+    };
+  }
+  
+  // Server errors
+  if (baseMessage.includes('500') || baseMessage.includes('Internal Server Error')) {
+    return {
+      message: 'Erro no servidor',
+      context: {
+        operation,
+        suggestion: 'Tente novamente em alguns instantes. Se o erro persistir, entre em contato com o suporte',
+        userMessage: 'Ocorreu um erro no servidor'
+      },
+      originalError: error
+    };
+  }
+  
+  // Default enhanced error
+  return {
+    message: baseMessage,
+    context: {
+      operation,
+      suggestion: 'Tente novamente. Se o erro persistir, entre em contato com o suporte'
+    },
+    originalError: error
+  };
 };
 
 export const formatHealthCheckError = (healthError: any): string => {
