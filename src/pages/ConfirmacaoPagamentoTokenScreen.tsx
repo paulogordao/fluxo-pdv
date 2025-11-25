@@ -10,6 +10,10 @@ import { comandoService } from "@/services/comandoService";
 import { toast } from "sonner";
 import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
 import ValidationModal from "@/components/ValidationModal";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('ConfirmacaoPagamentoTokenScreen');
+
 const ConfirmacaoPagamentoTokenScreen = () => {
   const [tokenDigits, setTokenDigits] = useState<string[]>([]);
   const [remainingTime, setRemainingTime] = useState(16); // Initial time in seconds
@@ -32,11 +36,11 @@ const ConfirmacaoPagamentoTokenScreen = () => {
   const [technicalPreviousRequestData, setTechnicalPreviousRequestData] = useState<string | undefined>();
 
   // Debug log to see the actual value
-  console.log('[TokenScreen] tipo_simulacao:', tipo_simulacao);
+  log.debug('tipo_simulacao:', tipo_simulacao);
 
   // Determine if this is an ONLINE company (UAT or any non-OFFLINE company)
   const isOnlineCompany = tipo_simulacao && !tipo_simulacao.includes('OFFLINE');
-  console.log('[TokenScreen] isOnlineCompany:', isOnlineCompany);
+  log.debug('isOnlineCompany:', isOnlineCompany);
 
   // Mock token for the app emulator
   const mockToken = "128456";
@@ -59,7 +63,7 @@ const ConfirmacaoPagamentoTokenScreen = () => {
           }
         }
       } catch (error) {
-        console.error('Erro ao parsear rlidealResponse:', error);
+        log.error('Erro ao parsear rlidealResponse:', error);
       }
     }
 
@@ -82,7 +86,7 @@ const ConfirmacaoPagamentoTokenScreen = () => {
       };
       setTechnicalRequestData(JSON.stringify(currentRequest, null, 2));
     } catch (error) {
-      console.error('Error generating current request:', error);
+      log.error('Error generating current request:', error);
     }
   };
 
@@ -131,9 +135,9 @@ const ConfirmacaoPagamentoTokenScreen = () => {
             return;
           }
           
-          console.log('[TokenScreen] Calling RLIAUTH with token:', token);
+          log.info('Calling RLIAUTH with token:', token);
           const response = await comandoService.enviarComandoRliauth(transactionId, token);
-          console.log('[TokenScreen] RLIAUTH Response:', response);
+          log.debug('RLIAUTH Response:', response);
 
           // Store the RLIAUTH response in localStorage
           localStorage.setItem('rliauthResponse', JSON.stringify(response));
@@ -144,9 +148,9 @@ const ConfirmacaoPagamentoTokenScreen = () => {
           const nextStep = response?.[0]?.response?.data?.next_step?.[0]?.description;
           
           if (systemMessage) {
-            console.log('[TokenScreen] System message found:', systemMessage);
-            console.log('[TokenScreen] Message ID:', messageId);
-            console.log('[TokenScreen] Next step:', nextStep);
+            log.info('System message found:', systemMessage);
+            log.debug('Message ID:', messageId);
+            log.debug('Next step:', nextStep);
             
             // Salvar resposta pendente
             setPendingRliauthResponse(response);
@@ -161,7 +165,7 @@ const ConfirmacaoPagamentoTokenScreen = () => {
           }
           
         } catch (error) {
-          console.error('[TokenScreen] Error calling RLIAUTH:', error);
+          log.error('Error calling RLIAUTH:', error);
           
           // Mostrar erro genérico
           const errorMessage = error instanceof Error ? error.message : "Erro ao validar token. Tente novamente.";

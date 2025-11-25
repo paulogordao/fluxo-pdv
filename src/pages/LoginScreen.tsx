@@ -12,6 +12,9 @@ import { authService } from "@/services/authService";
 import { brasilApiService } from "@/services/brasilApiService";
 import { userService } from "@/services/userService";
 import { empresaService } from "@/services/empresaService";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('LoginScreen');
 
 const LoginScreen = () => {
   const navigate = useNavigate();
@@ -66,9 +69,9 @@ const LoginScreen = () => {
     setIsFetchingCNPJ(true);
     
     try {
-      console.log('Buscando dados do CNPJ:', cnpj);
+      log.debug('Buscando dados do CNPJ:', cnpj);
       const cnpjData = await brasilApiService.consultarCNPJ(cnpj);
-      console.log('Dados recebidos da API:', cnpjData);
+      log.debug('Dados recebidos da API:', cnpjData);
 
       // Only fill empty fields to avoid overwriting user input
       setAccessRequestData(prev => ({
@@ -80,7 +83,7 @@ const LoginScreen = () => {
       toast.success("Dados da empresa preenchidos automaticamente!");
       
     } catch (error) {
-      console.error("Erro ao buscar dados do CNPJ:", error);
+      log.error("Erro ao buscar dados do CNPJ:", error);
       toast.error(error instanceof Error ? error.message : "Erro ao consultar CNPJ");
     } finally {
       setIsFetchingCNPJ(false);
@@ -125,7 +128,7 @@ const LoginScreen = () => {
         toast.error("Erro ao enviar solicitação. Tente novamente.");
       }
     } catch (error) {
-      console.error("Erro ao enviar solicitação de recuperação:", error);
+      log.error("Erro ao enviar solicitação de recuperação:", error);
       toast.error(error instanceof Error ? error.message : "Erro de conexão. Tente novamente.");
     } finally {
       setIsSubmittingForgotPassword(false);
@@ -169,7 +172,7 @@ const LoginScreen = () => {
         toast.error("Erro ao enviar solicitação. Tente novamente.");
       }
     } catch (error) {
-      console.error("Erro ao enviar solicitação de acesso:", error);
+      log.error("Erro ao enviar solicitação de acesso:", error);
       toast.error(error instanceof Error ? error.message : "Erro de conexão. Tente novamente.");
     } finally {
       setIsSubmittingRequest(false);
@@ -178,7 +181,7 @@ const LoginScreen = () => {
 
   const cacheUserSessionData = async (userId: string) => {
     try {
-      console.log('[LoginScreen] Caching user session data for userId:', userId);
+      log.debug('Caching user session data for userId:', userId);
       
       // 1. Fetch user data
       const userData = await userService.getUserById(userId, userId);
@@ -195,7 +198,7 @@ const LoginScreen = () => {
           companyName = empresaData.nome || companyName;
           tipoSimulacao = empresaData.tipo_simulacao || null;
         } catch (error) {
-          console.warn('[LoginScreen] Error fetching company data:', error);
+          log.warn('Error fetching company data:', error);
         }
       }
       
@@ -214,10 +217,10 @@ const LoginScreen = () => {
       sessionStorage.setItem("user_name", userName);
       sessionStorage.setItem("company_name", companyName);
       
-      console.log('[LoginScreen] User session data cached successfully:', cacheData);
+      log.debug('User session data cached successfully:', cacheData);
       
     } catch (error) {
-      console.error('[LoginScreen] Error caching user session data:', error);
+      log.error('Error caching user session data:', error);
       // Don't throw error to avoid breaking login flow
     }
   };
@@ -267,7 +270,7 @@ const LoginScreen = () => {
         
         // Save user ID in multiple places to ensure the permissions hook can find it
         if (data.id_usuario) {
-          console.log('Saving user ID for permissions:', data.id_usuario);
+          log.debug('Saving user ID for permissions:', data.id_usuario);
           // Save in sessionStorage (existing)
           sessionStorage.setItem("user.uuid", data.id_usuario);
           // Save in localStorage with direct key that useUserPermissions looks for
@@ -300,7 +303,7 @@ const LoginScreen = () => {
         setShowError(true);
       }
     } catch (error) {
-      console.error("Erro na autenticação:", error);
+      log.error("Erro na autenticação:", error);
       setErrorMessage(error instanceof Error ? error.message : "Erro de conexão. Tente novamente.");
       setShowError(true);
     } finally {

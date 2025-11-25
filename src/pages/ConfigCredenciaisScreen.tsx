@@ -19,6 +19,9 @@ import { formatCNPJInput, normalizeCNPJ } from "@/utils/cnpjUtils";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import PermissionModal from "@/components/PermissionModal";
 import { extractErrorMessage, formatHealthCheckError } from '@/utils/errorUtils';
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('ConfigCredenciaisScreen');
 
 const credentialSchema = z.object({
   cnpj: z.string().min(14, "CNPJ é obrigatório e deve ter pelo menos 14 caracteres"),
@@ -74,7 +77,7 @@ const ConfigCredenciaisScreen = () => {
       }));
       setCredentials(credentialsWithHealthStatus);
     } catch (error) {
-      console.error("Erro ao carregar credenciais:", error);
+      log.error("Erro ao carregar credenciais:", error);
       setCredentials([]); // Ensure we always have an array
       toast({
         title: "Erro ao carregar credenciais",
@@ -220,7 +223,7 @@ const ConfigCredenciaisScreen = () => {
         )
       );
 
-      console.error('Error updating credential status:', error);
+      log.error('Error updating credential status:', error);
       toast({
         title: "Erro ao atualizar status",
         description: error instanceof Error ? error.message : "Ocorreu um erro inesperado",
@@ -316,7 +319,7 @@ const ConfigCredenciaisScreen = () => {
         )
       );
 
-      console.error('Error checking credential health:', error);
+      log.error('Error checking credential health:', error);
       toast({
         title: "Erro na verificação",
         description: extractErrorMessage(error),

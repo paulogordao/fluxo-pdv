@@ -15,6 +15,10 @@ import { useTokenPaymentEligibility } from "@/hooks/useTokenPaymentEligibility";
 import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
 import { comandoService } from "@/services/comandoService";
 import { truncateSku } from "@/utils/skuUtils";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('ConfirmacaoPagamentoAppScreen');
+
 const ConfirmacaoPagamentoAppScreen = () => {
   const navigate = useNavigate();
   // Technical documentation states
@@ -81,16 +85,16 @@ const ConfirmacaoPagamentoAppScreen = () => {
         const url = buildApiUrl('/consultaFluxoDetalhe', {
           SLUG: 'RLIDEALRLIWAIT'
         });
-        console.log("Fetching API details:", url);
+        log.debug("Fetching API details:", url);
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`Error in request: ${response.status}`);
         }
         const data = await response.json();
         setApiData(data);
-        console.log("API data:", data);
+        log.debug("API data:", data);
       } catch (error) {
-        console.error("Error fetching API data:", error);
+        log.error("Error fetching API data:", error);
         toast.error("Erro ao carregar detalhes técnicos");
       } finally {
         setIsLoading(false);
@@ -120,7 +124,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
           setTechnicalResponseData(JSON.stringify(parsedData, null, 2));
         }
       } catch (error) {
-        console.error('Error parsing rlidealResponse:', error);
+        log.error('Error parsing rlidealResponse:', error);
         setTechnicalResponseData(rlidealResponse);
       }
     }
@@ -156,15 +160,15 @@ const ConfirmacaoPagamentoAppScreen = () => {
     const shouldStartPolling = isOnlineFlow && transactionId && !pollingStartedRef.current;
     
     if (shouldStartPolling) {
-      console.log('[ConfirmacaoPagamentoAppScreen] Starting RLIWAIT polling for ONLINE flow (ONCE)');
-      console.log('[ConfirmacaoPagamentoAppScreen] Transaction ID:', transactionId);
+      log.info('Starting RLIWAIT polling for ONLINE flow (ONCE)');
+      log.debug('Transaction ID:', transactionId);
       pollingStartedRef.current = true;
       startPolling();
     }
     
     // ✅ CLEANUP - Parar polling quando componente desmontar
     return () => {
-      console.log('[ConfirmacaoPagamentoAppScreen] Component unmounting - forcing stop');
+      log.info('Component unmounting - forcing stop');
       if (pollingStartedRef.current) {
         stopPolling();
         pollingStartedRef.current = false;
@@ -175,7 +179,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
   // Monitor polling timeout
   useEffect(() => {
     if (pollingStatus.status === 'timeout') {
-      console.log('[ConfirmacaoPagamentoAppScreen] Polling timeout detected - showing modal');
+      log.warn('Polling timeout detected - showing modal');
       setTimeoutModalOpen(true);
     }
   }, [pollingStatus.status]);
@@ -191,7 +195,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
         customer_info_id: pollingStatus.orderData.customer_info_id,
         next_step: pollingStatus.nextStepData
       }));
-      console.log('[ConfirmacaoPagamentoAppScreen] Order data stored, navigating to confirmacao_pagamento');
+      log.info('Order data stored, navigating to confirmacao_pagamento');
       navigate('/confirmacao_pagamento', {
         state: {
           fromAppScreen: true
@@ -203,10 +207,10 @@ const ConfirmacaoPagamentoAppScreen = () => {
     navigate("/confirmacao_pagamento");
   };
   const handleCancel = async () => {
-    console.log('[ConfirmacaoPagamentoApp] User clicked cancel button');
+    log.info('User clicked cancel button');
     
     if (isOnlineFlow && transactionId) {
-      console.log('[ConfirmacaoPagamentoApp] Sending cancel request before stopping polling');
+      log.info('Sending cancel request before stopping polling');
       
       // Enviar RLIWAIT com cancel=true
       await sendCancelRequest();
@@ -217,7 +221,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
       }
     }
     
-    console.log('[ConfirmacaoPagamentoApp] Returning to confirmation screen');
+    log.info('Returning to confirmation screen');
     navigate("/confirmacao_pagamento", {
       state: { fromAppScreen: true }
     });
@@ -225,20 +229,20 @@ const ConfirmacaoPagamentoAppScreen = () => {
 
   // Show alert dialog first
   const handleTokenPaymentClick = () => {
-    console.log("Alerta exibido: necessário executar break step via RLIFUND antes do token.");
+    log.info("Alerta exibido: necessário executar break step via RLIFUND antes do token.");
     setAlertDialogOpen(true);
   };
 
   // Handler for when alert OK button is clicked
   const handleAlertConfirm = async () => {
-    console.log("[Token] Iniciando refazer checkout com payment_option_type: otp");
+    log.info("[Token] Iniciando refazer checkout com payment_option_type: otp");
     setIsTokenLoading(true);
     setAlertDialogOpen(false);
     try {
       // Recuperar dados originais do carrinho
       const cartCacheStr = localStorage.getItem('cartCache');
       if (!cartCacheStr) {
-        console.error('[Token] Dados do carrinho não encontrados');
+        log.error('[Token] Dados do carrinho não encontrados');
         toast.error("Dados da compra não encontrados. Retorne para o início.");
         navigate('/meios_de_pagamento');
         return;
@@ -246,18 +250,18 @@ const ConfirmacaoPagamentoAppScreen = () => {
 
       const cartCache = JSON.parse(cartCacheStr);
       const { cart, totalAmount } = cartCache;
-      console.log('[Token] Dados do carrinho recuperados:', cartCache);
+      log.debug('[Token] Dados do carrinho recuperados:', cartCache);
 
       // Validar dados do carrinho
       if (!cart || !Array.isArray(cart) || cart.length === 0) {
-        console.error('[Token] Carrinho vazio ou inválido');
+        log.error('[Token] Carrinho vazio ou inválido');
         toast.error("Carrinho vazio. Retorne para o início.");
         navigate('/meios_de_pagamento');
         return;
       }
 
       if (!totalAmount || totalAmount <= 0) {
-        console.error('[Token] Valor total inválido');
+        log.error('[Token] Valor total inválido');
         toast.error("Valor da compra inválido. Retorne para o início.");
         navigate('/meios_de_pagamento');
         return;
@@ -280,12 +284,12 @@ const ConfirmacaoPagamentoAppScreen = () => {
         is_on_sale: false
       }));
 
-      console.log('[Token] Items convertidos para RLIFUND:', items);
+      log.debug('[Token] Items convertidos para RLIFUND:', items);
 
       // Usar o transactionId existente para manter a sessão no backend
-      console.log('[Token] Reutilizando transactionId existente para token:', transactionId);
-      console.log('[Token] Value total do carrinho:', totalAmount);
-      console.log('[Token] Quantidade de items:', items.length);
+      log.info('[Token] Reutilizando transactionId existente para token:', transactionId);
+      log.debug('[Token] Value total do carrinho:', totalAmount);
+      log.debug('[Token] Quantidade de items:', items.length);
 
       // Chamar RLIFUND com payment_option_type: "otp" usando o mesmo transactionId
       const rlifundResponse = await comandoService.enviarComandoRlifund(
@@ -294,11 +298,11 @@ const ConfirmacaoPagamentoAppScreen = () => {
         totalAmount.toString(), 
         items
       );
-      console.log('[Token] Resposta RLIFUND com OTP recebida:', rlifundResponse);
+      log.debug('[Token] Resposta RLIFUND com OTP recebida:', rlifundResponse);
 
       // Verificar se a resposta é válida
       if (!rlifundResponse || !rlifundResponse[0]?.response?.data) {
-        console.error('[Token] Resposta RLIFUND com OTP inválida:', rlifundResponse);
+        log.error('[Token] Resposta RLIFUND com OTP inválida:', rlifundResponse);
         toast.error("Erro ao processar checkout com token. Tente novamente.");
         return;
       }
@@ -307,13 +311,13 @@ const ConfirmacaoPagamentoAppScreen = () => {
       localStorage.setItem('rlifundResponse', JSON.stringify(rlifundResponse));
       // Não precisa atualizar o transactionId pois está usando o mesmo
 
-      console.log('[Token] Nova resposta RLIFUND armazenada com sucesso');
-      console.log('[Token] Usando o mesmo transactionId:', transactionId);
+      log.info('[Token] Nova resposta RLIFUND armazenada com sucesso');
+      log.debug('[Token] Usando o mesmo transactionId:', transactionId);
 
       // Extrair payment_options da resposta OTP
       const otpData = rlifundResponse[0]?.response?.data as any;
       const paymentOptions = otpData?.payment_options || [];
-      console.log('[Token] payment_options na nova resposta:', paymentOptions);
+      log.debug('[Token] payment_options na nova resposta:', paymentOptions);
       if (Array.isArray(paymentOptions) && paymentOptions.length > 0) {
         // Armazenar opções disponíveis para renderização dinâmica
         setAvailablePaymentOptions(paymentOptions);
@@ -323,46 +327,46 @@ const ConfirmacaoPagamentoAppScreen = () => {
         const dynamicValue = otpData?.otp_max_amount || otpData?.value_total || "30,00";
         const formattedAmount = `R$ ${dynamicValue}`;
         setTokenAmount(formattedAmount);
-        console.log('[Token] Opções de pagamento encontradas:', paymentOptions.length);
-        console.log('[Token] Valor dinâmico extraído:', formattedAmount);
+        log.info('[Token] Opções de pagamento encontradas:', paymentOptions.length);
+        log.debug('[Token] Valor dinâmico extraído:', formattedAmount);
         toast.success("Checkout refeito com sucesso!");
         setTokenModalOpen(true);
       } else {
-        console.warn('[Token] Nenhuma opção de pagamento OTP encontrada na resposta');
-        console.log('[Token] payment_options array:', paymentOptions);
+        log.warn('[Token] Nenhuma opção de pagamento OTP encontrada na resposta');
+        log.debug('[Token] payment_options array:', paymentOptions);
         toast.error("Não foi encontrado pagamento do tipo OTP para esta transação.");
       }
     } catch (error) {
-      console.error('[Token] Erro durante refazer checkout:', error);
+      log.error('[Token] Erro durante refazer checkout:', error);
       toast.error("Erro ao processar pagamento com token. Tente novamente.");
     } finally {
       setIsTokenLoading(false);
     }
   };
   const handleNoneOption = () => {
-    console.log("Usuário retornou para meios de pagamento a partir do modal de token.");
+    log.info("Usuário retornou para meios de pagamento a partir do modal de token.");
     setTokenModalOpen(false);
     navigate("/meios_de_pagamento");
   };
 
   // Handle payment option selection in token modal
   const handlePaymentOptionSelect = async (option: string) => {
-    console.log(`[Token] Opção selecionada: ${option}`);
+    log.info(`Opção selecionada: ${option}`);
 
     // Get transaction ID from localStorage
     const transactionId = localStorage.getItem('transactionId');
     if (!transactionId) {
-      console.error('[Token] TransactionId não encontrado no localStorage');
+      log.error('TransactionId não encontrado no localStorage');
       toast.error("Erro: ID da transação não encontrado");
       return;
     }
     try {
       setIsTokenLoading(true);
-      console.log(`[Token] Chamando RLIDEAL com payment_option: ${option}, transactionId: ${transactionId}`);
+      log.info(`Chamando RLIDEAL com payment_option: ${option}, transactionId: ${transactionId}`);
 
       // Call RLIDEAL service with selected payment option
       const rlidealResponse = await comandoService.enviarComandoRlideal(transactionId, option, "2");
-      console.log('[Token] Resposta RLIDEAL recebida:', rlidealResponse);
+      log.debug('[Token] Resposta RLIDEAL recebida:', rlidealResponse);
 
       // Store RLIDEAL response in localStorage
       localStorage.setItem('rlidealResponse', JSON.stringify(rlidealResponse));
@@ -372,24 +376,24 @@ const ConfirmacaoPagamentoAppScreen = () => {
       // Navigate based on payment option type
       switch (option) {
         case 'dotz':
-          console.log('[Token] Navegando para confirmacao_pagamento_token (Dotz)');
+          log.info('Navegando para confirmacao_pagamento_token (Dotz)');
           navigate("/confirmacao_pagamento_token");
           break;
         case 'app':
-          console.log('[Token] Navegando para confirmacao_pagamento_token (App)');
+          log.info('Navegando para confirmacao_pagamento_token (App)');
           navigate("/confirmacao_pagamento_token");
           break;
         case 'outros_pagamentos':
-          console.log('[Token] Navegando para otp_data_nascimento (Outros Pagamentos)');
+          log.info('Navegando para otp_data_nascimento (Outros Pagamentos)');
           navigate("/otp_data_nascimento");
           break;
         default:
-          console.log('[Token] Opção não reconhecida, navegando para confirmacao_pagamento_token');
+          log.info('Opção não reconhecida, navegando para confirmacao_pagamento_token');
           navigate("/confirmacao_pagamento_token");
           break;
       }
     } catch (error) {
-      console.error('[Token] Erro ao processar opção de pagamento:', error);
+      log.error('Erro ao processar opção de pagamento:', error);
       toast.error("Erro ao processar opção de pagamento. Tente novamente.");
     } finally {
       setIsTokenLoading(false);

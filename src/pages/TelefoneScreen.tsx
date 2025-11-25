@@ -11,6 +11,9 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import EncerrarAtendimentoButton from "@/components/EncerrarAtendimentoButton";
 import { useUserSession } from "@/hooks/useUserSession";
+import { createLogger } from '@/utils/logger';
+
+const log = createLogger('TelefoneScreen');
 
 const TelefoneScreen = () => {
   const [telefone, setTelefone] = useState("");
@@ -37,7 +40,7 @@ const TelefoneScreen = () => {
         
         // Fallback if CPF is not available
         if (!cpf) {
-          console.error('CPF não encontrado. Redirecionando para a etapa de identificação.');
+          log.error('CPF não encontrado. Redirecionando para a etapa de identificação.');
           navigate('/cpf');
           return;
         }
@@ -56,7 +59,7 @@ const TelefoneScreen = () => {
               setTransactionId(onlineResponse[0].response.data.transaction_id);
             }
           } catch (parseError) {
-            console.error('Erro ao fazer parse do onlineResponse:', parseError);
+            log.error('Erro ao fazer parse do onlineResponse:', parseError);
           }
         }
 
@@ -65,7 +68,7 @@ const TelefoneScreen = () => {
         const data = await consultaFluxoService.consultarFluxoDetalhe('RLIINFORLICELL');
         setApiData(data);
       } catch (error) {
-        console.error("Erro ao consultar detalhes do fluxo:", error);
+        log.error("Erro ao consultar detalhes do fluxo:", error);
       } finally {
         setIsLoading(false);
       }
@@ -85,7 +88,7 @@ const TelefoneScreen = () => {
   };
 
   const handleSubmit = async () => {
-    console.log(`Celular informado: ${formatTelefone(telefone)}`);
+    log.info(`Celular informado: ${formatTelefone(telefone)}`);
     setLastError(null);
     
     // Validação básica
@@ -132,7 +135,7 @@ const TelefoneScreen = () => {
           }
         });
 
-        console.log('Response RLICELL:', response);
+        log.debug('Response RLICELL:', response);
         
         // Store response for next screen
         localStorage.setItem('rlicellResponse', JSON.stringify(response));
@@ -142,7 +145,7 @@ const TelefoneScreen = () => {
         // Navigate based on next_step or use default flow
         if (Array.isArray(response) && response[0]?.response?.data?.next_step?.length > 0) {
           const nextStep = response[0].response.data.next_step[0];
-          console.log('Next step:', nextStep);
+          log.debug('Next step:', nextStep);
           // Navigate based on the next step logic
           navigate("/transicao-cadastro?from=telefone");
         } else {
@@ -150,7 +153,7 @@ const TelefoneScreen = () => {
         }
         
       } catch (error) {
-        console.error('Erro ao enviar comando RLICELL:', error);
+        log.error('Erro ao enviar comando RLICELL:', error);
         setLastError(error instanceof Error ? error.message : 'Erro desconhecido');
         toast.error("Erro ao processar telefone. Tente novamente.");
       } finally {
