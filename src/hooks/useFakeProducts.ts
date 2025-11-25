@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { buscarProdutosFakes } from '@/services/produtoService';
+import { API_CONFIG } from '@/config/api';
 import type { FakeProduct } from '@/services/produtoService';
 
 const CACHE_RELOAD_INTERVAL = 15; // Recarregar a cada 15 acessos
@@ -33,12 +34,9 @@ export const useFakeProducts = () => {
       console.log('[useFakeProducts] Buscando produtos do backend...');
       
       // Fetch the original fake products data with full structure
-      const response = await fetch('https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/produtosFakes', {
+      const response = await fetch(`${API_CONFIG.baseUrl}/produtosFakes`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975'
-        },
+        headers: API_CONFIG.defaultHeaders,
       });
       
       if (!response.ok) {

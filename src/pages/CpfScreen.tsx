@@ -17,6 +17,8 @@ import { MessageModal } from "@/components/MessageModal";
 import { consultaFluxoService } from "@/services/consultaFluxoService";
 import { comandoService } from "@/services/comandoService";
 import { empresaService } from "@/services/empresaService";
+import { API_CONFIG, buildApiUrl } from "@/config/api";
+
 
 
 const CpfScreen = () => {
@@ -304,12 +306,9 @@ const CpfScreen = () => {
         // Store debug information
         setApiDebugInfo({
           request: {
-            url: 'https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/comando',
+            url: buildApiUrl('comando'),
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': '0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975'
-            },
+            headers: API_CONFIG.defaultHeaders,
             body: requestData,
             timestamp: requestTime
           },
@@ -445,7 +444,7 @@ const CpfScreen = () => {
       // Store error debug information
       setApiDebugInfo({
         request: {
-          url: tipo_simulacao !== "OFFLINE" ? 'https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV/comando' : 'offline',
+          url: tipo_simulacao !== "OFFLINE" ? buildApiUrl('comando') : 'offline',
           method: 'POST',
           body: { comando: 'RLIINFO', cpf },
           timestamp: new Date().toISOString()

@@ -16,6 +16,7 @@ import { permissionService } from "@/services/permissionService";
 import { empresaService, Empresa } from "@/services/empresaService";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { credentialsService } from "@/services/credentialsService";
+import { getUserId } from "@/utils/userUtils";
 import PermissionModal from "@/components/PermissionModal";
 
 const ConfigUsuarioNovoScreen = () => {
@@ -36,24 +37,7 @@ const ConfigUsuarioNovoScreen = () => {
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [permissionMessage, setPermissionMessage] = useState("");
 
-  // Get user ID from localStorage
-  const getUserId = (): string | null => {
-    const userId = localStorage.getItem('userId');
-    if (userId) return userId;
-    
-    const userData = localStorage.getItem('userData');
-    if (userData) {
-      try {
-        const user = JSON.parse(userData);
-        return user.id_usuario || user.id || user.usuario_id;
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-      }
-    }
-    
-    return null;
-  };
-
+  // Get user ID using centralized utility
   const userId = getUserId();
 
   // Create user mutation

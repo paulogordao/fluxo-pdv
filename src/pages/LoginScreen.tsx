@@ -263,7 +263,7 @@ const LoginScreen = () => {
       if (data.mensagem === "senha correta" && data.code === 200) {
         // Save user session data
         sessionStorage.setItem("user.login", email);
-        sessionStorage.setItem("user.senha", password);
+        // Security: Removed password storage from sessionStorage
         
         // Save user ID in multiple places to ensure the permissions hook can find it
         if (data.id_usuario) {
