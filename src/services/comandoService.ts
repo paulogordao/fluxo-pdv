@@ -1,6 +1,8 @@
 import { buildApiUrl, API_CONFIG } from '@/config/api';
 import { getUserId } from '@/utils/userUtils';
 import { createLogger } from '@/utils/logger';
+import { withRetry } from '@/utils/retryUtils';
+import { validateInput, transactionIdSchema, cpfSchema, telefoneSchema } from '@/schemas/validationSchemas';
 
 const log = createLogger('comandoService');
 
@@ -300,6 +302,7 @@ async function executeComandoRequest(
     timeout?: number;
     validateStringResponse?: boolean;
     customValidation?: (data: ComandoResponse) => void;
+    enableRetry?: boolean;
   }
 ): Promise<ComandoResponse> {
   const userId = getUserId();
@@ -314,70 +317,94 @@ async function executeComandoRequest(
   log.debug(`URL: ${url}`);
   log.debug(`User ID: ${userId}`);
   
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  // Main request function
+  const makeRequest = async (): Promise<ComandoResponse> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          ...API_CONFIG.defaultHeaders,
+          'id_usuario': userId
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      log.debug(`[${comando}] Response status: ${response.status}`);
+      
+      if (!response.ok) {
+        const error: any = new Error(`HTTP error! status: ${response.status}`);
+        error.status = response.status;
+        throw error;
+      }
+      
+      const responseText = await response.text();
+      const parsedData = parseResponseText(responseText, comando);
+      const data = normalizeToArray(parsedData, comando);
+      
+      validateResponse(data, comando);
+      
+      // Handle string response (potential error)
+      if (options?.validateStringResponse !== false) {
+        handleStringResponse(data, comando, requestBody);
+      }
+      
+      // Validate success
+      validateSuccess(data, comando);
+      
+      // Custom validation if provided
+      if (options?.customValidation) {
+        options.customValidation(data);
+      }
+      
+      log.info(`[${comando}] Request successful`);
+      return data;
+      
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error.name === 'AbortError') {
+        log.error(`[${comando}] Request timeout`);
+        throw new Error('TIMEOUT');
+      }
+      
+      log.error(`[${comando}] Request error:`, error);
+      throw error;
+    }
+  };
   
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        ...API_CONFIG.defaultHeaders,
-        'id_usuario': userId
-      },
-      body: JSON.stringify(requestBody),
-      signal: controller.signal
+  // Use retry logic if enabled (default: true for most commands)
+  if (options?.enableRetry !== false) {
+    return withRetry(makeRequest, {
+      maxAttempts: 3,
+      initialDelay: 1000,
+      onRetry: (attempt, error) => {
+        log.warn(`[${comando}] Retry attempt ${attempt} after error:`, error);
+      }
     });
-    
-    clearTimeout(timeoutId);
-    
-    log.debug(`[${comando}] Response status: ${response.status}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const responseText = await response.text();
-    const parsedData = parseResponseText(responseText, comando);
-    const data = normalizeToArray(parsedData, comando);
-    
-    validateResponse(data, comando);
-    
-    // Handle string response (potential error)
-    if (options?.validateStringResponse !== false) {
-      handleStringResponse(data, comando, requestBody);
-    }
-    
-    // Validate success
-    validateSuccess(data, comando);
-    
-    // Custom validation if provided
-    if (options?.customValidation) {
-      options.customValidation(data);
-    }
-    
-    log.info(`[${comando}] Request successful`);
-    return data;
-    
-  } catch (error) {
-    clearTimeout(timeoutId);
-    
-    if (error.name === 'AbortError') {
-      log.error(`[${comando}] Request timeout`);
-      throw new Error('TIMEOUT');
-    }
-    
-    log.error(`[${comando}] Request error:`, error);
-    throw error;
   }
+  
+  return makeRequest();
 }
 
 // ===== SERVICE METHODS =====
 
 export const comandoService = {
   async enviarComando(comando: string, cpf: string, version?: string): Promise<ComandoResponse> {
+    // Validate CPF
+    const cpfValidation = validateInput(cpfSchema, cpf);
+    if (!cpfValidation.success) {
+      throw new Error(`CPF inválido: ${'error' in cpfValidation ? cpfValidation.error : 'Erro desconhecido'}`);
+    }
+    
     const requestBody: ComandoRequest = {
       comando,
-      cpf,
+      cpf: cpfValidation.data,
       ...(version && { version })
     };
     
@@ -385,10 +412,22 @@ export const comandoService = {
   },
 
   async enviarComandoRlicell(telefone: string, transactionId: string): Promise<ComandoResponse> {
+    // Validate phone number
+    const phoneValidation = validateInput(telefoneSchema, telefone);
+    if (!phoneValidation.success) {
+      throw new Error(`Telefone inválido: ${'error' in phoneValidation ? phoneValidation.error : 'Erro desconhecido'}`);
+    }
+    
+    // Validate transaction ID
+    const txValidation = validateInput(transactionIdSchema, transactionId);
+    if (!txValidation.success) {
+      throw new Error(`Transaction ID inválido: ${'error' in txValidation ? txValidation.error : 'Erro desconhecido'}`);
+    }
+    
     const requestBody: ComandoRlicellRequest = {
       comando: "RLICELL",
-      telefone,
-      id_transaction: transactionId
+      telefone: phoneValidation.data,
+      id_transaction: txValidation.data
     };
     
     return executeComandoRequest(requestBody, "RLICELL");
