@@ -159,47 +159,117 @@ Todos os comandos do fluxo PDV utilizam o mesmo endpoint com diferentes valores 
 
 ---
 
-### 1. RLIIDEN - Identificar CPF
+### Estrutura Padrão de Response
+
+Todos os comandos do fluxo PDV retornam uma estrutura padronizada:
+
+```json
+[
+  {
+    "request": {
+      "route": "COMANDO",
+      "version": 1,
+      "input": {
+        // Parâmetros enviados
+      }
+    },
+    "response": {
+      "data": {
+        "transaction_id": "uuid-da-transacao",
+        "customer_info_id": "cpf-do-cliente",
+        "message": {
+          "id": 0,
+          "content": "Mensagem para o usuário",
+          "link_image": null
+        },
+        "next_step": [
+          {
+            "code": 0,
+            "description": "PROXIMO_COMANDO",
+            "version": 1
+          }
+        ],
+        "break_step": [
+          {
+            "code": 0,
+            "description": "COMANDO_ALTERNATIVO",
+            "version": 1
+          }
+        ]
+      },
+      "success": true
+    }
+  }
+]
+```
+
+---
+
+### 1. RLIINFO - Identificar CPF
 
 **Página:** `CpfScreen`
 
 **Request:**
 ```json
 {
-  "comando": "RLIIDEN",
-  "cpf": "12345678900"
+  "comando": "RLIINFO",
+  "cpf": "12345678900",
+  "version": "2"
 }
 ```
 
-**Response - Sucesso:**
+**Response:**
 ```json
-{
-  "success": true,
-  "data": [
-    {
-      "SLUG": "identificacao-123",
-      "messageId": 1000,
-      "message": {
-        "content": "CPF identificado com sucesso"
+[
+  {
+    "request": {
+      "route": "RLIINFO",
+      "version": 2,
+      "input": {
+        "customer_info_id": "32373222884",
+        "customer_info_id_type": 1,
+        "employee_id": "teste_88375",
+        "pos_id": "t51570",
+        "order_id": "t279640"
       }
+    },
+    "response": {
+      "data": {
+        "customer": {
+          "first_name": "PAULO",
+          "document": "32373222884"
+        },
+        "transaction_id": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+        "customer_info_id": "32373222884",
+        "message": {
+          "id": 105,
+          "content": "PAULO, Baixe o APP para GANHAR Dotz e pagar até R$0,00 com pontos + crédito pré aprovado em 7 dias sem juros ou até 6x!",
+          "link_image": null
+        },
+        "next_step": [
+          {
+            "code": 2,
+            "description": "RLICELL",
+            "version": 2
+          }
+        ],
+        "break_step": [
+          {
+            "code": 9,
+            "description": "RLIFUND",
+            "version": 1
+          },
+          {
+            "code": 5,
+            "description": "RLIQUIT",
+            "version": 1
+          }
+        ]
+      },
+      "success": true
     }
-  ]
-}
-```
-
-**Response - CPF não encontrado:**
-```json
-{
-  "success": false,
-  "data": [
-    {
-      "messageId": 2001,
-      "message": {
-        "content": "CPF não encontrado no sistema"
-      }
-    }
-  ]
-}
+  }
+]
 ```
 
 ---
@@ -212,40 +282,51 @@ Todos os comandos do fluxo PDV utilizam o mesmo endpoint com diferentes valores 
 ```json
 {
   "comando": "RLICELL",
-  "slug": "identificacao-123",
-  "cellphone": "11999999999"
+  "cellphone": "11999999999",
+  "id_transaction": "7c9f59ce-6b39-4e47-8967-4befab20d62a"
 }
 ```
 
-**Response - Sucesso:**
+**Response:**
 ```json
-{
-  "success": true,
-  "data": [
-    {
-      "SLUG": "identificacao-123",
-      "messageId": 1000,
-      "message": {
-        "content": "Telefone validado com sucesso"
+[
+  {
+    "request": {
+      "route": "RLICELL",
+      "version": 1,
+      "input": {
+        "transaction_id": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+        "cell_phone_number": "11983045980"
       }
+    },
+    "response": {
+      "data": {
+        "transaction_id": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+        "customer_info_id": "32373222884",
+        "message": {
+          "id": 200,
+          "content": "Quase lá! Enviaremos uma mensagem para que você complete seu cadastro na Dotz!",
+          "link_image": null
+        },
+        "next_step": [
+          {
+            "code": 9,
+            "description": "RLIFUND",
+            "version": 1
+          }
+        ],
+        "break_step": [
+          {
+            "code": 5,
+            "description": "RLIQUIT",
+            "version": 1
+          }
+        ]
+      },
+      "success": true
     }
-  ]
-}
-```
-
-**Response - Telefone inválido:**
-```json
-{
-  "success": false,
-  "data": [
-    {
-      "messageId": 2002,
-      "message": {
-        "content": "Telefone não corresponde ao cadastrado"
-      }
-    }
-  ]
-}
+  }
+]
 ```
 
 ---
@@ -258,56 +339,122 @@ Todos os comandos do fluxo PDV utilizam o mesmo endpoint com diferentes valores 
 ```json
 {
   "comando": "RLIFUND",
-  "slug": "identificacao-123",
-  "cpf": "12345678900",
-  "transaction_id": "TXN-123456789",
-  "transaction_amount": 150.50
-}
-```
-
-**Response - Com fundos disponíveis:**
-```json
-{
-  "success": true,
-  "data": [
+  "id_transaction": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+  "payment_option_type": "default",
+  "value_total": "21.97",
+  "items": [
     {
-      "SLUG": "identificacao-123",
-      "messageId": 1000,
-      "message": {
-        "content": "Fundos disponíveis"
-      },
-      "fundos_disponiveis": true,
-      "valor_disponivel": 200.00,
-      "metodos_pagamento": ["CASHBACK", "SALDO"]
+      "ean": "0000000000072",
+      "sku": "1801253214",
+      "unit_price": 8.99,
+      "discount": 1.17,
+      "quantity": 2,
+      "name": "Slotted Turner",
+      "unit_type": "UN",
+      "brand": "Unknown",
+      "manufacturer": "Unknown",
+      "categories": ["kitchen-accessories"],
+      "gross_profit_amount": 1.65,
+      "is_private_label": true,
+      "is_on_sale": false
     }
   ]
 }
 ```
 
-**Response - Sem fundos:**
+**Response:**
 ```json
-{
-  "success": true,
-  "data": [
-    {
-      "SLUG": "identificacao-123",
-      "messageId": 1000,
-      "message": {
-        "content": "Fundos insuficientes"
+[
+  {
+    "request": {
+      "data": {
+        "route": "RLIFUND",
+        "version": 1,
+        "input": {
+          "transaction_id": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+          "payment_option_type": "default",
+          "order": {
+            "value": 21.97,
+            "discount": 0,
+            "date": "2025-11-26T00:58:09.245Z",
+            "items": [
+              {
+                "ean": "0000000000072",
+                "sku": "1801253214",
+                "unit_price": 8.99,
+                "discount": 1.17,
+                "quantity": 2,
+                "name": "Slotted Turner",
+                "unit_type": "UN",
+                "brand": "Unknown",
+                "manufacturer": "Unknown",
+                "categories": ["kitchen-accessories"],
+                "gross_profit_amount": 1.65,
+                "is_private_label": true,
+                "is_on_sale": false
+              },
+              {
+                "ean": "0000000000029",
+                "sku": "408067386",
+                "unit_price": 3.99,
+                "discount": 0.48,
+                "quantity": 1,
+                "name": "Juice",
+                "unit_type": "UN",
+                "brand": "Unknown",
+                "manufacturer": "Unknown",
+                "categories": ["groceries"],
+                "gross_profit_amount": 0.45,
+                "is_private_label": true,
+                "is_on_sale": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    "response": {
+      "data": {
+        "payment_options": [
+          {
+            "option": "app",
+            "message": "Pague até R$ 21,97 desta compra pelo aplicativo"
+          },
+          {
+            "option": "livelo",
+            "message": "Pague R$ 13,18 desta compra com Livelo pelo PDV"
+          },
+          {
+            "option": "dotz",
+            "message": "Pague R$ 3,00 desta compra com Dotz pelo PDV"
+          }
+        ],
+        "transaction_id": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+        "customer_info_id": "32373222884",
+        "message": {
+          "id": 906,
+          "content": "PAULO, pague até R$13,18 com seus pontos Livelo ou R$1.000,00 no crédito s/juros ou em até 6x com a Dotz!!\nQuer usar o Benefício?",
+          "link_image": null
+        },
+        "next_step": [
+          {
+            "code": 3,
+            "description": "RLIDEAL",
+            "version": 2
+          }
+        ],
+        "break_step": [
+          {
+            "code": 5,
+            "description": "RLIQUIT",
+            "version": 1
+          }
+        ]
       },
-      "fundos_disponiveis": false,
-      "valor_disponivel": 50.00
+      "success": true
     }
-  ]
-}
-```
-
-**Response - Erro RLIFUND:**
-```json
-{
-  "success": false,
-  "error": "RLIFUND_ERROR: Erro ao consultar fundos disponíveis"
-}
+  }
+]
 ```
 
 ---
@@ -320,29 +467,65 @@ Todos os comandos do fluxo PDV utilizam o mesmo endpoint com diferentes valores 
 ```json
 {
   "comando": "RLIDEAL",
-  "slug": "identificacao-123",
-  "cpf": "12345678900",
-  "transaction_id": "TXN-123456789",
-  "transaction_amount": 150.50,
-  "metodo_pagamento": "CASHBACK"
+  "payment_option": "dotz",
+  "id_transaction": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+  "version": "2"
 }
 ```
 
 **Response:**
 ```json
-{
-  "success": true,
-  "data": [
-    {
-      "SLUG": "identificacao-123",
-      "messageId": 1000,
-      "message": {
-        "content": "Transação iniciada com sucesso"
+[
+  {
+    "request": {
+      "route": "RLIDEAL",
+      "version": 2,
+      "input": {
+        "transaction_id": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+        "payment_option": "dotz"
+      }
+    },
+    "response": {
+      "data": {
+        "otp_payment_enabled": true,
+        "token": {
+          "required": true,
+          "type": "birthdate"
+        },
+        "order": {
+          "value": 21.97,
+          "discount": 0,
+          "paid_out": 0,
+          "residual": 21.97,
+          "date": "2025-11-26T00:58:09.245Z",
+          "payments": []
+        },
+        "transaction_id": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+        "customer_info_id": "32373222884",
+        "message": {
+          "id": 302,
+          "content": "Aguardando autenticação no Pdv.",
+          "link_image": null
+        },
+        "next_step": [
+          {
+            "code": 10,
+            "description": "RLIAUTH",
+            "version": 1
+          }
+        ],
+        "break_step": [
+          {
+            "code": 5,
+            "description": "RLIQUIT",
+            "version": 1
+          }
+        ]
       },
-      "deal_id": "DEAL-987654321"
+      "success": true
     }
-  ]
-}
+  }
+]
 ```
 
 ---
@@ -351,68 +534,97 @@ Todos os comandos do fluxo PDV utilizam o mesmo endpoint com diferentes valores 
 
 **Páginas:** `ConfirmacaoPagamentoTokenScreen`, `OtpDataNascimentoScreen`
 
-**Request - Token:**
+**Request:**
 ```json
 {
   "comando": "RLIAUTH",
-  "slug": "identificacao-123",
-  "token": "123456"
+  "id_transaction": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+  "token": "06111983",
+  "cancel": false
 }
 ```
 
-**Request - Data de Nascimento:**
-```json
-{
-  "comando": "RLIAUTH",
-  "slug": "identificacao-123",
-  "data_nascimento": "1990-01-15"
-}
-```
+**Observação:** O campo `token` pode conter:
+- Token de 6 dígitos (ex: "182101")
+- Data de nascimento no formato DDMMAAAA (ex: "06111983")
 
 **Response - Token Válido:**
 ```json
-{
-  "success": true,
-  "data": [
-    {
-      "SLUG": "identificacao-123",
-      "messageId": 1000,
-      "message": {
-        "content": "Token validado com sucesso"
+[
+  {
+    "request": {
+      "route": "RLIAUTH",
+      "version": 1,
+      "input": {
+        "transaction_id": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+        "token": "06111983",
+        "cancel": false
       }
+    },
+    "response": {
+      "data": {
+        "transaction_id": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+        "customer_info_id": "32373222884",
+        "message": {
+          "id": 1000,
+          "content": "Token validado com sucesso",
+          "link_image": null
+        },
+        "next_step": [
+          {
+            "code": 6,
+            "description": "RLIPAYS",
+            "version": 1
+          }
+        ],
+        "break_step": [
+          {
+            "code": 5,
+            "description": "RLIQUIT",
+            "version": 1
+          }
+        ]
+      },
+      "success": true
     }
-  ]
-}
+  }
+]
 ```
 
 **Response - Token Inválido (Recuperável - messageId 1001):**
 ```json
-{
-  "success": false,
-  "data": [
-    {
-      "messageId": 1001,
-      "message": {
-        "content": "Token inválido. Tente novamente."
-      }
+[
+  {
+    "response": {
+      "data": {
+        "messageId": 1001,
+        "message": {
+          "content": "Token inválido. Tente novamente.",
+          "link_image": null
+        }
+      },
+      "success": false
     }
-  ]
-}
+  }
+]
 ```
 
 **Response - Token Inválido (Fatal - messageId 1002):**
 ```json
-{
-  "success": false,
-  "data": [
-    {
-      "messageId": 1002,
-      "message": {
-        "content": "Limite de tentativas excedido. Tente novamente mais tarde."
-      }
+[
+  {
+    "response": {
+      "data": {
+        "messageId": 1002,
+        "message": {
+          "content": "Limite de tentativas excedido. Tente novamente mais tarde.",
+          "link_image": null
+        }
+      },
+      "success": false
     }
-  ]
-}
+  }
+]
 ```
 
 ---
@@ -425,42 +637,68 @@ Todos os comandos do fluxo PDV utilizam o mesmo endpoint com diferentes valores 
 ```json
 {
   "comando": "RLIPAYS",
-  "slug": "identificacao-123"
-}
-```
-
-**Response - Pagamento Confirmado:**
-```json
-{
-  "success": true,
-  "data": [
+  "id_transaction": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+  "payments": [
     {
-      "SLUG": "identificacao-123",
-      "messageId": 1000,
-      "message": {
-        "content": "Pagamento confirmado com sucesso"
-      },
-      "transaction_id": "TXN-123456789",
-      "valor_pago": 150.50,
-      "metodo_usado": "CASHBACK"
+      "type": 2,
+      "bin": "978939",
+      "amount": 18.97,
+      "description": "Pagamento em cartão de crédito"
     }
   ]
 }
 ```
 
-**Response - Pagamento Negado:**
+**Response:**
 ```json
-{
-  "success": false,
-  "data": [
-    {
-      "messageId": 3001,
-      "message": {
-        "content": "Pagamento negado. Fundos insuficientes."
+[
+  {
+    "request": {
+      "data": {
+        "route": "RLIPAYS",
+        "version": 1,
+        "input": {
+          "transaction_id": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+          "payments": [
+            {
+              "type": 2,
+              "bin": "978939",
+              "amount": 18.97,
+              "description": "Pagamento em cartão de crédito"
+            }
+          ]
+        }
       }
+    },
+    "response": {
+      "data": {
+        "invoice_receipt": {
+          "content": [
+            "Parabens! Você ganhou Dotz!",
+            "Dotz ganhos nessa compra: 1 Dotz.",
+            "Baixe agora o APP Dotz ou acesse dotz.com.br e veja ainda mais benefícios!"
+          ]
+        },
+        "transaction_id": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+        "customer_info_id": "32373222884",
+        "message": {
+          "id": 600,
+          "content": "Parabéns, você irá acumular 1 Dotz nessa compra.",
+          "link_image": null
+        },
+        "next_step": [],
+        "break_step": [
+          {
+            "code": 7,
+            "description": "RLIUNDO",
+            "version": 1
+          }
+        ]
+      },
+      "success": true
     }
-  ]
-}
+  }
+]
 ```
 
 ---
@@ -473,59 +711,64 @@ Todos os comandos do fluxo PDV utilizam o mesmo endpoint com diferentes valores 
 ```json
 {
   "comando": "RLIWAIT",
-  "slug": "identificacao-123"
+  "id_transaction": "f57941f9-4682-4656-a621-61340a2c9ac3",
+  "cancel": false
 }
 ```
 
-**Response - Aguardando Confirmação:**
+**Response:**
 ```json
-{
-  "success": true,
-  "data": [
-    {
-      "SLUG": "identificacao-123",
-      "messageId": 1000,
-      "message": {
-        "content": "Aguardando confirmação no aplicativo"
+[
+  {
+    "request": {
+      "route": "RLIWAIT",
+      "version": 1,
+      "input": {
+        "transaction_id": "f57941f9-4682-4656-a621-61340a2c9ac3",
+        "cancel": false
+      }
+    },
+    "response": {
+      "data": {
+        "order": {
+          "value": 7.78,
+          "discount": 0,
+          "paid_out": 0,
+          "residual": 7.78,
+          "date": "2025-11-26T01:26:54.508Z",
+          "payments": []
+        },
+        "transaction_id": "f57941f9-4682-4656-a621-61340a2c9ac3",
+        "customer_info_id": "32373222884",
+        "message": {
+          "id": 400,
+          "content": "Aguardando pagamento no APP.",
+          "link_image": null
+        },
+        "next_step": [
+          {
+            "code": 4,
+            "description": "RLIWAIT",
+            "version": 2
+          }
+        ],
+        "break_step": [
+          {
+            "code": 9,
+            "description": "RLIFUND",
+            "version": 1
+          },
+          {
+            "code": 5,
+            "description": "RLIQUIT",
+            "version": 1
+          }
+        ]
       },
-      "status": "PENDING"
+      "success": true
     }
-  ]
-}
-```
-
-**Response - Pagamento Confirmado:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "SLUG": "identificacao-123",
-      "messageId": 1000,
-      "message": {
-        "content": "Pagamento confirmado"
-      },
-      "status": "CONFIRMED",
-      "transaction_id": "TXN-123456789"
-    }
-  ]
-}
-```
-
-**Response - Pagamento Cancelado:**
-```json
-{
-  "success": false,
-  "data": [
-    {
-      "messageId": 3002,
-      "message": {
-        "content": "Pagamento cancelado pelo usuário"
-      },
-      "status": "CANCELLED"
-    }
-  ]
-}
+  }
+]
 ```
 
 ---
@@ -538,24 +781,37 @@ Todos os comandos do fluxo PDV utilizam o mesmo endpoint com diferentes valores 
 ```json
 {
   "comando": "RLIQUIT",
-  "slug": "identificacao-123"
+  "id_transaction": "f57941f9-4682-4656-a621-61340a2c9ac3"
 }
 ```
 
 **Response:**
 ```json
-{
-  "success": true,
-  "data": [
-    {
-      "SLUG": "identificacao-123",
-      "messageId": 1000,
-      "message": {
-        "content": "Atendimento encerrado com sucesso"
+[
+  {
+    "request": {
+      "route": "RLIQUIT",
+      "version": 1,
+      "input": {
+        "transaction_id": "f57941f9-4682-4656-a621-61340a2c9ac3"
       }
+    },
+    "response": {
+      "data": {
+        "transaction_id": "f57941f9-4682-4656-a621-61340a2c9ac3",
+        "customer_info_id": null,
+        "message": {
+          "id": 500,
+          "content": "Desistência da compra recebido com sucesso.",
+          "link_image": null
+        },
+        "next_step": [],
+        "break_step": []
+      },
+      "success": true
     }
-  ]
-}
+  }
+]
 ```
 
 ---
@@ -577,27 +833,26 @@ Todos os comandos do fluxo PDV utilizam o mesmo endpoint com diferentes valores 
 
 **Response:**
 ```json
-{
-  "data": [
-    {
-      "id": "txn-001",
-      "cpf": "12345678900",
-      "valor": 150.50,
-      "data": "2024-01-15T10:30:00Z",
-      "status": "CONFIRMADO",
-      "metodo_pagamento": "CASHBACK"
-    },
-    {
-      "id": "txn-002",
-      "cpf": "98765432100",
-      "valor": 75.00,
-      "data": "2024-01-14T15:45:00Z",
-      "status": "PENDENTE",
-      "metodo_pagamento": "SALDO"
-    }
-  ]
-}
+[
+  {
+    "data": [
+      {
+        "id": 1231,
+        "created_at": "2025-09-09T05:39:23.927799+00:00",
+        "transaction_id": "bb075d13-c769-4230-ba5b-2c2746863a5e",
+        "servico": "RLIINFO",
+        "request": "{\"route\":\"RLIINFO\",\"version\":1,\"input\":{\"customer_info_id\":\"16428905027\",\"customer_info_id_type\":1,\"employee_id\":\"teste_36841\",\"pos_id\":\"t07359\",\"order_id\":\"t762478\"}}",
+        "response": "{\"data\":{\"customer\":{\"first_name\":\"Strikerr\",\"document\":\"16428905027\",\"balance_dz\":639610},\"has_product_dz\":0,\"transaction_id\":\"bb075d13-c769-4230-ba5b-2c2746863a5e\",\"customer_info_id\":\"16428905027\",\"message\":{\"id\":105,\"content\":\"Strikerr, Baixe o APP para GANHAR Dotz e pagar até R$7.675,32 com pontos + crédito pré aprovado em 7 dias sem juros ou até 6x!\",\"link_image\":null},\"next_step\":[{\"code\":2,\"description\":\"RLICELL\",\"version\":1}],\"break_step\":[{\"code\":3,\"description\":\"RLIDEAL\",\"version\":1},{\"code\":5,\"description\":\"RLIQUIT\",\"version\":1}]},\"success\":true}",
+        "id_usuario": "f647bfee-faa2-4293-a5f2-d192a9e9f3f1",
+        "id_empresa": "94a5d5c3-054a-4385-b2e3-dae4e52f681d",
+        "estornado": false
+      }
+    ]
+  }
+]
 ```
+
+**Observação:** Os campos `request` e `response` contêm JSON em formato string.
 
 ---
 
@@ -616,20 +871,26 @@ Todos os comandos do fluxo PDV utilizam o mesmo endpoint com diferentes valores 
 
 **Response:**
 ```json
-{
-  "data": [
-    {
-      "id": "pay-001",
-      "transaction_id": "TXN-123456789",
-      "cpf": "12345678900",
-      "valor": 150.50,
-      "data": "2024-01-15T10:30:00Z",
-      "status": "PAID",
-      "pode_estornar": true
-    }
-  ]
-}
+[
+  {
+    "data": [
+      {
+        "id": 2383,
+        "created_at": "2025-09-24T12:04:43.278088+00:00",
+        "transaction_id": "ffdd3b69-1c26-4f78-a856-30bea29f73ba",
+        "servico": "RLIPAYS",
+        "request": "{\"data\":{\"route\":\"RLIPAYS\",\"version\":1,\"input\":{\"transaction_id\":\"ffdd3b69-1c26-4f78-a856-30bea29f73ba\"}}}",
+        "response": "{\"data\":{\"invoice_receipt\":{\"content\":[\"Parabens! Você ganhou Dotz!\",\"Dotz ganhos nessa compra: 1 Dotz.\",\"Baixe agora o APP Dotz ou acesse dotz.com.br e veja ainda mais benefícios!\"]},\"transaction_id\":\"ffdd3b69-1c26-4f78-a856-30bea29f73ba\",\"customer_info_id\":\"32373222884\",\"message\":{\"id\":600,\"content\":\"Parabéns, você irá acumular 1 Dotz nessa compra.\",\"link_image\":null},\"next_step\":[],\"break_step\":[{\"code\":7,\"description\":\"RLIUNDO\"}]},\"success\":true}",
+        "id_usuario": "f647bfee-faa2-4293-a5f2-d192a9e9f3f1",
+        "id_empresa": "5d3b3ef4-09a1-4899-901e-df9942747dfa",
+        "estornado": false
+      }
+    ]
+  }
+]
 ```
+
+**Observação:** Os campos `request` e `response` contêm JSON em formato string.
 
 ---
 
@@ -649,31 +910,44 @@ Todos os comandos do fluxo PDV utilizam o mesmo endpoint com diferentes valores 
 **Request:**
 ```json
 {
-  "id": "pay-001",
-  "transaction_id": "TXN-123456789",
-  "cpf": "12345678900"
+  "id": "2383",
+  "transaction_id": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+  "cpf": "32373222884"
 }
 ```
 
-**Response - Sucesso:**
+**Response:**
 ```json
-{
-  "response": {
-    "data": {
-      "message": {
-        "content": "Transação estornada com sucesso"
+[
+  {
+    "request": {
+      "route": "RLIUNDO",
+      "version": 1,
+      "input": {
+        "transaction_id": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+        "customer_id": "32373222884"
       }
+    },
+    "response": {
+      "data": {
+        "customer_id": "32373222884",
+        "transaction_id": "7c9f59ce-6b39-4e47-8967-4befab20d62a",
+        "customer_info_id": null,
+        "message": {
+          "id": 801,
+          "content": "Estorno realizado com sucesso.",
+          "link_image": null
+        },
+        "next_step": [],
+        "break_step": []
+      },
+      "success": true
     }
   }
-}
+]
 ```
 
-**Response - Erro:**
-```json
-{
-  "error": "Transação não pode ser estornada"
-}
-```
+**Observação:** Internamente o endpoint utiliza o comando `RLIUNDO` para processar o estorno.
 
 ---
 
@@ -1517,6 +1791,14 @@ Todos os comandos do fluxo PDV utilizam o mesmo endpoint com diferentes valores 
 ## 📝 Códigos de Mensagem (messageId)
 
 ### Sucesso
+- **105**: CPF identificado com sucesso (RLIINFO)
+- **200**: Cadastro em andamento, mensagem enviada ao telefone (RLICELL)
+- **302**: Aguardando autenticação no PDV (RLIDEAL)
+- **400**: Aguardando pagamento no APP (RLIWAIT)
+- **500**: Desistência da compra recebida com sucesso (RLIQUIT)
+- **600**: Pontos acumulados com sucesso na transação (RLIPAYS)
+- **801**: Estorno realizado com sucesso (RLIUNDO)
+- **906**: Opções de pagamento disponíveis apresentadas (RLIFUND)
 - **1000**: Operação realizada com sucesso (genérico)
 
 ### Erros Recuperáveis (permite nova tentativa)
@@ -1623,4 +1905,4 @@ Para importar essa documentação no Postman ou Insomnia:
 
 ---
 
-**Última atualização:** 2024-01-15
+**Última atualização:** 2025-11-26
