@@ -1,0 +1,553 @@
+{
+  "name": "RLIUNDO",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "={{ $json.mensagem }}",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "={{ $json.code }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -96,
+        352
+      ],
+      "id": "777883de-8b3b-4c33-991e-490b7d260ac1",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "eheptbdu7HOwPMAW",
+          "mode": "list",
+          "cachedResultName": "Credencial PDV"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_usuario": "={{ $('Webhook_simuladorPDV_estorno').item.json.headers.id_usuario }}"
+          },
+          "matchingColumns": [
+            "id_usuario"
+          ],
+          "schema": [
+            {
+              "id": "id_usuario",
+              "displayName": "id_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -16,
+        -80
+      ],
+      "id": "b3d631c4-423d-4a2f-a31d-78f358a43fb8",
+      "name": "Credenciais"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1342c45d-521c-4ac6-afc2-4e7af8373222",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        128
+      ],
+      "id": "6d938faf-fd63-4441-bb4a-86cb35925a54",
+      "name": "If7"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "133b9b7e-ceb0-468f-a154-d8182157b341",
+              "name": "request",
+              "value": "={{ (s => JSON.parse(s.startsWith('{') ? s : '{' + s + '}').data)\n   (((''+($('Request UNDO').item.json.request ?? '')).trim())) }}",
+              "type": "object"
+            },
+            {
+              "id": "c34869dd-480b-4b24-ae92-5978ae8585fb",
+              "name": "response",
+              "value": "={{ $('Router - RLIUNDO').item.json.response }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1088,
+        48
+      ],
+      "id": "42d6a222-b5f9-4635-93e6-9b5a0d26d070",
+      "name": "trata resposta12"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "133b9b7e-ceb0-468f-a154-d8182157b341",
+              "name": "request",
+              "value": "={{ (s => JSON.parse(s.startsWith('{') ? s : '{' + s + '}').data)\n   (((''+($('Request UNDO').item.json.request ?? '')).trim())) }}",
+              "type": "object"
+            },
+            {
+              "id": "c34869dd-480b-4b24-ae92-5978ae8585fb",
+              "name": "response",
+              "value": "={{ $json.error.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        256
+      ],
+      "id": "11b7e396-5ce0-4857-baaf-1bc856b0aa81",
+      "name": "trata resposta13"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Credenciais').item.json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "provideSslCertificates": true,
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Id",
+              "value": "={{ $('Credenciais').item.json.cnpj }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Basic {{ $('Credenciais').item.json.hashBase64 }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.request }}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        512,
+        624
+      ],
+      "id": "9a9ac024-83bf-428d-9994-9d6356cdc507",
+      "name": "Router - WAIT1",
+      "credentials": {
+        "httpSslAuth": {
+          "id": "QmU9dmvWdZ3dGR0e",
+          "name": "Certificado Router"
+        },
+        "httpBasicAuth": {
+          "id": "Xf3SyUdYT2vO8IAy",
+          "name": "credencial Americanas"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "simuladorPDV/transacoes/estorno",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        112
+      ],
+      "id": "2c6bcd11-7816-4b6d-814d-5201630515ae",
+      "name": "Webhook_simuladorPDV_estorno",
+      "webhookId": "f84a5b4c-e672-43dd-a1de-56e90cecade9",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dKIxoAHElaPDov0V",
+          "name": "header-simulador-pdv"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "//const headers = $('Webhook_simuladorPDV_comando').first().json.headers || {};\n//const comando = $input.first().json.body.comando;\n//const amount = $('Webhook_simuladorPDV_comando').first().json.body.amount;\n\nconst transaction_id = $input.first().json.body.transaction_id\nconst cpf = $input.first().json.body.cpf;\nconst id = $input.first().json.body.id;\n\n\nconst id_usuario = $input.first().json.headers.id_usuario;\n\n//const cancel = $('Webhook_simuladorPDV_comando').first().json.body.cancel;\n\n\nif (!transaction_id || !id_usuario || !id || !cpf) {\n  return [\n    {\n      json: {\n        status: 'erro',\n        mensagem: 'Dados obrigatórios não informados.',\n        code: 400\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      status: 'ok',\n      mensagem: 'Dados obrigatórios recebidos com sucesso.',\n      code: 200\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        112
+      ],
+      "id": "4733a9dc-fa41-4905-bff2-d7eea9c21dae",
+      "name": "Dados obrigatórios - Estorno"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1376,
+        208
+      ],
+      "id": "ef873524-ff17-4d90-ba2c-1ebf4d2899b9",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "279ad807-9715-4cdc-ac97-582a394a3049",
+              "name": "request",
+              "value": "=\n  \"data\": {\n    \"route\": \"RLIUNDO\",\n    \"version\": 1,\n    \"input\": {\n      \"transaction_id\": \"{{ $('Webhook_simuladorPDV_estorno').item.json.body.transaction_id }}\",\n      \"customer_id\": \"{{ $('Webhook_simuladorPDV_estorno').item.json.body.cpf }}\"\n    }\n  }\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        64
+      ],
+      "id": "ee513d37-0abc-4c88-b57f-d6dfa44a9033",
+      "name": "Request UNDO"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Credenciais').item.json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Credenciais').item.json['x-api-key'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"router\": { \"env\": \"{{ $('Credenciais').item.json.ambiente }}\" },\n  \"auth\": {\n    \"client_id\": \"{{ $('Credenciais').item.json.client_id }}\",\n    \"client_secret\": \"{{ $('Credenciais').item.json.client_secret }}\",\n    \"cnpj_id\": \"{{ $('Credenciais').item.json.cnpj }}\"\n  },\n  \"cert\": {\n    \"pfx_base64\": \"{{ $('Credenciais').item.json.pfx_file }}\",\n    \"password\": \"{{ $('Credenciais').item.json.pfx_password }}\"\n  },\n  {{ $json.request }}\n}\n",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        416,
+        64
+      ],
+      "id": "daf1b065-a475-4fb5-8ea9-d5fadb249544",
+      "name": "Router - RLIUNDO",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "180c663c-967d-4e84-939d-6168809df5b9",
+              "leftValue": "={{ $json.status_code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        656,
+        0
+      ],
+      "id": "1f00e701-33c9-441e-ae9b-1588dafe633d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "simuladorPDV_log_transacoes",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook_simuladorPDV_estorno').item.json.body.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "estornado",
+              "fieldValue": "true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        864,
+        -96
+      ],
+      "id": "8f413138-6bac-4356-a46d-0c5c446027c3",
+      "name": "Atualiza estorno",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        []
+      ]
+    },
+    "Credenciais": {
+      "main": [
+        [
+          {
+            "node": "Request UNDO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "Credenciais",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router - WAIT1": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "Webhook_simuladorPDV_estorno": {
+      "main": [
+        [
+          {
+            "node": "Dados obrigatórios - Estorno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados obrigatórios - Estorno": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "trata resposta13": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "trata resposta12": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request UNDO": {
+      "main": [
+        [
+          {
+            "node": "Router - RLIUNDO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router - RLIUNDO": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "trata resposta13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Atualiza estorno",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "trata resposta12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualiza estorno": {
+      "main": [
+        [
+          {
+            "node": "trata resposta12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3dae6561-c89a-421a-a639-ca8fca9e242a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "aadd6643b56fea71162b7bcac01083163eddfa2c5edde510ba7d223b06fb5723"
+  },
+  "id": "NUqaaFIPulKnyHQ4",
+  "tags": []
+}

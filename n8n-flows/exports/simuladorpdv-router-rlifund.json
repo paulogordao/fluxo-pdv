@@ -1,0 +1,479 @@
+{
+  "name": "RLIFUND",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "={{ $json.mensagem }}",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "={{ $json.code }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        320,
+        224
+      ],
+      "id": "ed729e34-11c5-4c08-ac78-9d9e9c95500c",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1342c45d-521c-4ac6-afc2-4e7af8373222",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        32,
+        0
+      ],
+      "id": "f9a79db7-c8d0-43cc-a6e3-19cb78b60dff",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "route"
+            },
+            {
+              "name": "version"
+            },
+            {
+              "name": "transaction_id"
+            },
+            {
+              "name": "payment_option_type"
+            },
+            {
+              "name": "value_total"
+            },
+            {
+              "name": "body",
+              "type": "array"
+            },
+            {
+              "name": "id_usuario"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -368,
+        -16
+      ],
+      "id": "226604eb-1aba-4936-919b-8ffaf706dcbf",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "eheptbdu7HOwPMAW",
+          "mode": "list",
+          "cachedResultName": "Credencial PDV"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_usuario": "={{ $('When Executed by Another Workflow').item.json.id_usuario }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id_usuario",
+              "displayName": "id_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        -16
+      ],
+      "id": "3e3300b1-508d-4ada-b409-65233e5270ae",
+      "name": "Credenciais"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Entrada\nconst input = $input.first().json;\n\n// Campos do topo\nconst route = input.route || 'RLIFUND';\nconst version = Number(input.version) || 1;\nconst transaction_id = input.transaction_id;\nconst payment_option_type = input.payment_option_type;\nconst value_total_raw = input.value_total;\n\n// Itens: em seu JSON, \"body\" é um ARRAY\nconst itemsArr = Array.isArray(input.body) ? input.body : [];\n\n// Validações\nconst erros = [];\nif (!transaction_id) erros.push('transaction_id ausente');\nif (!payment_option_type) erros.push('payment_option_type ausente');\nif (value_total_raw == null || value_total_raw === '') erros.push('value_total ausente');\nif (itemsArr.length === 0) erros.push('nenhum item informado');\n\nif (erros.length) {\n  return [{\n    json: {\n      code: 400,\n      status: 'erro',\n      mensagem: 'Dados inválidos',\n      erros\n    }\n  }];\n}\n\n// Normaliza tipos numéricos\nconst value_total = Number(value_total_raw);\nif (Number.isNaN(value_total)) {\n  return [{\n    json: {\n      code: 400,\n      status: 'erro',\n      mensagem: 'value_total inválido',\n      value_total_raw\n    }\n  }];\n}\n\nconst items = itemsArr.map(i => ({\n  ...i,\n  unit_price: Number(i.unit_price),\n  discount: Number(i.discount),\n  quantity: Number(i.quantity)\n}));\n\n// Saída OK (200) para o seu IF\nconst output = {\n  data: {\n    route,\n    version,\n    input: {\n      transaction_id,\n      payment_option_type,\n      order: {\n        value: value_total,\n        discount: 0.00,\n        date: new Date().toISOString(),\n        items\n      }\n    }\n  }\n};\n\nreturn [{ json: { code: 200, status: 'ok', ...output } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -16
+      ],
+      "id": "caaa9187-bb9e-4102-9469-5b4858f64fda",
+      "name": "Dados obrigatórios - FUND"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "133b9b7e-ceb0-468f-a154-d8182157b341",
+              "name": "request",
+              "value": "={{ JSON.stringify({ data: $('Dados obrigatórios - FUND').item.json.data }) }}",
+              "type": "object"
+            },
+            {
+              "id": "c34869dd-480b-4b24-ae92-5978ae8585fb",
+              "name": "response",
+              "value": "={{ $input.first().json.response }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        976,
+        -128
+      ],
+      "id": "f374c98d-d6e7-41b4-8f26-f7054aa8c474",
+      "name": "trata resposta2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "133b9b7e-ceb0-468f-a154-d8182157b341",
+              "name": "request",
+              "value": "={{ JSON.stringify({ data: $('Dados obrigatórios - FUND').item.json.data }) }}",
+              "type": "object"
+            },
+            {
+              "id": "c34869dd-480b-4b24-ae92-5978ae8585fb",
+              "name": "response",
+              "value": "={{ $json.error.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        976,
+        32
+      ],
+      "id": "02eb8223-98c1-48a2-a52f-e8b254550115",
+      "name": "trata resposta3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "provideSslCertificates": true,
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Id",
+              "value": "={{ $json.cnpj }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Basic {{ $json.hashBase64 }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ data: $('Dados obrigatórios - FUND').item.json.data }) }}\n",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        288
+      ],
+      "id": "2a010cdb-d75b-4716-99ec-26fbf4317972",
+      "name": "Router - RLIFUND1",
+      "credentials": {
+        "httpSslAuth": {
+          "id": "QmU9dmvWdZ3dGR0e",
+          "name": "Certificado Router"
+        },
+        "httpBasicAuth": {
+          "id": "Xf3SyUdYT2vO8IAy",
+          "name": "credencial Americanas"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Credenciais').item.json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Credenciais').item.json['x-api-key'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  router: { env: $json.ambiente },\n  auth: {\n    client_id: $('Credenciais').item.json.client_id,\n    client_secret: $('Credenciais').item.json.client_secret,\n    cnpj_id: $('Credenciais').item.json.cnpj,\n  },\n  cert: {\n    pfx_base64: $('Credenciais').item.json.pfx_file,\n    password: $('Credenciais').item.json.pfx_password,\n  },\n  data: $('tratamento_dados').item.json.data,\n}) }}",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        -16
+      ],
+      "id": "1bb9c317-df36-4aed-ab31-72ef8a868bad",
+      "name": "Router - RLIFUND",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9f860cf3-a04c-4652-81e0-3d04bdd6f22a",
+              "name": "data",
+              "value": "={{ $('Dados obrigatórios - FUND').item.json.data }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        -16
+      ],
+      "id": "39884fa3-7c80-4ed7-8bbb-16aa162b4138",
+      "name": "tratamento_dados"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "route": "RLIFUND",
+          "version": "1",
+          "transaction_id": "49d76f26-b577-4ce6-801a-1f22aef1e7fa",
+          "payment_option_type": "default",
+          "value_total": "11",
+          "id_usuario": "f647bfee-faa2-4293-a5f2-d192a9e9f3f1",
+          "body": [
+            {
+              "ean": "5464",
+              "sku": "46546465",
+              "unit_price": 4,
+              "discount": 5,
+              "quantity": 3,
+              "name": "bombom",
+              "unit_type": "CX",
+              "brand": "galac",
+              "manufacturer": "Dotz",
+              "categories": [
+                "tablet"
+              ],
+              "gross_profit_amount": 1,
+              "is_private_label": false,
+              "is_on_sale": true
+            },
+            {
+              "ean": "7897",
+              "sku": "89489274",
+              "unit_price": 4,
+              "discount": 5,
+              "quantity": 3,
+              "name": "xxxxxx",
+              "unit_type": "CX",
+              "brand": "blabla",
+              "manufacturer": "Dotz",
+              "categories": [
+                "tablet"
+              ],
+              "gross_profit_amount": 1,
+              "is_private_label": false,
+              "is_on_sale": true
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "tratamento_dados",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Dados obrigatórios - FUND",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Credenciais": {
+      "main": [
+        [
+          {
+            "node": "Router - RLIFUND",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados obrigatórios - FUND": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router - RLIFUND1": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "Router - RLIFUND": {
+      "main": [
+        [
+          {
+            "node": "trata resposta2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "trata resposta3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tratamento_dados": {
+      "main": [
+        [
+          {
+            "node": "Credenciais",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e3c12252-d474-42f8-b21e-3fa9b0857090",
+  "meta": {
+    "instanceId": "aadd6643b56fea71162b7bcac01083163eddfa2c5edde510ba7d223b06fb5723"
+  },
+  "id": "O7AZkA1jSN0lklG6",
+  "tags": []
+}

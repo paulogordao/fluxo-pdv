@@ -1,0 +1,449 @@
+{
+  "name": "RLIDEAL",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "={{ $json.mensagem }}",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "={{ $json.code }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        320,
+        224
+      ],
+      "id": "e765316a-88a0-4492-92c0-b59957c76b62",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1342c45d-521c-4ac6-afc2-4e7af8373222",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        128,
+        0
+      ],
+      "id": "f7ee9588-5b1c-4d9a-b04e-2a811e470a18",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "route"
+            },
+            {
+              "name": "version"
+            },
+            {
+              "name": "transaction_id"
+            },
+            {
+              "name": "use_product_dz",
+              "type": "number"
+            },
+            {
+              "name": "value_total",
+              "type": "number"
+            },
+            {
+              "name": "body",
+              "type": "array"
+            },
+            {
+              "name": "id_usuario"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -368,
+        0
+      ],
+      "id": "176940d2-1bc8-46ab-a445-611c0770ae2c",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "eheptbdu7HOwPMAW",
+          "mode": "list",
+          "cachedResultName": "Credencial PDV"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_usuario": "={{ $('When Executed by Another Workflow').item.json.id_usuario }}"
+          },
+          "matchingColumns": [
+            "id_usuario"
+          ],
+          "schema": [
+            {
+              "id": "id_usuario",
+              "displayName": "id_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        416,
+        -16
+      ],
+      "id": "4b045a3e-1f45-48d7-afc5-a3199c1f974b",
+      "name": "Credenciais"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Entrada\nconst input = $input.first().json;\n\n// Campos\nconst route = input.route || 'RLIDEAL';\nconst transaction_id = input.transaction_id;\nconst use_product_dz = Number(input.use_product_dz ?? 0);\nconst value_total_raw = input.value_total;\nconst itemsArr = Array.isArray(input.body) ? input.body : [];\nconst version = 1;\n\n// Validações\nconst erros = [];\nif (!transaction_id) erros.push('transaction_id ausente');\nif (value_total_raw == null || value_total_raw === '') erros.push('value_total ausente');\nif (itemsArr.length === 0) erros.push('nenhum item informado');\n\nif (erros.length) {\n  return [{ json: { code: 400, status: 'erro', mensagem: 'Dados inválidos', erros } }];\n}\n\nconst value = Number(value_total_raw);\nif (Number.isNaN(value)) {\n  return [{ json: { code: 400, status: 'erro', mensagem: 'value_total inválido', value_total_raw } }];\n}\n\n// Normaliza itens\nconst items = itemsArr.map(i => ({\n  ean: String(i.ean ?? ''),\n  sku: String(i.sku ?? ''),\n  name: String(i.name ?? ''),\n  unit_price: Number(i.unit_price ?? 0),\n  discount: Number(i.discount ?? 0),\n  quantity: Number(i.quantity ?? 0),\n  unit_type: i.unit_type ?? '',\n  brand: i.brand ?? '',\n  manufacturer: i.manufacturer ?? '',\n  categories: Array.isArray(i.categories) ? i.categories : [],\n  gross_profit_amount: Number(i.gross_profit_amount ?? 0),\n  is_private_label: !!i.is_private_label,\n  is_on_sale: !!i.is_on_sale\n}));\n\n// Payload no formato requerido\nconst data = {\n  route,\n  version,\n  input: {\n    transaction_id,\n    use_product_dz,\n    order: {\n      value,\n      discount: 0, // ajuste se precisar virem do input\n      date: new Date().toISOString(),\n      items\n    }\n  }\n};\n\nreturn [{ json: { code: 200, data } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        -16
+      ],
+      "id": "3f5152d8-e8b0-48ac-b169-ca88c1c1cb55",
+      "name": "Dados obrigatórios - DEAL"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "provideSslCertificates": true,
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Id",
+              "value": "={{ $json.cnpj }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Basic {{ $json.hashBase64 }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ data: $('Dados obrigatórios - DEAL').item.json.data }) }}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        288
+      ],
+      "id": "ff909cb5-7e69-4743-8466-a3d673513053",
+      "name": "Router - RLIDEAL1",
+      "credentials": {
+        "httpSslAuth": {
+          "id": "QmU9dmvWdZ3dGR0e",
+          "name": "Certificado Router"
+        },
+        "httpBasicAuth": {
+          "id": "Xf3SyUdYT2vO8IAy",
+          "name": "credencial Americanas"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Credenciais').item.json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Credenciais').item.json['x-api-key'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  router: { env: $json.ambiente },\n  auth: {\n    client_id: $('Credenciais').item.json.client_id,\n    client_secret: $('Credenciais').item.json.client_secret,\n    cnpj_id: $('Credenciais').item.json.cnpj,\n  },\n  cert: {\n    pfx_base64: $('Credenciais').item.json.pfx_file,\n    password: $('Credenciais').item.json.pfx_password,\n  },\n  data: $('Dados obrigatórios - DEAL').item.json.data,\n}) }}",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        592,
+        -16
+      ],
+      "id": "46da00ab-6a88-40e9-a9c0-9cd2c8826aed",
+      "name": "Router - RLIDEAL",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "133b9b7e-ceb0-468f-a154-d8182157b341",
+              "name": "request",
+              "value": "={{ JSON.stringify({ data: $('Dados obrigatórios - DEAL').item.json.data }) }}",
+              "type": "object"
+            },
+            {
+              "id": "c34869dd-480b-4b24-ae92-5978ae8585fb",
+              "name": "response",
+              "value": "={{ $json.error.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        64
+      ],
+      "id": "122b8009-008b-4b0a-b670-eb18ec54259f",
+      "name": "trata resposta3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "133b9b7e-ceb0-468f-a154-d8182157b341",
+              "name": "request",
+              "value": "={{ JSON.stringify({ data: $('Dados obrigatórios - DEAL').item.json.data }) }}",
+              "type": "object"
+            },
+            {
+              "id": "c34869dd-480b-4b24-ae92-5978ae8585fb",
+              "name": "response",
+              "value": "={{ $input.first().json.response }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        848,
+        -96
+      ],
+      "id": "09904460-5995-463d-97c9-ebb1ac8f9cb3",
+      "name": "trata resposta2"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "route": "RLIDEAL",
+          "version": "1",
+          "transaction_id": "49d76f26-b577-4ce6-801a-1f22aef1e7fa",
+          "use_product_dz": "1",
+          "value_total": "11",
+          "id_usuario": "f647bfee-faa2-4293-a5f2-d192a9e9f3f1",
+          "body": [
+            {
+              "ean": "5464",
+              "sku": "46546465",
+              "unit_price": 4,
+              "discount": 5,
+              "quantity": 3,
+              "name": "bombom",
+              "unit_type": "CX",
+              "brand": "galac",
+              "manufacturer": "Dotz",
+              "categories": [
+                "tablet"
+              ],
+              "gross_profit_amount": 1,
+              "is_private_label": false,
+              "is_on_sale": true
+            },
+            {
+              "ean": "7897",
+              "sku": "89489274",
+              "unit_price": 4,
+              "discount": 5,
+              "quantity": 3,
+              "name": "xxxxxx",
+              "unit_type": "CX",
+              "brand": "blabla",
+              "manufacturer": "Dotz",
+              "categories": [
+                "tablet"
+              ],
+              "gross_profit_amount": 1,
+              "is_private_label": false,
+              "is_on_sale": true
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Credenciais",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Dados obrigatórios - DEAL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Credenciais": {
+      "main": [
+        [
+          {
+            "node": "Router - RLIDEAL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados obrigatórios - DEAL": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router - RLIDEAL1": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "Router - RLIDEAL": {
+      "main": [
+        [
+          {
+            "node": "trata resposta2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "trata resposta3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3cc161fb-3592-4bad-ab37-7bca35b88b8d",
+  "meta": {
+    "instanceId": "aadd6643b56fea71162b7bcac01083163eddfa2c5edde510ba7d223b06fb5723"
+  },
+  "id": "PjuGngB2G3ULzJFI",
+  "tags": []
+}

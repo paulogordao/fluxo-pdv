@@ -1,0 +1,452 @@
+{
+  "name": "RLIAUTH",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "={{ $json.mensagem }}",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "={{ $json.code }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        144,
+        112
+      ],
+      "id": "85f2bb86-9b3e-4621-9eb3-336e1cb11dbd",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1342c45d-521c-4ac6-afc2-4e7af8373222",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -112,
+        -80
+      ],
+      "id": "10dcce54-193a-45b1-aa8c-54bcf294be34",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "route"
+            },
+            {
+              "name": "version"
+            },
+            {
+              "name": "transaction_id"
+            },
+            {
+              "name": "token"
+            },
+            {
+              "name": "cancel",
+              "type": "boolean"
+            },
+            {
+              "name": "id_usuario"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -768,
+        -48
+      ],
+      "id": "8b89a854-0c98-42c9-9191-3a59d6110373",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "eheptbdu7HOwPMAW",
+          "mode": "list",
+          "cachedResultName": "Credencial PDV"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_usuario": "={{ $('When Executed by Another Workflow').item.json.id_usuario }}"
+          },
+          "matchingColumns": [
+            "id_usuario"
+          ],
+          "schema": [
+            {
+              "id": "id_usuario",
+              "displayName": "id_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        144,
+        -96
+      ],
+      "id": "deff75e9-7025-4252-9cc6-e47b52812b3b",
+      "name": "Credenciais"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "279ad807-9715-4cdc-ac97-582a394a3049",
+              "name": "request",
+              "value": "=\n  \"data\": {\n    \"route\": \"{{ $('When Executed by Another Workflow').item.json.route }}\",\n    \"version\": 1,\n    \"input\": {\n      \"transaction_id\": \"{{ $('When Executed by Another Workflow').item.json.transaction_id }}\",\n      \"token\": \"{{ $('When Executed by Another Workflow').item.json.token }}\",\n      \"cancel\": {{ $('When Executed by Another Workflow').item.json.cancel }}\n    }\n  }\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        368,
+        -96
+      ],
+      "id": "6426fe91-7540-4a06-a842-99367351c958",
+      "name": "Request AUTH"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "133b9b7e-ceb0-468f-a154-d8182157b341",
+              "name": "request",
+              "value": "={{ (s => JSON.parse(s.startsWith('{') ? s : '{' + s + '}').data)\n   (((''+($('Request AUTH').item.json.request ?? '')).trim())) }}",
+              "type": "object"
+            },
+            {
+              "id": "c34869dd-480b-4b24-ae92-5978ae8585fb",
+              "name": "response",
+              "value": "={{ $input.first().json.response }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        784,
+        -176
+      ],
+      "id": "5907ef3e-1464-4bca-a673-70c14c3896ea",
+      "name": "trata resposta8"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "133b9b7e-ceb0-468f-a154-d8182157b341",
+              "name": "request",
+              "value": "={{ (s => JSON.parse(s.startsWith('{') ? s : '{' + s + '}').data)\n   (((''+($('Request AUTH').item.json.request ?? '')).trim())) }}",
+              "type": "object"
+            },
+            {
+              "id": "c34869dd-480b-4b24-ae92-5978ae8585fb",
+              "name": "response",
+              "value": "={{ $json.error.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        816,
+        64
+      ],
+      "id": "4ee27fc4-ec27-4b56-8722-4992c8fd349f",
+      "name": "trata resposta9"
+    },
+    {
+      "parameters": {
+        "jsCode": "//const headers = $('Webhook_simuladorPDV_comando').first().json.headers || {};\n//const comando = $input.first().json.body.comando;\nconst token = $input.first().json.token;\n\nconst transaction_id = $input.first().json.transaction_id;\n\nconst cancel = $input.first().json.cancel;\n\nconst id_usuario = $input.first().json.id_usuario;\n\nif (!token || !transaction_id || !id_usuario) {\n  return [\n    {\n      json: {\n        status: 'erro',\n        mensagem: 'Dados obrigatórios não informados.',\n        code: 400\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      status: 'ok',\n      mensagem: 'Dados obrigatórios recebidos com sucesso.',\n      code: 200\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        -80
+      ],
+      "id": "f44293a8-51d4-44cc-b3df-3ce9ad860084",
+      "name": "Dados obrigatórios - AUTH"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Credenciais').item.json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "provideSslCertificates": true,
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Id",
+              "value": "={{ $('Credenciais').item.json.cnpj }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Basic {{ $('Credenciais').item.json.hashBase64 }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.request }}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        144
+      ],
+      "id": "aeec6adb-f445-4e73-960b-39f82e0be738",
+      "name": "Router - RLIAUTH1",
+      "credentials": {
+        "httpSslAuth": {
+          "id": "QmU9dmvWdZ3dGR0e",
+          "name": "Certificado Router"
+        },
+        "httpBasicAuth": {
+          "id": "Xf3SyUdYT2vO8IAy",
+          "name": "credencial Americanas"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Credenciais').item.json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Credenciais').item.json['x-api-key'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"router\": { \"env\": \"{{ $('Credenciais').item.json.ambiente }}\" },\n  \"auth\": {\n    \"client_id\": \"{{ $('Credenciais').item.json.client_id }}\",\n    \"client_secret\": \"{{ $('Credenciais').item.json.client_secret }}\",\n    \"cnpj_id\": \"{{ $('Credenciais').item.json.cnpj }}\"\n  },\n  \"cert\": {\n    \"pfx_base64\": \"{{ $('Credenciais').item.json.pfx_file }}\",\n    \"password\": \"{{ $('Credenciais').item.json.pfx_password }}\"\n  },\n  {{ $json.request }}\n}\n",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        -80
+      ],
+      "id": "1de6f195-8a72-4b98-9c6b-dc29f1f89ce1",
+      "name": "Router - RLIIAUTH",
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "route": "RLIAUTH",
+          "version": "2",
+          "transaction_id": "18821bfb-639f-4314-b379-2085bc535d95",
+          "token": "736990",
+          "cancel": false,
+          "id_usuario": "f647bfee-faa2-4293-a5f2-d192a9e9f3f1"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Credenciais",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Dados obrigatórios - AUTH",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Credenciais": {
+      "main": [
+        [
+          {
+            "node": "Request AUTH",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request AUTH": {
+      "main": [
+        [
+          {
+            "node": "Router - RLIIAUTH",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "trata resposta8": {
+      "main": [
+        []
+      ]
+    },
+    "trata resposta9": {
+      "main": [
+        []
+      ]
+    },
+    "Dados obrigatórios - AUTH": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router - RLIAUTH1": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "Router - RLIIAUTH": {
+      "main": [
+        [
+          {
+            "node": "trata resposta8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "trata resposta9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "77ecc3f8-b1d9-418f-aac3-a5f6a861e45f",
+  "meta": {
+    "instanceId": "aadd6643b56fea71162b7bcac01083163eddfa2c5edde510ba7d223b06fb5723"
+  },
+  "id": "gL8DDxOAlGk6jcFy",
+  "tags": []
+}

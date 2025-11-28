@@ -1,0 +1,437 @@
+{
+  "name": "RLIWAIT",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "={{ $json.mensagem }}",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "={{ $json.code }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        288
+      ],
+      "id": "62dee2d8-0a8a-4bb4-92a2-9da04b4d6cc9",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "route"
+            },
+            {
+              "name": "version"
+            },
+            {
+              "name": "transaction_id"
+            },
+            {
+              "name": "id_usuario"
+            },
+            {
+              "name": "cancel",
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -960,
+        16
+      ],
+      "id": "bbd23fc3-d552-42c7-803e-5277c0064c99",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "eheptbdu7HOwPMAW",
+          "mode": "list",
+          "cachedResultName": "Credencial PDV"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_usuario": "={{ $('When Executed by Another Workflow').item.json.id_usuario }}"
+          },
+          "matchingColumns": [
+            "id_usuario"
+          ],
+          "schema": [
+            {
+              "id": "id_usuario",
+              "displayName": "id_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -112,
+        -48
+      ],
+      "id": "ba879434-bd20-4e86-8990-96547176cf6b",
+      "name": "Credenciais"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1342c45d-521c-4ac6-afc2-4e7af8373222",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        48
+      ],
+      "id": "c03e845e-5e54-4a53-8d75-e762ca4fc95b",
+      "name": "If7"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "279ad807-9715-4cdc-ac97-582a394a3049",
+              "name": "request",
+              "value": "=\n  \"data\": {\n    \"route\": \"{{ $('When Executed by Another Workflow').item.json.route }}\",\n    \"version\": {{ $('When Executed by Another Workflow').item.json.version }},\n    \"input\": {\n      \"transaction_id\": \"{{ $('When Executed by Another Workflow').item.json.transaction_id }}\",\n      \"cancel\": {{ $('When Executed by Another Workflow').item.json.cancel }}\n    }\n  }\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        64
+      ],
+      "id": "903023f4-1e4d-46c9-94e1-576a98945a2f",
+      "name": "Request WAIT"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "133b9b7e-ceb0-468f-a154-d8182157b341",
+              "name": "request",
+              "value": "={{ (s => JSON.parse(s.startsWith('{') ? s : '{' + s + '}').data)\n   (((''+($('Request WAIT').item.json.request ?? '')).trim())) }}",
+              "type": "object"
+            },
+            {
+              "id": "c34869dd-480b-4b24-ae92-5978ae8585fb",
+              "name": "response",
+              "value": "={{ $input.first().json.response }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        -64
+      ],
+      "id": "6cd2779b-183e-440f-a5d9-b71614c884a5",
+      "name": "trata resposta12"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "133b9b7e-ceb0-468f-a154-d8182157b341",
+              "name": "request",
+              "value": "={{ (s => JSON.parse(s.startsWith('{') ? s : '{' + s + '}').data)\n   (((''+($('Request WAIT').item.json.request ?? '')).trim())) }}",
+              "type": "object"
+            },
+            {
+              "id": "c34869dd-480b-4b24-ae92-5978ae8585fb",
+              "name": "response",
+              "value": "={{ $json.error.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        304
+      ],
+      "id": "e3e7a673-2b6b-4723-a557-8177baf314b5",
+      "name": "trata resposta13"
+    },
+    {
+      "parameters": {
+        "jsCode": "//const headers = $('Webhook_simuladorPDV_comando').first().json.headers || {};\n//const comando = $input.first().json.body.comando;\n//const amount = $('Webhook_simuladorPDV_comando').first().json.body.amount;\n\nconst transaction_id = $input.first().json.transaction_id;\n\nconst id_usuario = $input.first().json.id_usuario;\n\n//const cancel = $('Webhook_simuladorPDV_comando').first().json.body.cancel;\n\n\nif (!transaction_id || !id_usuario) {\n  return [\n    {\n      json: {\n        status: 'erro',\n        mensagem: 'Dados obrigatórios não informados.',\n        code: 400\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      status: 'ok',\n      mensagem: 'Dados obrigatórios recebidos com sucesso.',\n      code: 200\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        32
+      ],
+      "id": "97cb27c9-ec74-4ef3-bfb8-e3c0c6822a61",
+      "name": "Dados obrigatórios - WAIT"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Credenciais').item.json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "provideSslCertificates": true,
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Id",
+              "value": "={{ $('Credenciais').item.json.cnpj }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Basic {{ $('Credenciais').item.json.hashBase64 }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.request }}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        512
+      ],
+      "id": "99076b99-188c-4bde-ab4c-75e096906057",
+      "name": "Router - WAIT1",
+      "credentials": {
+        "httpSslAuth": {
+          "id": "QmU9dmvWdZ3dGR0e",
+          "name": "Certificado Router"
+        },
+        "httpBasicAuth": {
+          "id": "Xf3SyUdYT2vO8IAy",
+          "name": "credencial Americanas"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Credenciais').item.json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Credenciais').item.json['x-api-key'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"router\": { \"env\": \"{{ $('Credenciais').item.json.ambiente }}\" },\n  \"auth\": {\n    \"client_id\": \"{{ $('Credenciais').item.json.client_id }}\",\n    \"client_secret\": \"{{ $('Credenciais').item.json.client_secret }}\",\n    \"cnpj_id\": \"{{ $('Credenciais').item.json.cnpj }}\"\n  },\n  \"cert\": {\n    \"pfx_base64\": \"{{ $('Credenciais').item.json.pfx_file }}\",\n    \"password\": \"{{ $('Credenciais').item.json.pfx_password }}\"\n  },\n  {{ $json.request }}\n}\n",
+        "options": {
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        464,
+        80
+      ],
+      "id": "6939f4e6-10b6-4d44-a90d-db7eca0393a4",
+      "name": "Router - RLIIWAIT",
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "route": "RLIWAIT",
+          "version": "2",
+          "transaction_id": "49d76f26-b577-4ce6-801a-1f22aef1e7fa",
+          "id_usuario": "f647bfee-faa2-4293-a5f2-d192a9e9f3f1"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        []
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Dados obrigatórios - WAIT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Credenciais": {
+      "main": [
+        [
+          {
+            "node": "Request WAIT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "Credenciais",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request WAIT": {
+      "main": [
+        [
+          {
+            "node": "Router - RLIIWAIT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados obrigatórios - WAIT": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router - WAIT1": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "Router - RLIIWAIT": {
+      "main": [
+        [
+          {
+            "node": "trata resposta12",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "trata resposta13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "001ab6bf-e230-471c-80bd-46a97859d653",
+  "meta": {
+    "instanceId": "aadd6643b56fea71162b7bcac01083163eddfa2c5edde510ba7d223b06fb5723"
+  },
+  "id": "aNYAgrkmzBzqcwxe",
+  "tags": []
+}

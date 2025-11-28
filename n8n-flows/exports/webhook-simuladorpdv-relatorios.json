@@ -1,0 +1,568 @@
+{
+  "name": "Relatórios",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "simuladorPDV/transacoes",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        -224
+      ],
+      "id": "955c39b6-e5b4-4511-96e5-f8cf94b00587",
+      "name": "Webhook_simuladorPDV_transações",
+      "webhookId": "f84a5b4c-e672-43dd-a1de-56e90cecade9",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dKIxoAHElaPDov0V",
+          "name": "header-simulador-pdv"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1342c45d-521c-4ac6-afc2-4e7af8373222",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -176,
+        -160
+      ],
+      "id": "831e4398-eded-428f-af77-c37888977b41",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "const headers = $('Webhook_simuladorPDV_transações').first().json.headers || {};\n//const comando = $input.first().json.body.comando;\n//const cpf = $('Webhook_simuladorPDV_comando').first().json.body.cpf;\nconst id_usuario = $input.first().json.headers.id_usuario;\n\nif (!id_usuario) {\n  return [\n    {\n      json: {\n        status: 'erro',\n        mensagem: 'ID usuário não informado.',\n        code: 400\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      status: 'ok',\n      mensagem: 'Dados obrigatórios recebidos com sucesso.',\n      code: 200\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        -176
+      ],
+      "id": "b6eda71b-1984-494f-8f9a-2d350ea074ba",
+      "name": "Dados obrigatórios"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "simuladorPDV_log_transacoes",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id_usuario",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook_simuladorPDV_transações').item.json.headers.id_usuario }}"
+            },
+            {
+              "keyName": "id_empresa",
+              "condition": "eq",
+              "keyValue": "={{ $json.empresa_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        128,
+        64
+      ],
+      "id": "7c1c4164-5b7a-4f8c-9d61-fa0adff7676b",
+      "name": "Consulta transações",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        432,
+        -160
+      ],
+      "id": "670eb785-8987-4650-a416-b9ab3d67daba",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      data: items.map(item => item.json)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        48
+      ],
+      "id": "03af24f4-8e19-48bb-a24c-d49a26043828",
+      "name": "Response1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorpdv_auth",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('Webhook_simuladorPDV_transações').item.json.headers.id_usuario }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        32,
+        -176
+      ],
+      "id": "76c494dd-30ce-4c27-afdf-cfdc670e8345",
+      "name": "Consulta usuário",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "54305f30-1efd-440a-b0ec-bd0f4f4f0969",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        -160
+      ],
+      "id": "f8730596-5e51-4c09-b0f9-4978e4e59f04",
+      "name": "If9"
+    },
+    {
+      "parameters": {
+        "path": "simuladorPDV/transacoes/pays",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        256
+      ],
+      "id": "2a4c3918-a30e-4c99-b3b8-bbc5a9e0aa18",
+      "name": "Webhook_simuladorPDV_transações_pagas",
+      "webhookId": "f84a5b4c-e672-43dd-a1de-56e90cecade9",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dKIxoAHElaPDov0V",
+          "name": "header-simulador-pdv"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1342c45d-521c-4ac6-afc2-4e7af8373222",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -112,
+        288
+      ],
+      "id": "f65d57a3-62f2-4bee-8429-93142a41738e",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const headers = $('Webhook_simuladorPDV_transações_pagas').first().json.headers || {};\n//const comando = $input.first().json.body.comando;\n//const cpf = $('Webhook_simuladorPDV_comando').first().json.body.cpf;\nconst id_usuario = $input.first().json.headers.id_usuario;\n\nif (!id_usuario) {\n  return [\n    {\n      json: {\n        status: 'erro',\n        mensagem: 'ID usuário não informado.',\n        code: 400\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      status: 'ok',\n      mensagem: 'Dados obrigatórios recebidos com sucesso.',\n      code: 200\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        256
+      ],
+      "id": "ceecf89b-1803-4cc1-a2d7-c9aaef6652ac",
+      "name": "Dados obrigatórios1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        496,
+        288
+      ],
+      "id": "2e245187-ae78-4d96-88c8-ba34a8c8b63a",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      data: items.map(item => item.json)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        544
+      ],
+      "id": "39bc7eec-2c15-4312-ad4f-30c67d4479df",
+      "name": "Response"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorpdv_auth",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('Webhook_simuladorPDV_transações_pagas').item.json.headers.id_usuario }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        96,
+        272
+      ],
+      "id": "61b5d070-c6ac-4bf8-ab6c-81985c6dd8a3",
+      "name": "Consulta usuário1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "54305f30-1efd-440a-b0ec-bd0f4f4f0969",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        272,
+        288
+      ],
+      "id": "73124c07-e03e-41e2-af8e-9f6dd87706ac",
+      "name": "If10"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "simuladorPDV_log_transacoes",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id_usuario",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook_simuladorPDV_transações_pagas').item.json.headers.id_usuario }}"
+            },
+            {
+              "keyName": "id_empresa",
+              "condition": "eq",
+              "keyValue": "={{ $json.empresa_id }}"
+            },
+            {
+              "keyName": "servico",
+              "condition": "eq",
+              "keyValue": "RLIPAYS"
+            },
+            {
+              "keyName": "estornado",
+              "condition": "is",
+              "keyValue": "false"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        192,
+        528
+      ],
+      "id": "fadb11ac-e2cd-4a7c-8b5b-d54f79671767",
+      "name": "Consulta transações - pagas",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook_simuladorPDV_transações": {
+      "main": [
+        [
+          {
+            "node": "Dados obrigatórios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados obrigatórios": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Consulta usuário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta transações": {
+      "main": [
+        [
+          {
+            "node": "Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Response1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta usuário": {
+      "main": [
+        [
+          {
+            "node": "If9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If9": {
+      "main": [
+        [
+          {
+            "node": "Consulta transações",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Consulta usuário1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados obrigatórios1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta usuário1": {
+      "main": [
+        [
+          {
+            "node": "If10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If10": {
+      "main": [
+        [
+          {
+            "node": "Consulta transações - pagas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook_simuladorPDV_transações_pagas": {
+      "main": [
+        [
+          {
+            "node": "Dados obrigatórios1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta transações - pagas": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c2806714-7505-4e4b-bdf7-0fe5b56b22f9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "aadd6643b56fea71162b7bcac01083163eddfa2c5edde510ba7d223b06fb5723"
+  },
+  "id": "y4EeY7PbtFQj4IRm",
+  "tags": []
+}

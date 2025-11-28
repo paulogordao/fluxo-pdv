@@ -1,0 +1,4604 @@
+{
+  "name": "webhook - simulador PDV (usuário)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "simuladorPDV/validaUsuario",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4256,
+        -480
+      ],
+      "id": "e19d4233-7d3f-456d-9647-b0c0535666b5",
+      "name": "Webhook_simuladorPDV_valida_usuario",
+      "webhookId": "f84a5b4c-e672-43dd-a1de-56e90cecade9",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dKIxoAHElaPDov0V",
+          "name": "header-simulador-pdv"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "=node /bcrypt/comparaHash.js '{{ $('Code').item.json.body.senha }}' '{{ $node[\"Busca usuário\"].json[\"senha_hash\"] }}'"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -3376,
+        -576
+      ],
+      "id": "d6f8926e-5092-4283-869e-ef50b638aa58",
+      "name": "ComparaHash",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const email = $input.first().json.body.email;\nconst senha = $input.first().json.body.senha;\n\nif (!email || !senha) {\n  throw new Error('Email e senha são obrigatórios');\n}\n\nreturn items;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4048,
+        -480
+      ],
+      "id": "5c021b4b-38f1-45d8-ae37-f1021e3c4359",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5e80cc69-522e-40db-8887-01cda2b3d865",
+              "name": "mensagem",
+              "value": "usuário não encontrado",
+              "type": "string"
+            },
+            {
+              "id": "8a203913-4a00-44eb-b00d-fc9670803ded",
+              "name": "code",
+              "value": 404,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3376,
+        -384
+      ],
+      "id": "515dd8fa-9bd0-4dde-bcbe-a70ae284c548",
+      "name": "usuário não encontrado"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorpdv_auth",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email",
+              "keyValue": "={{ $json.body.email }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3824,
+        -480
+      ],
+      "id": "facace45-2a03-4d2c-940c-358fa6ee1aff",
+      "name": "Busca usuário",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "87e05071-94da-4b49-9c22-847ed6c825fd",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3600,
+        -480
+      ],
+      "id": "165d2931-48d4-4c36-8594-0939f5a221bf",
+      "name": "usuário encontrado?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1e254d96-149f-40cc-9f91-d917c3a79e53",
+              "leftValue": "={{ $json.stdout }}",
+              "rightValue": "senha correta",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3168,
+        -576
+      ],
+      "id": "05c7c89e-d48b-42f9-a4b6-ad529f38d35d",
+      "name": "Senha correta?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "320b3034-09a3-420f-b04a-003c253b287b",
+              "name": "mensagem",
+              "value": "senha correta",
+              "type": "string"
+            },
+            {
+              "id": "d71baa7b-f959-46bf-a028-df27e820b256",
+              "name": "id_usuario",
+              "value": "={{ $('Busca usuário').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "a3a0b7f8-ccba-4412-b610-2e649e831533",
+              "name": "primeiro_acesso",
+              "value": "={{ $('usuário encontrado?').item.json.primeiro_acesso }}",
+              "type": "boolean"
+            },
+            {
+              "id": "862d41c0-ea4c-4d10-b0ae-e65fd386b4b4",
+              "name": "code",
+              "value": 200,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2944,
+        -688
+      ],
+      "id": "3ffa51a9-6658-465a-a023-7845bfc9f550",
+      "name": "senha correta"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "320b3034-09a3-420f-b04a-003c253b287b",
+              "name": "mensagem",
+              "value": "senha incorreta",
+              "type": "string"
+            },
+            {
+              "id": "862d41c0-ea4c-4d10-b0ae-e65fd386b4b4",
+              "name": "code",
+              "value": 401,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2944,
+        -480
+      ],
+      "id": "e4c36d45-5f87-4545-91b5-d357ff1c7da2",
+      "name": "senha incorreta"
+    },
+    {
+      "parameters": {
+        "path": "simuladorPDV/permissoes_usuario",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4496,
+        -128
+      ],
+      "id": "02679f60-644a-42b1-a82f-76b32cddc18f",
+      "name": "Webhook_simuladorPDV_detalhe1",
+      "webhookId": "f84a5b4c-e672-43dd-a1de-56e90cecade9"
+    },
+    {
+      "parameters": {
+        "jsCode": "const id_usuario = $input.first().json.query.id_usuario;\n//const senha = $input.first().json.body.senha;\n\nif (!id_usuario) {\n  throw new Error('ID do usuário obrigatório');\n}\n\nreturn items;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4304,
+        -128
+      ],
+      "id": "a6753159-f90e-4947-b08f-011ee8156cff",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xevjxyjtqltrhjibtvgm.supabase.co/rest/v1/rpc/permissoes_por_usuario",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhldmp4eWp0cWx0cmhqaWJ0dmdtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTAxMDUwMiwiZXhwIjoyMDYwNTg2NTAyfQ.PQh2PaB3eoP0EPnV0uXUmN5hm845_Ah65hli6KPaYik"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhldmp4eWp0cWx0cmhqaWJ0dmdtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTAxMDUwMiwiZXhwIjoyMDYwNTg2NTAyfQ.PQh2PaB3eoP0EPnV0uXUmN5hm845_Ah65hli6KPaYik"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "usuario_id",
+              "value": "={{ $json.query.id_usuario }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3888,
+        -112
+      ],
+      "id": "3965f906-a267-4515-bc81-9594f3b5f4ca",
+      "name": "Consulta permissao",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "path": "simuladorPDV/usuarios",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4256,
+        992
+      ],
+      "id": "a24fb074-36ca-4e68-95ac-f7074b85343c",
+      "name": "Webhook_simuladorPDV_consulta_usuarios",
+      "webhookId": "f84a5b4c-e672-43dd-a1de-56e90cecade9",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dKIxoAHElaPDov0V",
+          "name": "header-simulador-pdv"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const headers = $input.first().json.headers || {};\nconst id_usuario = headers['id_usuario'];\n//const id_empresa = $input.first().json.query.id\n\nif (!id_usuario) {\n  return [\n    {\n      json: {\n        status: 'erro',\n        mensagem: 'ID do usuário não informado. Por favor, verifique.',\n        code: 400\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      status: 'ok',\n      mensagem: 'ID do usuário recebido com sucesso.',\n      id_usuario: id_usuario,\n      code: 200\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4048,
+        992
+      ],
+      "id": "256ed9fa-8f8c-4f0a-b384-0de14a8fb8fe",
+      "name": "Code7"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1342c45d-521c-4ac6-afc2-4e7af8373222",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3824,
+        992
+      ],
+      "id": "d499c6ad-3132-4819-a15f-e99a44998a45",
+      "name": "If14"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "={{ $json.mensagem }}",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "={{ $json.code }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3600,
+        1104
+      ],
+      "id": "69fe0c83-db7d-4120-84ab-2cf3d334fd7e",
+      "name": "Edit Fields18"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorpdv_auth",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.id_usuario }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3600,
+        896
+      ],
+      "id": "eae925bc-ce2e-43da-a698-28b97e123cf3",
+      "name": "Localiza usuário3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "87e05071-94da-4b49-9c22-847ed6c825fd",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3376,
+        896
+      ],
+      "id": "ab640b25-fd15-43df-8db9-6fe5cc71820f",
+      "name": "usuário encontrado?5"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorPDV_perfil",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.perfil_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3168,
+        896
+      ],
+      "id": "babf8d5a-e347-44a0-bfe6-5510a3c8fb27",
+      "name": "Busca perfil3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9624e463-73e6-4193-962b-8385e0c41eea",
+              "leftValue": "={{ $json.nome }}",
+              "rightValue": "ROOT",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "2778a1fe-b2bb-4f16-a3e6-cca7aafd51ae",
+              "leftValue": "={{ $json.nome }}",
+              "rightValue": "ADMIN",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2944,
+        896
+      ],
+      "id": "a257a303-6fec-4fa4-9a6c-4caee19998f8",
+      "name": "If15"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "=nok",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "=Usuário sem privilégios para a ação",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "=401",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2720,
+        992
+      ],
+      "id": "79fc6c5f-1046-4806-805e-aff9966ea10d",
+      "name": "Edit Fields19"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "simuladorpdv_auth",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2288,
+        416
+      ],
+      "id": "0e2259b7-8ee3-4ed0-9172-95e71b7a6fa2",
+      "name": "Busca usuarios",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -2064,
+        416
+      ],
+      "id": "370e86be-4835-40b7-b595-fd2e56da7c1b",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "52c5b629-deb4-4294-9d73-4bbe1104ec6b",
+              "leftValue": "={{ $json.empresa_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1840,
+        352
+      ],
+      "id": "7e2fc94b-d73e-4a2b-890f-1dfe7e38d721",
+      "name": "verifica_empresaid"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "33cabf59-b0ef-4138-8a3d-fdb641a95b90",
+              "name": "usuario",
+              "value": "={{ $json.usuario }}",
+              "type": "string"
+            },
+            {
+              "id": "f81ba6ee-d6b4-490b-acef-047a213e9927",
+              "name": "nome",
+              "value": "={{ $json.nome }}",
+              "type": "string"
+            },
+            {
+              "id": "a0d04cf8-c8de-4b8f-a732-01c5b1994c1e",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "d9a72ab9-3a2f-4180-b3f1-0b09296d760d",
+              "name": "empresa",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "51983cbb-cf65-4ffe-8f90-506d98c1d88c",
+              "name": "criado_em",
+              "value": "={{ $json.criado_em }}",
+              "type": "string"
+            },
+            {
+              "id": "67c68437-67f4-4c0d-97b1-859b025f8b97",
+              "name": "id",
+              "value": "={{ $('Loop Over Items').item.json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1616,
+        448
+      ],
+      "id": "c48a2dad-056a-4f8e-8cc1-c0b55aaa5a55",
+      "name": "Padroniza_response"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorPDV_empresa",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.empresa_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1616,
+        240
+      ],
+      "id": "90bd59f7-0412-446c-a51a-4d6065cf1439",
+      "name": "Busca empresa1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "33cabf59-b0ef-4138-8a3d-fdb641a95b90",
+              "name": "usuario",
+              "value": "={{ $('verifica_empresaid').item.json.usuario }}",
+              "type": "string"
+            },
+            {
+              "id": "f81ba6ee-d6b4-490b-acef-047a213e9927",
+              "name": "nome",
+              "value": "={{ $('verifica_empresaid').item.json.nome }}",
+              "type": "string"
+            },
+            {
+              "id": "a0d04cf8-c8de-4b8f-a732-01c5b1994c1e",
+              "name": "email",
+              "value": "={{ $('verifica_empresaid').item.json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "d9a72ab9-3a2f-4180-b3f1-0b09296d760d",
+              "name": "empresa",
+              "value": "={{ $json.nome }} - {{ $json.cnpj }}",
+              "type": "string"
+            },
+            {
+              "id": "51983cbb-cf65-4ffe-8f90-506d98c1d88c",
+              "name": "criado_em",
+              "value": "={{ $('verifica_empresaid').item.json.criado_em }}",
+              "type": "string"
+            },
+            {
+              "id": "1622e3df-89a4-48d0-bccd-b6a4a11590fe",
+              "name": "id",
+              "value": "={{ $('Busca usuarios').item.json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1408,
+        400
+      ],
+      "id": "1703bcb2-974a-462c-b606-77d32ed24fb1",
+      "name": "Padroniza_response1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      data: items.map(item => item.json)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1840,
+        144
+      ],
+      "id": "a828a789-8acf-48a4-b1fb-e9dd645dbe4f",
+      "name": "Response"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b2cf1cd6-3830-4849-bd9f-c1a86955dfbc",
+              "leftValue": "={{ $('Webhook_simuladorPDV_consulta_usuarios').item.json.query.id_usuario_consulta }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2720,
+        800
+      ],
+      "id": "2897b9b6-b8f0-438a-8049-09f118f9aecf",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorpdv_auth",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('Webhook_simuladorPDV_consulta_usuarios').item.json.query.id_usuario_consulta }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2496,
+        1200
+      ],
+      "id": "a1287d31-08e9-4bc8-bb38-8d8253d2f442",
+      "name": "Busca usuário - por id",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "33cabf59-b0ef-4138-8a3d-fdb641a95b90",
+              "name": "usuario",
+              "value": "={{ $json.usuario }}",
+              "type": "string"
+            },
+            {
+              "id": "f81ba6ee-d6b4-490b-acef-047a213e9927",
+              "name": "nome",
+              "value": "={{ $json.nome }}",
+              "type": "string"
+            },
+            {
+              "id": "a0d04cf8-c8de-4b8f-a732-01c5b1994c1e",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "d9a72ab9-3a2f-4180-b3f1-0b09296d760d",
+              "name": "empresa",
+              "value": "=",
+              "type": "string"
+            },
+            {
+              "id": "51983cbb-cf65-4ffe-8f90-506d98c1d88c",
+              "name": "criado_em",
+              "value": "={{ $json.criado_em }}",
+              "type": "string"
+            },
+            {
+              "id": "1622e3df-89a4-48d0-bccd-b6a4a11590fe",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "4d42d6d5-e610-4f83-aedb-0bc58142b79d",
+              "name": "empresa_id",
+              "value": "={{ $json.empresa_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2288,
+        1200
+      ],
+      "id": "5e872eb3-7300-41f0-a8c6-81b68f2d8cfd",
+      "name": "Padroniza_response2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "PUT",
+        "path": "simuladorPDV/usuarios",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4256,
+        1760
+      ],
+      "id": "2faea683-6398-446f-9aa5-6d5200322dbc",
+      "name": "Webhook_simuladorPDV_atualiza_usuario",
+      "webhookId": "f84a5b4c-e672-43dd-a1de-56e90cecade9",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dKIxoAHElaPDov0V",
+          "name": "header-simulador-pdv"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const headers = $input.first().json.headers || {};\nconst id_usuario = headers['id_usuario'];\n//const id_empresa = $input.first().json.query.id\n\nif (!id_usuario) {\n  return [\n    {\n      json: {\n        status: 'erro',\n        mensagem: 'ID do usuário não informado. Por favor, verifique.',\n        code: 400\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      status: 'ok',\n      mensagem: 'ID do usuário recebido com sucesso.',\n      id_usuario: id_usuario,\n      code: 200\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4048,
+        1760
+      ],
+      "id": "347a8fd4-b822-4fc6-a85d-9e6924941ff2",
+      "name": "Code8"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1342c45d-521c-4ac6-afc2-4e7af8373222",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3824,
+        1760
+      ],
+      "id": "f0041b62-2c4a-44b6-b871-46b00638ee90",
+      "name": "If16"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "={{ $json.mensagem }}",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "={{ $json.code }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3600,
+        1856
+      ],
+      "id": "86d3577c-41fe-4f5e-adfd-86e6c13b1095",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorpdv_auth",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.id_usuario }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3600,
+        1664
+      ],
+      "id": "b157fa28-7d6d-4933-96b5-e63452f17813",
+      "name": "Localiza usuário",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "87e05071-94da-4b49-9c22-847ed6c825fd",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3376,
+        1664
+      ],
+      "id": "2c755b93-68ee-4b46-bc3a-80fe21c3e246",
+      "name": "usuário encontrado?6"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorPDV_perfil",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.perfil_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3168,
+        1664
+      ],
+      "id": "79e24e5d-6fac-4293-90ed-fbe39a43dd42",
+      "name": "Busca perfil",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9624e463-73e6-4193-962b-8385e0c41eea",
+              "leftValue": "={{ $json.nome }}",
+              "rightValue": "ROOT",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "2778a1fe-b2bb-4f16-a3e6-cca7aafd51ae",
+              "leftValue": "={{ $json.nome }}",
+              "rightValue": "ADMIN",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2944,
+        1664
+      ],
+      "id": "feff9e27-446f-4678-af78-628ce2e95851",
+      "name": "If17"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "=nok",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "=Usuário sem privilégios para a ação",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "=401",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2720,
+        1760
+      ],
+      "id": "c3b01841-10cb-4dc3-9d4e-04ddb88ed7a3",
+      "name": "Edit Fields20"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b2cf1cd6-3830-4849-bd9f-c1a86955dfbc",
+              "leftValue": "={{ $('Webhook_simuladorPDV_atualiza_usuario').item.json.body.empresa_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2720,
+        1552
+      ],
+      "id": "e64a798c-7b2d-4d8b-af49-8836e78e8d4a",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorPDV_empresa",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('Webhook_simuladorPDV_atualiza_usuario').item.json.body.empresa_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2496,
+        1664
+      ],
+      "id": "d71058b2-5a45-4152-ac71-d2a7af310317",
+      "name": "Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b2cf1cd6-3830-4849-bd9f-c1a86955dfbc",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2288,
+        1664
+      ],
+      "id": "fa1617e9-b305-41f4-baeb-09edb42caa06",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "=nok",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "=Empresa não encontrada",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "=404",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2064,
+        1552
+      ],
+      "id": "5b42871c-b28f-4058-8a2f-f18671db71f1",
+      "name": "Edit Fields21"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "simuladorpdv_auth",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook_simuladorPDV_atualiza_usuario').item.json.body.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "usuario",
+              "fieldValue": "={{ $('Webhook_simuladorPDV_atualiza_usuario').item.json.body.usuario }}"
+            },
+            {
+              "fieldId": "nome",
+              "fieldValue": "={{ $('Webhook_simuladorPDV_atualiza_usuario').item.json.body.nome }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $('Webhook_simuladorPDV_atualiza_usuario').item.json.body.email }}"
+            },
+            {
+              "fieldId": "empresa_id",
+              "fieldValue": "={{ $('Webhook_simuladorPDV_atualiza_usuario').item.json.body.empresa_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2064,
+        1760
+      ],
+      "id": "ef4cedeb-1c96-4134-a516-ea7de9fa5a41",
+      "name": "Update usuário",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "simuladorpdv_auth",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook_simuladorPDV_atualiza_usuario').item.json.body.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "usuario",
+              "fieldValue": "={{ $('Webhook_simuladorPDV_atualiza_usuario').item.json.body.usuario }}"
+            },
+            {
+              "fieldId": "nome",
+              "fieldValue": "={{ $('Webhook_simuladorPDV_atualiza_usuario').item.json.body.nome }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $('Webhook_simuladorPDV_atualiza_usuario').item.json.body.email }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2496,
+        1456
+      ],
+      "id": "d2992486-8a6b-4a95-abcb-a957580e0d86",
+      "name": "Update usuário1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "=ok",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "=Usuário atualizado com sucesso",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "=200",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2288,
+        1456
+      ],
+      "id": "4ed5128d-d236-4a54-9070-62891f965f1e",
+      "name": "Edit Fields22"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "=ok",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "=Usuário atualizado com sucesso",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "=200",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1840,
+        1760
+      ],
+      "id": "31ddb091-5b5c-4f18-8fb5-2d71b07fbfcb",
+      "name": "Edit Fields23"
+    },
+    {
+      "parameters": {
+        "jsCode": "const headers = $input.first().json.headers || {};\n//const id_usuario = headers['id_usuario'];\nconst nome_empresa = $input.first().json.body.nome_empresa;\nconst cnpj = $input.first().json.body.cnpj;\nconst email = $input.first().json.body.email;\nconst nome = $input.first().json.body.nome;\n\nif (!nome_empresa || !cnpj || !email || !nome) {\n  return [\n    {\n      json: {\n        status: 'erro',\n        mensagem: 'Dados obrigatórios não informados. Por favor, verifique.',\n        code: 400\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      status: 'ok',\n      mensagem: 'Dados recebidos com sucesso.',\n      //id_usuario: id_usuario,\n      code: 200\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4048,
+        2224
+      ],
+      "id": "c06bc0c6-9336-4b35-8213-c9cb58b72fe5",
+      "name": "Code9"
+    },
+    {
+      "parameters": {
+        "tableId": "simuladorPDV_solicitacao_acesso",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $('Webhook_simuladorPDV_insere_solicitacao_acesso').item.json.body.email }}"
+            },
+            {
+              "fieldId": "nome",
+              "fieldValue": "={{ $('Webhook_simuladorPDV_insere_solicitacao_acesso').item.json.body.nome }}"
+            },
+            {
+              "fieldId": "cnpj_empresa",
+              "fieldValue": "={{ $('Webhook_simuladorPDV_insere_solicitacao_acesso').item.json.body.cnpj }}"
+            },
+            {
+              "fieldId": "nome_empresa",
+              "fieldValue": "={{ $('Webhook_simuladorPDV_insere_solicitacao_acesso').item.json.body.nome_empresa }}"
+            },
+            {
+              "fieldId": "visivel",
+              "fieldValue": "TRUE"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3600,
+        2112
+      ],
+      "id": "f6d52cbc-90ac-4f84-bda3-f6189c64da28",
+      "name": "Registra solicitação acesso",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "=ok",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "=Cadastro efetuado com sucesso!",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "=200",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3376,
+        2112
+      ],
+      "id": "cd34c563-20b1-4880-95b5-6b09db8903de",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1342c45d-521c-4ac6-afc2-4e7af8373222",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3824,
+        2224
+      ],
+      "id": "1a71cf8a-b9c4-48a8-8a7c-a9a7529ade0f",
+      "name": "If18"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "={{ $json.mensagem }}",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "={{ $json.code }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3600,
+        2320
+      ],
+      "id": "e3aad33c-56e3-4464-8744-a0ed680daeb3",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      data: items.map(item => item.json)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3600,
+        -128
+      ],
+      "id": "a6dfded3-ca6a-4316-ad6a-5b2532e2bb4e",
+      "name": "Response1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "95caa7af-f0df-4b63-bafc-264564cf4cb0",
+              "leftValue": "={{ $('Busca perfil3').item.json.nome }}",
+              "rightValue": "ROOT",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2496,
+        704
+      ],
+      "id": "7c521257-65a8-4c1c-b8fd-bc756de35d3d",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "simuladorpdv_auth",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "perfil_id",
+              "condition": "neq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2064,
+        992
+      ],
+      "id": "b00e85c7-4c49-4465-a47e-d38e54a50987",
+      "name": "Busca usuarios1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorPDV_perfil",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "nome",
+              "keyValue": "ROOT"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2288,
+        992
+      ],
+      "id": "8eb46b2e-3f2c-4463-9ea9-2d609c018810",
+      "name": "Busca perfil - ROOT",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1840,
+        992
+      ],
+      "id": "502b4d68-e173-4aac-9fe6-dedc608288d4",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "52c5b629-deb4-4294-9d73-4bbe1104ec6b",
+              "leftValue": "={{ $json.empresa_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1616,
+        992
+      ],
+      "id": "0cee5732-9c39-47f5-a657-9180eb760b45",
+      "name": "verifica_empresaid1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "33cabf59-b0ef-4138-8a3d-fdb641a95b90",
+              "name": "usuario",
+              "value": "={{ $json.usuario }}",
+              "type": "string"
+            },
+            {
+              "id": "f81ba6ee-d6b4-490b-acef-047a213e9927",
+              "name": "nome",
+              "value": "={{ $json.nome }}",
+              "type": "string"
+            },
+            {
+              "id": "a0d04cf8-c8de-4b8f-a732-01c5b1994c1e",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "d9a72ab9-3a2f-4180-b3f1-0b09296d760d",
+              "name": "empresa",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "51983cbb-cf65-4ffe-8f90-506d98c1d88c",
+              "name": "criado_em",
+              "value": "={{ $json.criado_em }}",
+              "type": "string"
+            },
+            {
+              "id": "67c68437-67f4-4c0d-97b1-859b025f8b97",
+              "name": "id",
+              "value": "={{ $('Loop Over Items1').item.json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1408,
+        1104
+      ],
+      "id": "a4eede6a-4053-4c6b-b60a-58a6461e4433",
+      "name": "Padroniza_response3"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorPDV_empresa",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.empresa_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1408,
+        896
+      ],
+      "id": "b6c7fad0-8e01-45e3-9ce0-fcf0bcd52a22",
+      "name": "Busca empresa",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "33cabf59-b0ef-4138-8a3d-fdb641a95b90",
+              "name": "usuario",
+              "value": "={{ $('verifica_empresaid1').item.json.usuario }}",
+              "type": "string"
+            },
+            {
+              "id": "f81ba6ee-d6b4-490b-acef-047a213e9927",
+              "name": "nome",
+              "value": "={{ $('verifica_empresaid1').item.json.nome }}",
+              "type": "string"
+            },
+            {
+              "id": "a0d04cf8-c8de-4b8f-a732-01c5b1994c1e",
+              "name": "email",
+              "value": "={{ $('verifica_empresaid1').item.json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "d9a72ab9-3a2f-4180-b3f1-0b09296d760d",
+              "name": "empresa",
+              "value": "={{ $json.nome }} - {{ $json.cnpj }}",
+              "type": "string"
+            },
+            {
+              "id": "51983cbb-cf65-4ffe-8f90-506d98c1d88c",
+              "name": "criado_em",
+              "value": "={{ $('verifica_empresaid1').item.json.criado_em }}",
+              "type": "string"
+            },
+            {
+              "id": "1622e3df-89a4-48d0-bccd-b6a4a11590fe",
+              "name": "id",
+              "value": "={{ $('Busca usuarios1').item.json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1184,
+        1072
+      ],
+      "id": "188fd15c-4605-4e6f-b0e4-88bee2b70f34",
+      "name": "Padroniza_response4"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      data: items.map(item => item.json)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1616,
+        800
+      ],
+      "id": "0736ecc5-8705-47d7-9aef-fd580a9cfb8b",
+      "name": "Response2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "simuladorPDV/usuarios",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4288,
+        2592
+      ],
+      "id": "2e9c00f4-ac86-458c-add4-78f06bf85e5f",
+      "name": "Webhook_simuladorPDV_cria_usuario",
+      "webhookId": "f84a5b4c-e672-43dd-a1de-56e90cecade9",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dKIxoAHElaPDov0V",
+          "name": "header-simulador-pdv"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "simuladorPDV/usuarios/solicitar_acesso",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4256,
+        2224
+      ],
+      "id": "0140e7c3-7fc0-40fd-b2f2-5e5a884675a7",
+      "name": "Webhook_simuladorPDV_insere_solicitacao_acesso",
+      "webhookId": "f84a5b4c-e672-43dd-a1de-56e90cecade9",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dKIxoAHElaPDov0V",
+          "name": "header-simulador-pdv"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const headers = $input.first().json.headers || {};\n//const id_usuario = headers['id_usuario'];\nconst empresa_id = $input.first().json.body.empresa_id;\nconst email = $input.first().json.body.email;\nconst nome = $input.first().json.body.nome;\nconst perfil = $input.first().json.body.perfil;\nconst usuario = $input.first().json.body.usuario;\n\nif (!empresa_id || !email || !nome || !perfil || !usuario) {\n  return [\n    {\n      json: {\n        status: 'erro',\n        mensagem: 'Dados obrigatórios não informados. Por favor, verifique.',\n        code: 400\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      status: 'ok',\n      mensagem: 'Dados recebidos com sucesso.',\n      //id_usuario: id_usuario,\n      code: 200\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4016,
+        2592
+      ],
+      "id": "a87026b4-6f48-4c9c-9b9b-3e9da8232ff0",
+      "name": "Code10"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1342c45d-521c-4ac6-afc2-4e7af8373222",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3760,
+        2608
+      ],
+      "id": "1a5d0881-291d-41f6-8cca-18c6ba820ed1",
+      "name": "If19"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "={{ $json.mensagem }}",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "={{ $json.code }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3520,
+        2768
+      ],
+      "id": "c64f1223-ca59-4cdd-bfa4-507bbb4dc063",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorPDV_perfil",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "nome",
+              "keyValue": "={{ $('Webhook_simuladorPDV_cria_usuario').item.json.body.perfil }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3504,
+        2560
+      ],
+      "id": "ece364e8-444a-4928-b1ef-caa7e0256749",
+      "name": "Busca perfil1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "simuladorpdv_auth",
+        "dataToSend": "autoMapInputData"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2688,
+        2544
+      ],
+      "id": "15718cda-5756-4cab-8685-7783772fc3ee",
+      "name": "Insere usuário",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "148a1cff-a7e6-4ae4-94b6-892f0ddd9ef0",
+              "name": "perfil_id",
+              "value": "={{ $('Busca perfil1').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "66d433ba-1559-4ebc-b098-8945bc253119",
+              "name": "usuario",
+              "value": "={{ $('Webhook_simuladorPDV_cria_usuario').item.json.body.usuario }}",
+              "type": "string"
+            },
+            {
+              "id": "6a1ce7d9-f06a-4178-8d7d-ef4e345f64a1",
+              "name": "nome",
+              "value": "={{ $('Webhook_simuladorPDV_cria_usuario').item.json.body.nome }}",
+              "type": "string"
+            },
+            {
+              "id": "8242cf7d-892b-406c-bd95-35c13649e99a",
+              "name": "email",
+              "value": "={{ $('Webhook_simuladorPDV_cria_usuario').item.json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "1de7718f-f52f-40d4-a5d6-2963be7c592d",
+              "name": "empresa_id",
+              "value": "={{ $('Webhook_simuladorPDV_cria_usuario').item.json.body.empresa_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f691d551-e724-422d-a348-478f0ec85180",
+              "name": "primeiro_acesso",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "86b36487-100c-43e6-980a-1c4ec7714d0f",
+              "name": "senha_hash",
+              "value": "={{ $json.stdout }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2864,
+        2544
+      ],
+      "id": "0418939b-f5ad-4ce2-acde-eab992d5a99d",
+      "name": "Dados insert"
+    },
+    {
+      "parameters": {
+        "command": "=node /bcrypt/geraHash.js {{ $json.token }}"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -3056,
+        2592
+      ],
+      "id": "b4869e13-0abc-4ad4-92b6-9930cff56a0c",
+      "name": "Cria Hash"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "=ok",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "=Cadastro efetuado com sucesso!",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "=200",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2256,
+        2560
+      ],
+      "id": "2888f1b1-5fd1-447d-b14a-8d1122cba71c",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const headers = $input.first().json.headers || {};\nconst id_usuario = $input.first().json.headers.id_usuario;\n//const nome_empresa = $input.first().json.body.nome_empresa;\n//const cnpj = $input.first().json.body.cnpj;\n//const email = $input.first().json.body.email;\n//const nome = $input.first().json.body.nome;\n\nif (!id_usuario) {\n  return [\n    {\n      json: {\n        status: 'erro',\n        mensagem: 'Dados obrigatórios não informados. Por favor, verifique.',\n        code: 400\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      status: 'ok',\n      mensagem: 'Dados recebidos com sucesso.',\n      //id_usuario: id_usuario,\n      code: 200\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4064,
+        3072
+      ],
+      "id": "6aba653a-de2d-4be3-bbd7-a12adb258efa",
+      "name": "Code11"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1342c45d-521c-4ac6-afc2-4e7af8373222",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3824,
+        3088
+      ],
+      "id": "c51991b1-8ed2-4558-a66f-e8190f1b93c3",
+      "name": "If20"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "={{ $json.mensagem }}",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "={{ $json.code }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3584,
+        3280
+      ],
+      "id": "44d670c4-09cf-43a0-bb83-f88252087d9e",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorpdv_auth",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('Webhook_simuladorPDV_consulta_solicitacao_acesso').item.json.headers.id_usuario }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3600,
+        3072
+      ],
+      "id": "794b53f5-bb92-4630-b1a1-1c837a339abc",
+      "name": "Localiza usuário1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "87e05071-94da-4b49-9c22-847ed6c825fd",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3376,
+        3040
+      ],
+      "id": "52c83488-cfbe-441e-a035-2ff6ea091af7",
+      "name": "usuário encontrado?7"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorPDV_perfil",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.perfil_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3136,
+        3008
+      ],
+      "id": "5f1fc81f-61eb-4890-af33-3ea8eb01d576",
+      "name": "Busca perfil2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9624e463-73e6-4193-962b-8385e0c41eea",
+              "leftValue": "={{ $json.nome }}",
+              "rightValue": "ROOT",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "2778a1fe-b2bb-4f16-a3e6-cca7aafd51ae",
+              "leftValue": "={{ $json.nome }}",
+              "rightValue": "ADMIN",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2848,
+        3040
+      ],
+      "id": "7fc764b1-f583-4f74-b2f5-35c765a8c173",
+      "name": "If21"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "=nok",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "=Usuário não encontrado",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "=404",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3184,
+        3264
+      ],
+      "id": "079a8411-9a77-40b0-bd69-29df4f96d78f",
+      "name": "Edit Fields6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "=nok",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "=Usuário sem privilégios para a ação",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "=401",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2640,
+        3328
+      ],
+      "id": "b106240d-1f89-4dae-a4ae-9eb8e3adb2d5",
+      "name": "Edit Fields24"
+    },
+    {
+      "parameters": {
+        "path": "simuladorPDV/usuarios/solicitar_acesso",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4320,
+        3072
+      ],
+      "id": "72d6b5cb-8de8-4b2c-9406-6d745a7878ca",
+      "name": "Webhook_simuladorPDV_consulta_solicitacao_acesso",
+      "webhookId": "f84a5b4c-e672-43dd-a1de-56e90cecade9",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dKIxoAHElaPDov0V",
+          "name": "header-simulador-pdv"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorPDV_solicitacao_acesso",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "visivel",
+              "keyValue": "TRUE"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2608,
+        3008
+      ],
+      "id": "8d969079-7406-4992-a89e-8ed2b7481c6e",
+      "name": "Lista solitações acesso",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      data: items.map(item => item.json)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2288,
+        3024
+      ],
+      "id": "e88176a9-6297-49a4-9857-bddd4c04ca44",
+      "name": "Response3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b2a6d3a9-fc53-4907-a983-c771584726fe",
+              "name": "token",
+              "value": "={{ Math.floor(100000 + Math.random() * 900000) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3264,
+        2592
+      ],
+      "id": "596505f2-4424-46a8-81e8-19653926b4e7",
+      "name": "Gera token númerico"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "re_U6LRhF4m_CBoP88yzCs63chuXZq8Y7Mzb"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "Simulador PDV <simuladorpdv@plsm.com.br>"
+            },
+            {
+              "name": "to",
+              "value": "={{ $('Webhook_simuladorPDV_cria_usuario').item.json.body.email }}"
+            },
+            {
+              "name": "subject",
+              "value": "Bem vindo - Token temporário"
+            },
+            {
+              "name": "html",
+              "value": "=<!DOCTYPE html> <html lang=\"pt-BR\">   <head>     <meta charset=\"UTF-8\" />     <title>Seja bem-vindo ao Simulador PDV</title>   </head>   <body style=\"font-family: Arial, sans-serif; background-color: #f7f7f7; padding: 32px;\">     <table width=\"100%\" style=\"max-width: 600px; margin: auto; background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);\">       <tr>         <td style=\"text-align: center; padding-bottom: 16px;\">           <h2 style=\"color: #ff4c00; margin-bottom: 4px;\">👋 Bem-vindo ao Simulador de PDV</h2>           <p style=\"color: #666666;\">Seu acesso inicial foi criado com sucesso.</p>         </td>       </tr>       <tr>         <td style=\"padding: 16px 0;\">           <p style=\"margin-bottom: 8px;\"><strong>Usuário:</strong> <span style=\"color: #333;\">{{ $json.usuario }}</span></p>           <p style=\"margin-bottom: 24px;\"><strong>Senha temporária:</strong> <span style=\"color: #333;\">{{ $('Gera token númerico').item.json.token }}</span></p>           <p style=\"color: #555;\">             Para definir sua nova senha, clique no botão abaixo e siga o processo de primeiro acesso:           </p>           <div style=\"text-align: center; margin: 24px 0;\">             <a href=\"{{url_primeiro_acesso}}\" target=\"_blank\"               style=\"background-color: #ff4c00; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold;\">               Primeiro acesso             </a>           </div>           <p style=\"color: #777; font-size: 13px;\">Caso não tenha solicitado este acesso, ignore este e-mail.</p>         </td>       </tr>       <tr>         <td style=\"text-align: center; font-size: 12px; color: #aaa; padding-top: 24px;\">           Simulador PDV • Projeto interno • Não responda este e-mail         </td>       </tr>     </table>   </body> </html>"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2464,
+        2560
+      ],
+      "id": "ab32be0a-6da2-4b3c-992a-e983dc4f7723",
+      "name": "Envia email"
+    },
+    {
+      "parameters": {
+        "jsCode": "const headers = $input.first().json.headers || {};\nconst id_usuario = $input.first().json.headers.id_usuario;\nconst nova_senha = $input.first().json.body.nova_senha;\n//const nome_empresa = $input.first().json.body.nome_empresa;\n//const cnpj = $input.first().json.body.cnpj;\n//const email = $input.first().json.body.email;\n//const nome = $input.first().json.body.nome;\n\nif (!id_usuario) {\n  return [\n    {\n      json: {\n        status: 'erro',\n        mensagem: 'Dados obrigatórios não informados. Por favor, verifique.',\n        code: 400\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      status: 'ok',\n      mensagem: 'Dados recebidos com sucesso.',\n      //id_usuario: id_usuario,\n      code: 200\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4096,
+        3808
+      ],
+      "id": "f7461fe5-7cdb-4614-9bce-b0cdf0dd2bbb",
+      "name": "Code12"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "simuladorPDV/usuarios/redefinir_senha",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4336,
+        3808
+      ],
+      "id": "01f9781c-57c6-4ea1-ad34-dab06bcf73fc",
+      "name": "Webhook_simuladorPDV_usuario_primeira_acesso",
+      "webhookId": "f84a5b4c-e672-43dd-a1de-56e90cecade9",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dKIxoAHElaPDov0V",
+          "name": "header-simulador-pdv"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1342c45d-521c-4ac6-afc2-4e7af8373222",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3856,
+        3808
+      ],
+      "id": "0b5cfdf3-26fb-44a2-a16c-87619d460346",
+      "name": "If22"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "={{ $json.mensagem }}",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "={{ $json.code }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3600,
+        3920
+      ],
+      "id": "c0c30a47-74d5-41fb-bcb7-ab4cdbc3604f",
+      "name": "Edit Fields7"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "87e05071-94da-4b49-9c22-847ed6c825fd",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3360,
+        3744
+      ],
+      "id": "2f553073-3ebd-47a4-9614-756567e7db0b",
+      "name": "usuário encontrado?8"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "=nok",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "=Usuário não encontrado",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "=404",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3184,
+        3968
+      ],
+      "id": "18f4cef5-ef96-4b5c-a4bb-f4f92c3fd52f",
+      "name": "Edit Fields8"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorpdv_auth",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('Webhook_simuladorPDV_usuario_primeira_acesso').item.json.headers.id_usuario }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3568,
+        3744
+      ],
+      "id": "05a71e76-8ce6-4cf5-874c-9c844d606aba",
+      "name": "Localiza usuário2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4982651f-a7b6-4139-8e11-f01cde99887c",
+              "leftValue": "={{ $json.primeiro_acesso }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3136,
+        3744
+      ],
+      "id": "782754d6-6d6e-426b-a141-7360269fbd8a",
+      "name": "primeiro_acesso"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "=nok",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "=Sem permissão para alteração de senha",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "=401",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2864,
+        3952
+      ],
+      "id": "d682401f-0253-4dba-8073-2e12d2ae3649",
+      "name": "Edit Fields9"
+    },
+    {
+      "parameters": {
+        "command": "=node /bcrypt/geraHash.js {{ $('Webhook_simuladorPDV_usuario_primeira_acesso').item.json.body.nova_senha }}"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -2896,
+        3728
+      ],
+      "id": "53525521-f730-4acd-b498-e3f9d32a74cf",
+      "name": "Cria Hash1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "simuladorpdv_auth",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('primeiro_acesso').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "senha_hash",
+              "fieldValue": "={{ $json.stdout }}"
+            },
+            {
+              "fieldId": "primeiro_acesso",
+              "fieldValue": "false"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2640,
+        3728
+      ],
+      "id": "35c3fed1-3502-41cf-9de7-6b13f6ec0f1d",
+      "name": "Atualiza senha usuário",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "=ok",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "=Usuário atualizado com sucesso!",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "=200",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2384,
+        3728
+      ],
+      "id": "55f0e144-9303-482c-99a4-a6eaa64bbb69",
+      "name": "Edit Fields10"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "simuladorPDV/usuarios/esqueci_senha",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4336,
+        4288
+      ],
+      "id": "813fc835-1c85-4d66-b07a-4d3d8d3a01a2",
+      "name": "Webhook_simuladorPDV_usuario_primeira_acesso1",
+      "webhookId": "f84a5b4c-e672-43dd-a1de-56e90cecade9",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dKIxoAHElaPDov0V",
+          "name": "header-simulador-pdv"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const headers = $input.first().json.headers || {};\n//const id_usuario = $input.first().json.headers.id_usuario;\nconst email = $input.first().json.body.email;\n//const nome_empresa = $input.first().json.body.nome_empresa;\n//const cnpj = $input.first().json.body.cnpj;\n//const email = $input.first().json.body.email;\n//const nome = $input.first().json.body.nome;\n\nif (!email) {\n  return [\n    {\n      json: {\n        status: 'erro',\n        mensagem: 'Dados obrigatórios não informados. Por favor, verifique.',\n        code: 400\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      status: 'ok',\n      mensagem: 'Dados recebidos com sucesso.',\n      //id_usuario: id_usuario,\n      code: 200\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4144,
+        4288
+      ],
+      "id": "8f607acf-ba39-4a21-98c0-fc2502bcc939",
+      "name": "Code13"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1342c45d-521c-4ac6-afc2-4e7af8373222",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3904,
+        4288
+      ],
+      "id": "74799468-c93a-4685-9528-023a69eafcf1",
+      "name": "If23"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "={{ $json.mensagem }}",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "={{ $json.code }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3616,
+        4400
+      ],
+      "id": "e0a27d46-5534-466d-8495-142695695cf8",
+      "name": "Edit Fields11"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorpdv_auth",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email",
+              "keyValue": "={{ $('Webhook_simuladorPDV_usuario_primeira_acesso1').item.json.body.email }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3616,
+        4208
+      ],
+      "id": "3be6073e-a3f8-4ee1-8e63-10b5e55f0079",
+      "name": "Localiza usuário4",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "87e05071-94da-4b49-9c22-847ed6c825fd",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3360,
+        4224
+      ],
+      "id": "03f1fef3-d712-4e87-ae5c-4476cb6868fc",
+      "name": "usuário encontrado?9"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "=ok",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "=Solicitação recebida!",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "=200",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3136,
+        4400
+      ],
+      "id": "1d90cdf2-a4f7-4085-84bc-c8b8e30e1ff8",
+      "name": "Edit Fields12"
+    },
+    {
+      "parameters": {
+        "command": "=node /bcrypt/geraHash.js {{ $json.token }}"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -2896,
+        4208
+      ],
+      "id": "006f8a3d-bef9-47df-b00b-6c402832ee8b",
+      "name": "Cria Hash2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b2a6d3a9-fc53-4907-a983-c771584726fe",
+              "name": "token",
+              "value": "={{ Math.floor(100000 + Math.random() * 900000) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3104,
+        4208
+      ],
+      "id": "8063bf15-8ff8-4b03-8f67-d0dd8c1969c7",
+      "name": "Gera token númerico1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "simuladorpdv_auth",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('usuário encontrado?9').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "senha_hash",
+              "fieldValue": "={{ $json.stdout }}"
+            },
+            {
+              "fieldId": "primeiro_acesso",
+              "fieldValue": "true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2704,
+        4208
+      ],
+      "id": "acd0b83d-39f0-46a1-a7ea-e624e190ad65",
+      "name": "Atualiza senha usuário1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "re_U6LRhF4m_CBoP88yzCs63chuXZq8Y7Mzb"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "Simulador PDV <simuladorpdv@plsm.com.br>"
+            },
+            {
+              "name": "to",
+              "value": "={{ $('usuário encontrado?9').item.json.email }}"
+            },
+            {
+              "name": "subject",
+              "value": "Bem vindo - Token temporário"
+            },
+            {
+              "name": "html",
+              "value": "=<!DOCTYPE html>\n<html lang=\"pt-BR\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <title>Recuperação de Senha - Simulador PDV</title>\n  </head>\n  <body style=\"font-family: Arial, sans-serif; background-color: #f7f7f7; padding: 32px;\">\n    <table width=\"100%\" style=\"max-width: 600px; margin: auto; background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);\">\n      <tr>\n        <td style=\"text-align: center; padding-bottom: 16px;\">\n          <h2 style=\"color: #ff4c00; margin-bottom: 4px;\">🔐 Recuperação de Senha</h2>\n          <p style=\"color: #666666;\">Você solicitou uma nova senha de acesso ao Simulador PDV.</p>\n        </td>\n      </tr>\n      <tr>\n        <td style=\"padding: 16px 0;\">\n          <p style=\"margin-bottom: 8px;\"><strong>Usuário:</strong> <span style=\"color: #333;\">{{ $json.usuario }}</span></p>\n          <p style=\"margin-bottom: 24px;\"><strong>Senha temporária:</strong> <span style=\"color: #333;\">{{ $('Gera token númerico1').item.json.token }}</span></p>\n          <p style=\"color: #555;\">\n            Esta é uma senha temporária e será necessário alterá-la no seu primeiro acesso.\n            Clique no botão abaixo para iniciar o processo de redefinição:\n          </p>\n          <div style=\"text-align: center; margin: 24px 0;\">\n            <a href=\"{{url_primeiro_acesso}}\" target=\"_blank\"\n              style=\"background-color: #ff4c00; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold;\">\n              Redefinir Senha\n            </a>\n          </div>\n          <p style=\"color: #777; font-size: 13px;\">Se você não solicitou a redefinição, ignore este e-mail com segurança.</p>\n        </td>\n      </tr>\n      <tr>\n        <td style=\"text-align: center; font-size: 12px; color: #aaa; padding-top: 24px;\">\n          Simulador PDV • Projeto interno • Não responda este e-m\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2480,
+        4208
+      ],
+      "id": "d5c7633f-128c-4ba9-9034-0ffe11fa775c",
+      "name": "Envia email1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "=ok",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "=Solicitação recebida!",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "=200",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2288,
+        4208
+      ],
+      "id": "33cc8a76-138a-477e-a572-41a3d11b9361",
+      "name": "Edit Fields13"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -4384,
+        112
+      ],
+      "id": "75154950-45d7-4597-8a4d-d1c4b4fc8ed4",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1490b4e8-4940-4c6d-84c6-21186c15a001",
+              "name": "id_usuario",
+              "value": "f647bfee-faa2-4293-a5f2-d192a9e9f3f1",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4144,
+        112
+      ],
+      "id": "24f32370-e3e1-4964-ba5f-9669e5d61e86",
+      "name": "id_usuario"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xevjxyjtqltrhjibtvgm.supabase.co/rest/v1/rpc/permissoes_por_usuario",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhldmp4eWp0cWx0cmhqaWJ0dmdtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTAxMDUwMiwiZXhwIjoyMDYwNTg2NTAyfQ.PQh2PaB3eoP0EPnV0uXUmN5hm845_Ah65hli6KPaYik"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhldmp4eWp0cWx0cmhqaWJ0dmdtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTAxMDUwMiwiZXhwIjoyMDYwNTg2NTAyfQ.PQh2PaB3eoP0EPnV0uXUmN5hm845_Ah65hli6KPaYik"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "usuario_id",
+              "value": "={{ $json.id_usuario }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3904,
+        144
+      ],
+      "id": "ff7d0fad-43f7-4267-ba9b-e7095c2568da",
+      "name": "Consulta permissao1",
+      "alwaysOutputData": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook_simuladorPDV_valida_usuario": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ComparaHash": {
+      "main": [
+        [
+          {
+            "node": "Senha correta?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Busca usuário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca usuário": {
+      "main": [
+        [
+          {
+            "node": "usuário encontrado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "usuário encontrado?": {
+      "main": [
+        [
+          {
+            "node": "ComparaHash",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "usuário não encontrado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Senha correta?": {
+      "main": [
+        [
+          {
+            "node": "senha correta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "senha incorreta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook_simuladorPDV_detalhe1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Consulta permissao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook_simuladorPDV_consulta_usuarios": {
+      "main": [
+        [
+          {
+            "node": "Code7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code7": {
+      "main": [
+        [
+          {
+            "node": "If14",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If14": {
+      "main": [
+        [
+          {
+            "node": "Localiza usuário3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields18",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Localiza usuário3": {
+      "main": [
+        [
+          {
+            "node": "usuário encontrado?5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "usuário encontrado?5": {
+      "main": [
+        [
+          {
+            "node": "Busca perfil3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca perfil3": {
+      "main": [
+        [
+          {
+            "node": "If15",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If15": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields19",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca usuarios": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "verifica_empresaid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verifica_empresaid": {
+      "main": [
+        [
+          {
+            "node": "Padroniza_response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busca empresa1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Padroniza_response": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca empresa1": {
+      "main": [
+        [
+          {
+            "node": "Padroniza_response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Padroniza_response1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busca usuário - por id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca usuário - por id": {
+      "main": [
+        [
+          {
+            "node": "Padroniza_response2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook_simuladorPDV_atualiza_usuario": {
+      "main": [
+        [
+          {
+            "node": "Code8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code8": {
+      "main": [
+        [
+          {
+            "node": "If16",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If16": {
+      "main": [
+        [
+          {
+            "node": "Localiza usuário",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Localiza usuário": {
+      "main": [
+        [
+          {
+            "node": "usuário encontrado?6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "usuário encontrado?6": {
+      "main": [
+        [
+          {
+            "node": "Busca perfil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca perfil": {
+      "main": [
+        [
+          {
+            "node": "If17",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If17": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields20",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields20": {
+      "main": [
+        []
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Update usuário1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields21",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update usuário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields21": {
+      "main": [
+        []
+      ]
+    },
+    "Update usuário1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields22",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update usuário": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields23",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code9": {
+      "main": [
+        [
+          {
+            "node": "If18",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registra solicitação acesso": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If18": {
+      "main": [
+        [
+          {
+            "node": "Registra solicitação acesso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta permissao": {
+      "main": [
+        [
+          {
+            "node": "Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Response": {
+      "main": [
+        []
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Busca usuarios",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busca perfil - ROOT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca usuarios1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca perfil - ROOT": {
+      "main": [
+        [
+          {
+            "node": "Busca usuarios1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Response2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "verifica_empresaid1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "verifica_empresaid1": {
+      "main": [
+        [
+          {
+            "node": "Padroniza_response3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Busca empresa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Padroniza_response3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca empresa": {
+      "main": [
+        [
+          {
+            "node": "Padroniza_response4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Padroniza_response4": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook_simuladorPDV_insere_solicitacao_acesso": {
+      "main": [
+        [
+          {
+            "node": "Code9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook_simuladorPDV_cria_usuario": {
+      "main": [
+        [
+          {
+            "node": "Code10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code10": {
+      "main": [
+        [
+          {
+            "node": "If19",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If19": {
+      "main": [
+        [
+          {
+            "node": "Busca perfil1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        []
+      ]
+    },
+    "Busca perfil1": {
+      "main": [
+        [
+          {
+            "node": "Gera token númerico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insere usuário": {
+      "main": [
+        [
+          {
+            "node": "Envia email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados insert": {
+      "main": [
+        [
+          {
+            "node": "Insere usuário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cria Hash": {
+      "main": [
+        [
+          {
+            "node": "Dados insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If20": {
+      "main": [
+        [
+          {
+            "node": "Localiza usuário1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code11": {
+      "main": [
+        [
+          {
+            "node": "If20",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Localiza usuário1": {
+      "main": [
+        [
+          {
+            "node": "usuário encontrado?7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "usuário encontrado?7": {
+      "main": [
+        [
+          {
+            "node": "Busca perfil2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca perfil2": {
+      "main": [
+        [
+          {
+            "node": "If21",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If21": {
+      "main": [
+        [
+          {
+            "node": "Lista solitações acesso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields24",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook_simuladorPDV_consulta_solicitacao_acesso": {
+      "main": [
+        [
+          {
+            "node": "Code11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lista solitações acesso": {
+      "main": [
+        [
+          {
+            "node": "Response3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gera token númerico": {
+      "main": [
+        [
+          {
+            "node": "Cria Hash",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        []
+      ]
+    },
+    "Envia email": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook_simuladorPDV_usuario_primeira_acesso": {
+      "main": [
+        [
+          {
+            "node": "Code12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code12": {
+      "main": [
+        [
+          {
+            "node": "If22",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If22": {
+      "main": [
+        [
+          {
+            "node": "Localiza usuário2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "usuário encontrado?8": {
+      "main": [
+        [
+          {
+            "node": "primeiro_acesso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Localiza usuário2": {
+      "main": [
+        [
+          {
+            "node": "usuário encontrado?8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "primeiro_acesso": {
+      "main": [
+        [
+          {
+            "node": "Cria Hash1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cria Hash1": {
+      "main": [
+        [
+          {
+            "node": "Atualiza senha usuário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualiza senha usuário": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook_simuladorPDV_usuario_primeira_acesso1": {
+      "main": [
+        [
+          {
+            "node": "Code13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code13": {
+      "main": [
+        [
+          {
+            "node": "If23",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If23": {
+      "main": [
+        [
+          {
+            "node": "Localiza usuário4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Localiza usuário4": {
+      "main": [
+        [
+          {
+            "node": "usuário encontrado?9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "usuário encontrado?9": {
+      "main": [
+        [
+          {
+            "node": "Gera token númerico1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gera token númerico1": {
+      "main": [
+        [
+          {
+            "node": "Cria Hash2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cria Hash2": {
+      "main": [
+        [
+          {
+            "node": "Atualiza senha usuário1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envia email1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualiza senha usuário1": {
+      "main": [
+        [
+          {
+            "node": "Envia email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "id_usuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "id_usuario": {
+      "main": [
+        [
+          {
+            "node": "Consulta permissao1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta permissao1": {
+      "main": [
+        [
+          {
+            "node": "Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "58ccf4b6-d56c-4882-bdbe-e7ec1e00549f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "aadd6643b56fea71162b7bcac01083163eddfa2c5edde510ba7d223b06fb5723"
+  },
+  "id": "QzKSECshPaQdhUoD",
+  "tags": []
+}

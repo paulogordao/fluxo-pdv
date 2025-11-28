@@ -1,0 +1,130 @@
+{
+  "name": "Webhook - Produtos",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        -16
+      ],
+      "id": "f1df54c6-7211-40f4-93d7-b5fb7910ab2e",
+      "name": "When clicking ‘Test workflow’",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "=https://dummyjson.com/products?limit=50&skip={{ Math.floor(Math.random() * 50) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        16,
+        80
+      ],
+      "id": "58fff173-7cba-461a-84af-1645e80bb797",
+      "name": "Produtos fakes"
+    },
+    {
+      "parameters": {
+        "jsCode": "const produtosOriginais = $json.products;\n\n// helper p/ SKU numérico de até 10 dígitos\nconst gerarSkuNumerico = () =>\n  Math.floor(Math.random() * 1_000_000_0000).toString().padStart(8, '0');\n\n// Fisher–Yates\nfunction embaralhar(arr) {\n  const a = arr.slice(); // cópia\n  for (let i = a.length - 1; i > 0; i--) {\n    const j = Math.floor(Math.random() * (i + 1));\n    [a[i], a[j]] = [a[j], a[i]];\n  }\n  return a;\n}\n\nconst filtrados = produtosOriginais.filter(p => p.price < 10);\nconst aleatorios = embaralhar(filtrados).slice(0, 5);\n\nconst produtosFiltrados = aleatorios.map(p => {\n  const unit_price = Number(Number(p.price).toFixed(2));\n\n  let pct = Math.round(p.discountPercentage ?? Math.floor(Math.random() * 31)); // 0..30\n  pct = Math.max(0, Math.min(pct, 80));\n  let discount = Number((unit_price * (pct / 100)).toFixed(2));\n  if (discount > unit_price) discount = unit_price;\n\n  return {\n    ean: p.id.toString().padStart(13, '0'),\n    sku: gerarSkuNumerico(),\n    unit_price,\n    discount,\n    quantity: Math.floor(Math.random() * 5) + 1,\n    name: p.title,\n    unit_type: 'UN',\n    brand: p.brand,\n    manufacturer: p.brand,\n    categories: [p.category],\n    gross_profit_amount: Number((Math.random() * 10).toFixed(2)),\n    is_private_label: Math.random() < 0.5,\n    is_on_sale: Math.random() < 0.5,\n    image: p.thumbnail,\n  };\n});\n\n// Produtos fakes\nconst produtosFakes = [\n  {\n    ean: '0000000000001',\n    sku: gerarSkuNumerico(),\n    unit_price: 100.00,\n    discount: 0.00,\n    quantity: 1,\n    name: 'Produto Fake 100',\n    unit_type: 'UN',\n    brand: 'FakeBrand',\n    manufacturer: 'FakeBrand',\n    categories: ['fake'],\n    gross_profit_amount: 10.00,\n    is_private_label: false,\n    is_on_sale: true,\n    image: 'https://via.placeholder.com/150'\n  },\n  {\n    ean: '0000000000002',\n    sku: gerarSkuNumerico(),\n    unit_price: 1000.00,\n    discount: 0.00,\n    quantity: 1,\n    name: 'Produto Fake 1000',\n    unit_type: 'UN',\n    brand: 'FakeBrand',\n    manufacturer: 'FakeBrand',\n    categories: ['fake'],\n    gross_profit_amount: 100.00,\n    is_private_label: false,\n    is_on_sale: true,\n    image: 'https://via.placeholder.com/150'\n  },\n  {\n    ean: '0000000000003',\n    sku: gerarSkuNumerico(),\n    unit_price: 10000.00,\n    discount: 0.00,\n    quantity: 1,\n    name: 'Produto Fake 10000',\n    unit_type: 'UN',\n    brand: 'FakeBrand',\n    manufacturer: 'FakeBrand',\n    categories: ['fake'],\n    gross_profit_amount: 1000.00,\n    is_private_label: false,\n    is_on_sale: true,\n    image: 'https://via.placeholder.com/150'\n  }\n];\n\nconst todosProdutos = [...produtosFiltrados, ...produtosFakes];\n\nreturn [{ json: { items: todosProdutos } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        80
+      ],
+      "id": "f9ff43ab-1a3b-4b9c-92ee-5e40f8d4d48b",
+      "name": "Response / filtro"
+    },
+    {
+      "parameters": {
+        "path": "simuladorPDV/produtosFakes",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        176
+      ],
+      "id": "2dde6eef-c993-41e8-8599-4732e078f673",
+      "name": "Webhook - Produtos fakes",
+      "webhookId": "480d57a1-0d50-47b3-b508-9cdbfe1baf05"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        464,
+        80
+      ],
+      "id": "b38170b4-46a3-4021-9d25-52c737d0224d",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Produtos fakes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Produtos fakes": {
+      "main": [
+        [
+          {
+            "node": "Response / filtro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Response / filtro": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Produtos fakes": {
+      "main": [
+        [
+          {
+            "node": "Produtos fakes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "dee26d8f-68ea-428e-be71-cb7e9cfe330f",
+  "meta": {
+    "instanceId": "aadd6643b56fea71162b7bcac01083163eddfa2c5edde510ba7d223b06fb5723"
+  },
+  "id": "dYi2IIIEilWc2aCB",
+  "tags": []
+}

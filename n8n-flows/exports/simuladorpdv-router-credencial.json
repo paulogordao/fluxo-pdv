@@ -1,0 +1,400 @@
+{
+  "name": "Credencial PDV",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "id_usuario"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -752,
+        -176
+      ],
+      "id": "c46242a9-ee9a-49c7-acf8-1eaeaf2a7b11",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtém os dados\nconst clientId = $json.client_id;\nconst clientSecret = $json.client_secret;\n\n// Concatena com dois pontos\nconst raw = `${clientId}:${clientSecret}`;\n\n// Codifica em base64\nconst encoded = Buffer.from(raw).toString('base64');\n\n// Retorna o hash\nreturn [\n  {\n    json: {\n      hashBase64: encoded\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        -64
+      ],
+      "id": "f7a4c911-b68b-4638-903a-a76a1e09c80b",
+      "name": "Gerar hash Base64"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f762718f-553d-4d70-8761-0572f0cda4a6",
+              "name": "client_id",
+              "value": "XHT3XV26WRFG85JZ48966693Y8HOD4",
+              "type": "string"
+            },
+            {
+              "id": "00b9c247-3605-43b8-a388-1b1cfc3a5f18",
+              "name": "client_secret",
+              "value": "KCQ6024WV6W15PE5B565A24ABD3X8Z",
+              "type": "string"
+            },
+            {
+              "id": "8cfb88e2-2016-4e66-ba72-1d21e634e431",
+              "name": "url",
+              "value": "https://uat-loyalty.dotznext.com/v1/command",
+              "type": "string"
+            },
+            {
+              "id": "5fce2340-b99e-49b6-a671-d6ef0f74bcc0",
+              "name": "cnpj",
+              "value": "00776574000660",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        -224
+      ],
+      "id": "0064b7cd-6002-4530-a017-79d1c6bd8e84",
+      "name": "Credenciais"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "70428dda-a2f4-40e5-81fa-884e2d3cf820",
+              "name": "cnpj",
+              "value": "={{ $json.cnpj_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2f4f8a28-49a8-41d9-babf-849412669df2",
+              "name": "client_id",
+              "value": "={{ $json.client_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ba022250-451e-4a17-aff8-fcdf1fa9c516",
+              "name": "client_secret",
+              "value": "={{ $json.client_secret }}",
+              "type": "string"
+            },
+            {
+              "id": "acb56781-88ec-48bd-aeca-8c04ae8021f4",
+              "name": "pfx_file",
+              "value": "={{ $json.pfx_file }}",
+              "type": "string"
+            },
+            {
+              "id": "2a71159b-74cd-4d06-9170-b96adfceaeeb",
+              "name": "pfx_password",
+              "value": "={{ $json.pfx_password }}",
+              "type": "string"
+            },
+            {
+              "id": "f88df1e9-e81a-4721-a82b-db96a2721c24",
+              "name": "url",
+              "value": "http://192.168.0.143:8080/secure-request",
+              "type": "string"
+            },
+            {
+              "id": "b0db8bb4-6cc3-44a7-80c0-6310ad59394f",
+              "name": "x-api-key",
+              "value": "def31f07fb5f7ee958a897d837139af64a8781b0ecd5e1067a61f6fc98d69094",
+              "type": "string"
+            },
+            {
+              "id": "9fe59121-3062-4bd4-805f-f13d596388ae",
+              "name": "ambiente",
+              "value": "={{ $json.ambiente }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        16
+      ],
+      "id": "2315a166-36db-4e2a-8a2f-34f9f3a3ab4e",
+      "name": "Response"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorpdv_auth",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.id_usuario }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        -160
+      ],
+      "id": "f155146a-afa3-4fe8-9785-d54fe43632c0",
+      "name": "Consulta usuário",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f3520baf-cc8b-45dd-9801-ec5a8090f1a0",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -464,
+        64
+      ],
+      "id": "171cdfde-68d2-440d-b07b-0ba4c2c5e461",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorPDV_empresa",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $json.empresa_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        -192
+      ],
+      "id": "896a9fbd-d22c-4bd3-849a-4619c853801a",
+      "name": "Consulta empresa",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f3520baf-cc8b-45dd-9801-ec5a8090f1a0",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -176,
+        48
+      ],
+      "id": "14f4acaf-6032-43bb-88b8-5e7661db3661",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorPDV_router_credentials",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "partner_id",
+              "keyValue": "={{ $json.id_credencial }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -144
+      ],
+      "id": "47326119-8e26-4173-8b3c-e1e54aa07278",
+      "name": "Consulta credencial",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "id_usuario": "f647bfee-faa2-4293-a5f2-d192a9e9f3f1"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Credenciais": {
+      "main": [
+        [
+          {
+            "node": "Gerar hash Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Consulta usuário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar hash Base64": {
+      "main": [
+        []
+      ]
+    },
+    "Consulta usuário": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Consulta empresa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta empresa": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Consulta credencial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta credencial": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "cf034839-4b2d-4596-8b72-ad46b1dddc5f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "aadd6643b56fea71162b7bcac01083163eddfa2c5edde510ba7d223b06fb5723"
+  },
+  "id": "eheptbdu7HOwPMAW",
+  "tags": []
+}

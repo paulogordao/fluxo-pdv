@@ -1,0 +1,1847 @@
+{
+  "name": "Serviços Router",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4a0c8216-7ff3-4e9a-907a-4e5b6584e093",
+              "name": "serviço",
+              "value": "={{ $('Webhook_simuladorPDV_comando').item.json.body.comando }}",
+              "type": "string"
+            },
+            {
+              "id": "8710db15-9baa-42e6-b333-08d86a59d3e4",
+              "name": "url",
+              "value": "https://uat-loyalty.dotznext.com/v1/command",
+              "type": "string"
+            },
+            {
+              "id": "470d0c79-b4b7-4341-8290-04b075621a3f",
+              "name": "cnpj",
+              "value": "00776574000660",
+              "type": "string"
+            },
+            {
+              "id": "fc0ee1f9-945a-44e4-9b94-2efe01f22c00",
+              "name": "employee_id",
+              "value": "={{ 'teste_' + Math.floor(10000 + Math.random() * 90000) }}",
+              "type": "string"
+            },
+            {
+              "id": "642ead00-fdf3-48b6-9577-64ffaf2e0543",
+              "name": "pos_id",
+              "value": "={{ 't' + ('' + Math.floor(1 + Math.random() * 99999)).padStart(5, '0') }}",
+              "type": "string"
+            },
+            {
+              "id": "70033688-b497-4814-b2cf-a650d480e69b",
+              "name": "order_id",
+              "value": "={{ 't' + ('' + Math.floor(1 + Math.random() * 999999)).padStart(6, '0') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -928,
+        1216
+      ],
+      "id": "0fa92154-9788-4305-a19f-f5b7ae9d3210",
+      "name": "Dados gerais"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json['serviço'] }}",
+                    "rightValue": "RLIINFO",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ee004645-7512-415f-b732-447f542f78b1"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RLIINFO"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "56633d77-37c3-477e-bb4c-d8651e355587",
+                    "leftValue": "={{ $json['serviço'] }}",
+                    "rightValue": "RLICELL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RLICELL"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3a60db9c-7923-4648-a5a1-4c9cc0d14c5e",
+                    "leftValue": "={{ $json['serviço'] }}",
+                    "rightValue": "RLIFUND",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RLIFUND"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8820391b-d812-44f0-aa2b-2b06dab545cc",
+                    "leftValue": "={{ $json['serviço'] }}",
+                    "rightValue": "RLIDEAL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RLIDEAL"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1abc365c-851c-47f9-b507-ebbe3efaa198",
+                    "leftValue": "={{ $json['serviço'] }}",
+                    "rightValue": "RLIAUTH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RLIAUTH"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1e53f292-ddfc-4a87-ab77-d9300786c408",
+                    "leftValue": "={{ $json['serviço'] }}",
+                    "rightValue": "RLIPAYS",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RLIPAYS"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b958a7ed-9b31-4a86-8b1e-62c68b8d50e9",
+                    "leftValue": "={{ $json['serviço'] }}",
+                    "rightValue": "RLIWAIT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RLIWAIT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d60a75e5-0fcb-4f6d-9618-0837a5815bdd",
+                    "leftValue": "={{ $json['serviço'] }}",
+                    "rightValue": "RLIQUIT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RLIQUIT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "05bc8740-921c-4cf5-b3ae-06ff8fbabf93",
+                    "leftValue": "={{ $json['serviço'] }}",
+                    "rightValue": "RLILIVE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -688,
+        1120
+      ],
+      "id": "34ac5b20-4842-4f12-9f4c-fea7b445d623",
+      "name": "Serviços"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f762718f-553d-4d70-8761-0572f0cda4a6",
+              "name": "client_id",
+              "value": "XHT3XV26WRFG85JZ48966693Y8HOD4",
+              "type": "string"
+            },
+            {
+              "id": "00b9c247-3605-43b8-a388-1b1cfc3a5f18",
+              "name": "client_secret",
+              "value": "KCQ6024WV6W15PE5B565A24ABD3X8Z",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1376,
+        1216
+      ],
+      "id": "8c62eec5-082e-4854-9e70-c92819202e1c",
+      "name": "Credenciais"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtém os dados\nconst clientId = $json.client_id;\nconst clientSecret = $json.client_secret;\n\n// Concatena com dois pontos\nconst raw = `${clientId}:${clientSecret}`;\n\n// Codifica em base64\nconst encoded = Buffer.from(raw).toString('base64');\n\n// Retorna o hash\nreturn [\n  {\n    json: {\n      hashBase64: encoded\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1152,
+        1216
+      ],
+      "id": "3f2eb1d5-77bc-4a8e-a932-01f53af8359a",
+      "name": "Gerar hash Base64"
+    },
+    {
+      "parameters": {
+        "jsCode": "const headers = $input.first().json.headers || {};\nconst comando = $input.first().json.body.comando;\n//const cpf = $input.first().json.body.cpf;\nconst id_usuario = $input.first().json.headers.id_usuario;\n\nif (!comando || !id_usuario) {\n  return [\n    {\n      json: {\n        status: 'erro',\n        mensagem: 'Comando não informado ou usuário não informado.',\n        code: 400\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      status: 'ok',\n      mensagem: 'Dados obrigatórios recebidos com sucesso.',\n      code: 200\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1824,
+        1312
+      ],
+      "id": "961c0960-0da4-451f-9847-ddc50b925c3c",
+      "name": "Trata dados entrada"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1342c45d-521c-4ac6-afc2-4e7af8373222",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1600,
+        1312
+      ],
+      "id": "0b1b5740-974f-4d1e-aaf0-41dc20bccfd3",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53b32f43-721c-47c8-8f26-675fd069ae71",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            },
+            {
+              "id": "ee23edb8-9303-4bac-9122-6506f1881695",
+              "name": "mensagem",
+              "value": "={{ $json.mensagem }}",
+              "type": "string"
+            },
+            {
+              "id": "920fcc7b-d3ae-4028-ba95-98fede43ee5c",
+              "name": "code",
+              "value": "={{ $json.code }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1376,
+        1408
+      ],
+      "id": "8cb221e6-8652-4d58-87cc-d5ec809cee9b",
+      "name": "Edit Fields7"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "simuladorPDV/comando",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2048,
+        1312
+      ],
+      "id": "97511ab1-c812-49b8-9e4c-3b8f9680bfe1",
+      "name": "Webhook_simuladorPDV_comando",
+      "webhookId": "f84a5b4c-e672-43dd-a1de-56e90cecade9",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "dKIxoAHElaPDov0V",
+          "name": "header-simulador-pdv"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const headers = $('Webhook_simuladorPDV_comando').first().json.headers || {};\n//const comando = $input.first().json.body.comando;\nconst transaction_id = $('Webhook_simuladorPDV_comando').first().json.body.id_transaction;\nconst telefone = $('Webhook_simuladorPDV_comando').first().json.body.telefone;\n\nif (!transaction_id || !telefone) {\n  return [\n    {\n      json: {\n        status: 'erro',\n        mensagem: 'ID da transação ou telefone não informados.',\n        code: 400\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      status: 'ok',\n      mensagem: 'Dados obrigatórios recebidos com sucesso.',\n      code: 200\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1296,
+        720
+      ],
+      "id": "dea7c246-8f7a-4c25-92bd-5d3f040225a8",
+      "name": "Dados obrigatórios - CELL"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "279ad807-9715-4cdc-ac97-582a394a3049",
+              "name": "request",
+              "value": "={\n  \"data\": {\n    \"route\": \"{{ $('Serviços').item.json['serviço'] }}\",\n    \"version\": 1,\n    \"input\": {\n      \"transaction_id\": \"{{ $('Webhook_simuladorPDV_comando').item.json.body.id_transaction}}\",\n      \"payments\": \"{{ $('Webhook_simuladorPDV_comando').item.json.body.payments.toJsonString() }}\"\n    }\n  }\n} ",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2016,
+        704
+      ],
+      "id": "52c5884e-b8f2-4505-8b26-c3a23974ad6b",
+      "name": "Request PAYS",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\nconst request = item.request ?? {};\nconst response = item.response ?? {};\n\n// Rota pode vir em request.route ou request.data.route\nconst route = request.route ?? request.data?.route ?? null;\n\nlet transaction_id = null;\n\nif (route === 'RLIINFO') {\n  // Para RLIINFO, prioriza do response\n  transaction_id = response?.data?.transaction_id ?? null;\n} else {\n  // Para demais, tenta do request (com/sem \"data\")\n  transaction_id =\n    request?.input?.transaction_id ??\n    request?.data?.input?.transaction_id ??\n    null;\n}\n\n// Fallback: se ainda não achou, tenta do response (caso algum parceiro retorne em todos os fluxos)\nif (!transaction_id) {\n  transaction_id = response?.data?.transaction_id ?? null;\n}\n\nreturn [\n  {\n    json: {\n      request,\n      response,\n      route,\n      transaction_id,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        1296
+      ],
+      "id": "917ffc11-4c8d-4d07-8f54-cacb88bc8929",
+      "name": "Request e response"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "simuladorpdv_auth",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('Webhook_simuladorPDV_comando').item.json.headers.id_usuario }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        1296
+      ],
+      "id": "7ad2aa8c-4f0f-4397-8208-61fdc1099757",
+      "name": "Consulta usuário",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "54305f30-1efd-440a-b0ec-bd0f4f4f0969",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1744,
+        1296
+      ],
+      "id": "ee0c35d1-9b9b-4f19-b2aa-1c0242ba0fc1",
+      "name": "If9"
+    },
+    {
+      "parameters": {
+        "tableId": "simuladorPDV_log_transacoes",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "transaction_id",
+              "fieldValue": "={{ $('Request e response').item.json.transaction_id }}"
+            },
+            {
+              "fieldId": "servico",
+              "fieldValue": "={{ $('Webhook_simuladorPDV_comando').item.json.body.comando }}"
+            },
+            {
+              "fieldId": "request",
+              "fieldValue": "={{ $('Request e response').item.json.request }}"
+            },
+            {
+              "fieldId": "response",
+              "fieldValue": "={{ $('Request e response').item.json.response }}"
+            },
+            {
+              "fieldId": "id_usuario",
+              "fieldValue": "={{ $('Consulta usuário').item.json.id }}"
+            },
+            {
+              "fieldId": "id_empresa",
+              "fieldValue": "={{ $('Consulta usuário').item.json.empresa_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2048,
+        1120
+      ],
+      "id": "ee634a7b-4cb6-4da4-91d0-c6ee3f4a4972",
+      "name": "registra log",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9jNRiEPtdbapqD1l",
+          "name": "Supabase - DB Geral"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        816,
+        1296
+      ],
+      "id": "adec0fea-5138-43c9-849e-5a421b053e69",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LeQJT7Jvku7GFpqM",
+          "mode": "list",
+          "cachedResultName": "RLIINFO"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cpf": "={{ $('Webhook_simuladorPDV_comando').item.json.body.cpf }}",
+            "route": "={{ $json['serviço'] }}",
+            "version": "={{ $('Webhook_simuladorPDV_comando').item.json.body?.version ?? \"1\" }}",
+            "employee_id": "={{ $json.employee_id }}",
+            "pos_id": "={{ $json.pos_id }}",
+            "order_id": "={{ $json.order_id }}",
+            "id_usuario": "={{ $('Webhook_simuladorPDV_comando').item.json.headers.id_usuario }}"
+          },
+          "matchingColumns": [
+            "cpf"
+          ],
+          "schema": [
+            {
+              "id": "cpf",
+              "displayName": "cpf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "route",
+              "displayName": "route",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "version",
+              "displayName": "version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "employee_id",
+              "displayName": "employee_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "pos_id",
+              "displayName": "pos_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "order_id",
+              "displayName": "order_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "id_usuario",
+              "displayName": "id_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        672
+      ],
+      "id": "07e89245-4fbe-464e-a92f-0fa76b0e036b",
+      "name": "Execute Workflow - RLIINFO"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "FtMcyDV03D4wTega",
+          "mode": "list",
+          "cachedResultName": "RLICELL"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "route": "={{ $json['serviço'] }}",
+            "version": "={{ $('Webhook_simuladorPDV_comando').item.json.body?.version ?? \"1\" }}",
+            "transaction_id": "={{ $('Webhook_simuladorPDV_comando').item.json.body.id_transaction }}",
+            "telefone": "={{ $('Webhook_simuladorPDV_comando').item.json.body.telefone }}",
+            "id_usuario": "={{ $('Webhook_simuladorPDV_comando').item.json.headers.id_usuario }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "route",
+              "displayName": "route",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "version",
+              "displayName": "version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "telefone",
+              "displayName": "telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "transaction_id",
+              "displayName": "transaction_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "id_usuario",
+              "displayName": "id_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -192,
+        864
+      ],
+      "id": "b8555360-5eb0-41d4-910f-ce2b314e711d",
+      "name": "Execute Workflow - RLICELL"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "O7AZkA1jSN0lklG6",
+          "mode": "list",
+          "cachedResultName": "RLIFUND"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "route": "={{ $json['serviço'] }}",
+            "transaction_id": "={{ $('Webhook_simuladorPDV_comando').item.json.body.id_transaction }}",
+            "payment_option_type": "={{ $('Webhook_simuladorPDV_comando').item.json.body.payment_option_type }}",
+            "value_total": "={{ $('Webhook_simuladorPDV_comando').item.json.body.value_total }}",
+            "body": "={{ $('Webhook_simuladorPDV_comando').item.json.body.items }}",
+            "version": "={{ $('Webhook_simuladorPDV_comando').item.json.body?.version ?? \"1\" }}",
+            "id_usuario": "={{ $('Webhook_simuladorPDV_comando').item.json.headers.id_usuario }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "route",
+              "displayName": "route",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "version",
+              "displayName": "version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "transaction_id",
+              "displayName": "transaction_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "payment_option_type",
+              "displayName": "payment_option_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "value_total",
+              "displayName": "value_total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "body",
+              "displayName": "body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "id_usuario",
+              "displayName": "id_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -192,
+        1088
+      ],
+      "id": "135e26cb-4a96-4ee8-8e7f-cf0b7c0a11e6",
+      "name": "Execute Workflow - RLIFUND"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "gL8DDxOAlGk6jcFy",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gL8DDxOAlGk6jcFy",
+          "cachedResultName": "RLIAUTH"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "route": "={{ $json['serviço'] }}",
+            "transaction_id": "={{ $('Webhook_simuladorPDV_comando').item.json.body.id_transaction }}",
+            "version": "2",
+            "token": "={{ $('Webhook_simuladorPDV_comando').item.json.body.token }}",
+            "cancel": "={{ $('Webhook_simuladorPDV_comando').item.json.body.cancel}}",
+            "id_usuario": "={{ $('Webhook_simuladorPDV_comando').item.json.headers.id_usuario }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "route",
+              "displayName": "route",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "version",
+              "displayName": "version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "transaction_id",
+              "displayName": "transaction_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "cancel",
+              "displayName": "cancel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            },
+            {
+              "id": "id_usuario",
+              "displayName": "id_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        1504
+      ],
+      "id": "f2b75f1d-3787-413a-96f2-51f94f09fd5a",
+      "name": "Execute Workflow - RLIAUTH"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Jh2aay2LcvKYkNrP",
+          "mode": "list",
+          "cachedResultName": "RLIPAYS"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "route": "={{ $json['serviço'] }}",
+            "transaction_id": "={{ $('Webhook_simuladorPDV_comando').item.json.body.id_transaction }}",
+            "version": "={{ $('Webhook_simuladorPDV_comando').item.json.body?.version ?? \"1\" }}",
+            "payments": "={{ $('Webhook_simuladorPDV_comando').item.json.body.payments }}",
+            "id_usuario": "={{ $('Webhook_simuladorPDV_comando').item.json.headers.id_usuario }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "route",
+              "displayName": "route",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "version",
+              "displayName": "version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "transaction_id",
+              "displayName": "transaction_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "payments",
+              "displayName": "payments",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "id_usuario",
+              "displayName": "id_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        1744
+      ],
+      "id": "5a2c669e-9b98-4eaf-b21e-aa8e8fc7c6e0",
+      "name": "Execute Workflow - RLIPAYS"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "aNYAgrkmzBzqcwxe",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/aNYAgrkmzBzqcwxe",
+          "cachedResultName": "RLIWAIT"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "route": "={{ $json['serviço'] }}",
+            "transaction_id": "={{ $('Webhook_simuladorPDV_comando').item.json.body.id_transaction }}",
+            "version": "={{ $('Webhook_simuladorPDV_comando').item.json.body?.version ?? \"1\" }}",
+            "id_usuario": "={{ $('Webhook_simuladorPDV_comando').item.json.headers.id_usuario }}",
+            "cancel": "={{ $('Webhook_simuladorPDV_comando').item.json.body.cancel }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "route",
+              "displayName": "route",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "version",
+              "displayName": "version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "transaction_id",
+              "displayName": "transaction_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "id_usuario",
+              "displayName": "id_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "cancel",
+              "displayName": "cancel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        1984
+      ],
+      "id": "a9973d08-62d2-4d1d-b7fa-e5078f9c8166",
+      "name": "Execute Workflow - RLIWAIT"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "5hNnfgsR6gunzv6H",
+          "mode": "list",
+          "cachedResultName": "RLIQUIT"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "route": "={{ $json['serviço'] }}",
+            "transaction_id": "={{ $('Webhook_simuladorPDV_comando').item.json.body.id_transaction }}",
+            "version": "={{ $('Webhook_simuladorPDV_comando').item.json.body?.version ?? \"1\" }}",
+            "id_usuario": "={{ $('Webhook_simuladorPDV_comando').item.json.headers.id_usuario }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "route",
+              "displayName": "route",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "version",
+              "displayName": "version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "transaction_id",
+              "displayName": "transaction_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "id_usuario",
+              "displayName": "id_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        2224
+      ],
+      "id": "2d6abaca-b063-4ba8-ada4-49b1fa5e1c5f",
+      "name": "Execute Workflow - RLIQUIT"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "0wHFTlO68juX94PG",
+          "mode": "list",
+          "cachedResultName": "RLIDEAL-V2"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "route": "={{ $json['serviço'] }}",
+            "transaction_id": "={{ $('Webhook_simuladorPDV_comando').item.json.body.id_transaction }}",
+            "version": "={{ $('Webhook_simuladorPDV_comando').item.json.body?.version ?? \"1\" }}",
+            "payment_option": "={{ $('Webhook_simuladorPDV_comando').first().json.body.payment_option }}",
+            "id_usuario": "={{ $('Webhook_simuladorPDV_comando').item.json.headers.id_usuario }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "route",
+              "displayName": "route",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "version",
+              "displayName": "version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "payment_option",
+              "displayName": "payment_option",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "transaction_id",
+              "displayName": "transaction_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "id_usuario",
+              "displayName": "id_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        16,
+        1200
+      ],
+      "id": "226a8d7e-2465-49f2-a1c1-17a42d558761",
+      "name": "Execute Workflow - RLIDEAL-V2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1df4f91c-d6d3-45a5-a4d4-add18cdd8c26",
+              "leftValue": "={{ $('Webhook_simuladorPDV_comando').item.json.body.version }}",
+              "rightValue": "2",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -288,
+        1280
+      ],
+      "id": "e63c21a0-56da-4f54-8279-336891575371",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "PjuGngB2G3ULzJFI",
+          "mode": "list",
+          "cachedResultName": "RLIDEAL"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "route": "={{ $json['serviço'] }}",
+            "transaction_id": "={{ $('Webhook_simuladorPDV_comando').item.json.body.id_transaction }}",
+            "value_total": "={{ $('Webhook_simuladorPDV_comando').item.json.body.order.value_total }}",
+            "body": "={{ $('Webhook_simuladorPDV_comando').item.json.body.order.items }}",
+            "version": "={{ $('Webhook_simuladorPDV_comando').item.json.body?.version ?? \"1\" }}",
+            "use_product_dz": "={{ $('Webhook_simuladorPDV_comando').item.json.body.use_product_dz }}",
+            "id_usuario": "={{ $('Webhook_simuladorPDV_comando').item.json.headers.id_usuario }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "route",
+              "displayName": "route",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "version",
+              "displayName": "version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "transaction_id",
+              "displayName": "transaction_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "use_product_dz",
+              "displayName": "use_product_dz",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "value_total",
+              "displayName": "value_total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "body",
+              "displayName": "body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "id_usuario",
+              "displayName": "id_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        1376
+      ],
+      "id": "a3c73fce-97ee-4fba-b805-be6fb1ca564a",
+      "name": "Execute Workflow - RLIDEAL"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "DaSCQ0p3ncHVBq4o",
+          "mode": "list",
+          "cachedResultName": "RLILIVE"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "route": "={{ $json['serviço'] }}",
+            "version": "={{ $('Webhook_simuladorPDV_comando').item.json.body?.version ?? \"1\" }}",
+            "id_usuario": "={{ $('Webhook_simuladorPDV_comando').item.json.headers.id_usuario }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "route",
+              "displayName": "route",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "version",
+              "displayName": "version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "id_usuario",
+              "displayName": "id_usuario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        2448
+      ],
+      "id": "85130926-8dd9-4c0e-9197-c96306755eeb",
+      "name": "Execute Workflow - RLILIVE"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Dados gerais": {
+      "main": [
+        [
+          {
+            "node": "Serviços",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Serviços": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - RLIINFO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Workflow - RLICELL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Workflow - RLIFUND",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Workflow - RLIAUTH",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Workflow - RLIPAYS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Workflow - RLIWAIT",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Workflow - RLIQUIT",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Workflow - RLILIVE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Credenciais": {
+      "main": [
+        [
+          {
+            "node": "Gerar hash Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar hash Base64": {
+      "main": [
+        [
+          {
+            "node": "Dados gerais",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trata dados entrada": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Credenciais",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook_simuladorPDV_comando": {
+      "main": [
+        [
+          {
+            "node": "Trata dados entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados obrigatórios - CELL": {
+      "main": [
+        []
+      ]
+    },
+    "Request PAYS": {
+      "main": [
+        []
+      ]
+    },
+    "Request e response": {
+      "main": [
+        [
+          {
+            "node": "Consulta usuário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta usuário": {
+      "main": [
+        [
+          {
+            "node": "If9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If9": {
+      "main": [
+        [
+          {
+            "node": "registra log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Request e response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - RLIINFO": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - RLICELL": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - RLIFUND": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - RLIAUTH": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - RLIPAYS": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - RLIWAIT": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - RLIQUIT": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - RLIDEAL-V2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow - RLIDEAL-V2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Workflow - RLIDEAL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - RLIDEAL": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow - RLILIVE": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f224bca8-5afd-4ca7-966f-502449f49002",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "aadd6643b56fea71162b7bcac01083163eddfa2c5edde510ba7d223b06fb5723"
+  },
+  "id": "SZ8GxbXwPBcLDISr",
+  "tags": []
+}
