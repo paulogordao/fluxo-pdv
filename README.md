@@ -4,7 +4,15 @@ Sistema de Ponto de Venda (PDV) desenvolvido com React, TypeScript e Tailwind CS
 
 ## 📚 Documentação Técnica
 
-- **[Arquitetura do Sistema](docs/ARCHITECTURE.md)** - Visão geral completa da arquitetura refatorada
+### 🏗️ Arquitetura
+- **[Arquitetura do Sistema](docs/ARCHITECTURE.md)** - Visão geral completa da arquitetura frontend
+- **[Arquitetura do Backend](docs/BACKEND_ARCHITECTURE.md)** - N8N, FastAPI e fluxos de integração
+- **[Schema do Banco de Dados](docs/DATABASE_SCHEMA.md)** - Estrutura completa das tabelas (Supabase/PostgreSQL)
+
+### 🔌 API & Integrações
+- **[Endpoints da API](docs/API_ENDPOINTS.md)** - Documentação completa dos endpoints
+
+### 📖 Guias de Desenvolvimento
 - **[Guia de Validação](docs/VALIDATION_GUIDE.md)** - Como usar validações com Zod
 - **[Guia de Retry Logic](docs/RETRY_GUIDE.md)** - Sistema de tentativas automáticas
 - **[Guia de Testes](docs/TESTING_GUIDE.md)** - Testes unitários com Vitest
