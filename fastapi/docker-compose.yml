@@ -1,0 +1,21 @@
+version: "3.9"
+services:
+  fastapi-ssl:
+    build: .
+    container_name: fastapi-ssl
+    environment:
+      - DOTZ_ENV=uat
+      - DOTZ_CLIENT_ID=XHT3XV26WRFG85JZ48966693Y8HOD4
+      - DOTZ_CLIENT_SECRET=KCQ6024WV6W15PE5B565A24ABD3X8Z
+      - DOTZ_CNPJ_ID=00776574000156
+      - DOTZ_PFX_PATH=/certs/AMERICANAS.pfx
+      - DOTZ_PFX_PASS=7DY08JD0282M1BK2PDY6VH3R2Z172KV8
+      - REQUEST_TIMEOUT=30
+      - AUTH_MODE=api-key
+      - INTERNAL_API_KEY=def31f07fb5f7ee958a897d837139af64a8781b0ecd5e1067a61f6fc98d69094
+      - CERT_CACHE_TTL=300
+      - CERT_CACHE_MAX_ENTRIES=50
+    volumes:
+      - /home/pmang/fastapi-ssl/certs/AMERICANAS.pfx:/certs/AMERICANAS.pfx:ro
+    ports:
+      - "8080:8000"  # container roda na 8000, expõe como 8080
