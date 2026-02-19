@@ -2,7 +2,7 @@
 
 ## 🔧 Configuração Base
 
-**Base URL:** `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV`
+**Base URL:** `https://n8n-prod.plsm.com.br/webhook/simuladorPDV`
 
 **API Key:** `0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975`
 
@@ -1894,7 +1894,7 @@ Para importar essa documentação no Postman ou Insomnia:
 
 1. Crie uma nova collection chamada "Simulador PDV API"
 2. Configure as variáveis de ambiente:
-   - `base_url`: `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV`
+   - `base_url`: `https://n8n-prod.plsm.com.br/webhook/simuladorPDV`
    - `api_key`: `0e890cb2ed05ed903e718ee9017fc4e88f9e0f4a8607459448e97c9f2539b975`
    - `id_usuario`: (será preenchido após login)
 3. Configure os headers globais:
