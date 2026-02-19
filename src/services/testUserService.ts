@@ -27,7 +27,7 @@ export const testUserService = {
       method: "GET",
       headers: {
         ...API_CONFIG.defaultHeaders,
-        "id_usuario": userId,
+        "id-usuario": userId,
       },
     });
 
@@ -68,7 +68,7 @@ export const testUserService = {
       method: "POST",
       headers: {
         ...API_CONFIG.defaultHeaders,
-        "id_usuario": userId,
+        "id-usuario": userId,
       },
       body: JSON.stringify({
         cpf_usuario: cpf,
@@ -93,7 +93,7 @@ export const testUserService = {
       method: "PUT",
       headers: {
         ...API_CONFIG.defaultHeaders,
-        "id_usuario": userId,
+        "id-usuario": userId,
       },
       body: JSON.stringify(usuario),
     });

@@ -40,7 +40,7 @@ export const empresaService = {
     const response = await fetch(`${API_CONFIG.baseUrl}/empresas`, {
       headers: {
         ...API_CONFIG.defaultHeaders,
-        'id_usuario': userId,
+        'id-usuario': userId,
       }
     });
 
@@ -64,7 +64,7 @@ export const empresaService = {
     const response = await fetch(`${API_CONFIG.baseUrl}/empresas?id=${id}`, {
       headers: {
         ...API_CONFIG.defaultHeaders,
-        'id_usuario': userId,
+        'id-usuario': userId,
       }
     });
 
@@ -93,7 +93,7 @@ export const empresaService = {
       headers: {
         ...API_CONFIG.defaultHeaders,
         'Content-Type': 'application/json',
-        'id_usuario': userId,
+        'id-usuario': userId,
       },
       body: JSON.stringify(payload),
     });
@@ -123,7 +123,7 @@ export const empresaService = {
       headers: {
         ...API_CONFIG.defaultHeaders,
         'Content-Type': 'application/json',
-        'id_usuario': userId,
+        'id-usuario': userId,
       },
       body: JSON.stringify(payload),
     });

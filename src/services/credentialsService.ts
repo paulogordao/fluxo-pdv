@@ -50,7 +50,7 @@ export const credentialsService = {
       method: 'POST',
       headers: {
         ...API_CONFIG.defaultHeaders,
-        'id_usuario': userId,
+        'id-usuario': userId,
       },
       body: JSON.stringify(data),
     });
@@ -75,7 +75,7 @@ export const credentialsService = {
       method: 'GET',
       headers: {
         ...API_CONFIG.defaultHeaders,
-        'id_usuario': userId,
+        'id-usuario': userId,
       },
     });
 
@@ -111,7 +111,7 @@ export const credentialsService = {
       method: 'GET',
       headers: {
         ...API_CONFIG.defaultHeaders,
-        'id_usuario': userId,
+        'id-usuario': userId,
       },
     });
 
@@ -135,7 +135,7 @@ export const credentialsService = {
       method: 'PUT',
       headers: {
         ...API_CONFIG.defaultHeaders,
-        'id_usuario': userId,
+        'id-usuario': userId,
       },
       body: JSON.stringify({ enabled: enabled.toString() }),
     });
@@ -160,7 +160,7 @@ export const credentialsService = {
       method: 'GET',
       headers: {
         ...API_CONFIG.defaultHeaders,
-        'id_usuario': userId,
+        'id-usuario': userId,
       },
     });
 
@@ -192,7 +192,7 @@ export const credentialsService = {
       method: 'GET',
       headers: {
         ...API_CONFIG.defaultHeaders,
-        'id_usuario': userId,
+        'id-usuario': userId,
       },
     });
 

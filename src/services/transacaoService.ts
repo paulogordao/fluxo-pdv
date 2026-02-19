@@ -21,7 +21,7 @@ export const transacaoService = {
       const headers = {
         ...API_CONFIG.defaultHeaders,
         'User-Agent': 'SimuladorPDV/1.0',
-        'id_usuario': userId,
+        'id-usuario': userId,
       };
       log.debug('Headers enviados:', headers);
       
@@ -67,7 +67,7 @@ export const transacaoService = {
       const headers = {
         ...API_CONFIG.defaultHeaders,
         'User-Agent': 'SimuladorPDV/1.0',
-        'id_usuario': userId,
+        'id-usuario': userId,
       };
       log.debug('Headers enviados para Pays:', headers);
       
@@ -113,7 +113,7 @@ export const transacaoService = {
       const headers = {
         ...API_CONFIG.defaultHeaders,
         'User-Agent': 'SimuladorPDV/1.0',
-        'id_usuario': userId,
+        'id-usuario': userId,
       };
 
       const body = {
