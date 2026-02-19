@@ -70,7 +70,7 @@ export const authService = {
       method: "POST",
       headers: {
         ...API_CONFIG.defaultHeaders,
-        "id_usuario": userId
+        "id-usuario": userId
       },
       body: JSON.stringify({
         nova_senha: novaSenha

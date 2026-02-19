@@ -35,7 +35,7 @@ export const consultaFluxoService = {
     // Create headers with user ID
     const headers = {
       ...API_CONFIG.defaultHeaders,
-      'id_usuario': userId
+      'id-usuario': userId
     };
     
     const url = buildApiUrl('consultaFluxo', { cpf, SLUG: slug });
@@ -84,7 +84,7 @@ export const consultaFluxoService = {
     // Create headers with user ID
     const headers = {
       ...API_CONFIG.defaultHeaders,
-      'id_usuario': userId
+      'id-usuario': userId
     };
     
     const url = buildApiUrl('consultaFluxoDetalhe', { SLUG: slug });

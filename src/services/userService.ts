@@ -43,7 +43,7 @@ export const userService = {
       method: 'POST',
       headers: {
         ...API_CONFIG.defaultHeaders,
-        'id_usuario': userId,
+        'id-usuario': userId,
       },
       body: JSON.stringify(userData)
     });
@@ -60,7 +60,7 @@ export const userService = {
       method: 'GET',
       headers: {
         ...API_CONFIG.defaultHeaders,
-        'id_usuario': userId,
+        'id-usuario': userId,
         'User-Agent': 'SimuladorPDV/1.0'
       }
     });
@@ -78,7 +78,7 @@ export const userService = {
       method: 'GET',
       headers: {
         ...API_CONFIG.defaultHeaders,
-        'id_usuario': userId,
+        'id-usuario': userId,
         'User-Agent': 'SimuladorPDV/1.0'
       }
     });
@@ -96,7 +96,7 @@ export const userService = {
       method: 'PUT',
       headers: {
         ...API_CONFIG.defaultHeaders,
-        'id_usuario': userId,
+        'id-usuario': userId,
         'User-Agent': 'SimuladorPDV/1.0'
       },
       body: JSON.stringify(userData)
@@ -114,7 +114,7 @@ export const userService = {
     const response = await fetch(`${API_CONFIG.baseUrl}/usuarios/solicitar_acesso`, {
       headers: {
         ...API_CONFIG.defaultHeaders,
-        'id_usuario': userId,
+        'id-usuario': userId,
       }
     });
 

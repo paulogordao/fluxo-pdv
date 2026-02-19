@@ -327,7 +327,7 @@ async function executeComandoRequest(
         method: 'POST',
         headers: {
           ...API_CONFIG.defaultHeaders,
-          'id_usuario': userId
+          'id-usuario': userId
         },
         body: JSON.stringify(requestBody),
         signal: controller.signal
