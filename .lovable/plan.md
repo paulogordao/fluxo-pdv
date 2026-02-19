@@ -1,64 +1,39 @@
 
-## Alteração de Domínio: umbrelosn8n → n8n-prod
+## Correção: Build Error — @hookform/resolvers incompatível com zod v3
 
-### Escopo da Alteração
+### Causa Raiz
 
-Substituição de `https://umbrelosn8n.plsm.com.br` por `https://n8n-prod.plsm.com.br` em **2 arquivos**, totalizando **3 ocorrências**.
+O `@hookform/resolvers` na versão `^5.0.1` foi instalado no projeto, mas essa versão requer `zod` v4. O projeto utiliza `zod` v3 (`^3.23.8`), gerando o erro:
 
----
-
-### Arquivo 1: src/config/api.ts (CRÍTICO)
-
-Este é o arquivo central de configuração da API. É a única fonte de verdade para a URL base usada por **todos os serviços** do frontend. A alteração aqui reflete imediatamente em toda a aplicação.
-
-**Linha 6 — antes:**
 ```
-baseUrl: 'https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV',
+[commonjs--resolver] Missing "./v4/core" specifier in "zod" package
 ```
 
-**Linha 6 — depois:**
-```
-baseUrl: 'https://n8n-prod.plsm.com.br/webhook/simuladorPDV',
-```
+O `@hookform/resolvers` v5 tenta importar `zod/v4/core`, que simplesmente não existe no `zod` v3.
 
----
+### Solução
 
-### Arquivo 2: docs/API_ENDPOINTS.md (Documentação)
+Alterar **apenas** a versão do `@hookform/resolvers` no `package.json` de `^5.0.1` para `^4.3.0`, que é totalmente compatível com `zod` v3 (versão atual do projeto).
 
-Duas ocorrências a serem atualizadas para manter a documentação sincronizada com o ambiente de produção:
+**Arquivo:** `package.json` — linha 14
 
-**Linha 5 — Seção "Configuração Base":**
 ```
-**Base URL:** `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV`
-```
-→
-```
-**Base URL:** `https://n8n-prod.plsm.com.br/webhook/simuladorPDV`
+// ANTES
+"@hookform/resolvers": "^5.0.1"
+
+// DEPOIS
+"@hookform/resolvers": "^4.3.0"
 ```
 
-**Linha 1897 — Seção "Guia Postman":**
-```
-- `base_url`: `https://umbrelosn8n.plsm.com.br/webhook/simuladorPDV`
-```
-→
-```
-- `base_url`: `https://n8n-prod.plsm.com.br/webhook/simuladorPDV`
-```
+### Impacto
 
----
+- Nenhuma alteração em lógica, telas, serviços ou fluxos de dados
+- Nenhuma mudança no `id_usuario` ou em qualquer serviço de API
+- Todas as validações de formulário com Zod continuam funcionando normalmente
+- O build será desbloqueado e o preview carregará com o novo domínio `n8n-prod.plsm.com.br` já configurado
 
-### Impacto da Alteração
+### Arquivo Alterado
 
-- O path `/webhook/simuladorPDV` permanece inalterado
-- A API Key (`x-api-key`) permanece inalterada
-- Todos os endpoints e serviços continuarão funcionando normalmente — apenas o host muda
-- Nenhuma alteração em lógica, componentes ou fluxos de dados
-
----
-
-### Resumo
-
-| Arquivo | Linha(s) | Impacto |
-|---------|----------|---------|
-| `src/config/api.ts` | 6 | Produção (aplicação) |
-| `docs/API_ENDPOINTS.md` | 5 e 1897 | Documentação |
+| Arquivo | Linha | Mudança |
+|---------|-------|---------|
+| `package.json` | 14 | `@hookform/resolvers` `^5.0.1` → `^4.3.0` |
