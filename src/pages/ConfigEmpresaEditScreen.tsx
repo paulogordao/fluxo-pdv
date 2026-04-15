@@ -16,6 +16,7 @@ import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { empresaService, type Empresa } from "@/services/empresaService";
 import { credentialsService, type CredentialListItem } from "@/services/credentialsService";
 import { clearUserSessionCache } from "@/utils/cacheUtils";
+import { formatCNPJInput, normalizeCNPJ, validateCNPJ } from "@/utils/cnpjUtils";
 
 const empresaEditSchema = z.object({
   nome: z.string().min(1, "Nome da empresa é obrigatório"),
