@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2 } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Loader2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -11,9 +11,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import ConfigLayoutWithSidebar from "@/components/ConfigLayoutWithSidebar";
 import { empresaService, type Empresa } from "@/services/empresaService";
 import { createLogger } from '@/utils/logger';
+import { toast } from "sonner";
 
 const log = createLogger('ConfigEmpresaEditarScreen');
 
@@ -22,6 +33,8 @@ const ConfigEmpresaEditarScreen = () => {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [empresaToDelete, setEmpresaToDelete] = useState<Empresa | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchEmpresas = async () => {
     try {
@@ -61,8 +74,38 @@ const ConfigEmpresaEditarScreen = () => {
   };
 
   const handleDelete = (empresa: Empresa) => {
-    log.info('Apagar empresa:', empresa);
-    // Funcionalidade será implementada posteriormente
+    setEmpresaToDelete(empresa);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!empresaToDelete) return;
+
+    const idUsuario = sessionStorage.getItem('user.uuid');
+    if (!idUsuario) {
+      toast.error("Sessão expirada. Faça login novamente.");
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      log.info('Excluindo empresa:', empresaToDelete.id);
+
+      const response = await empresaService.deleteEmpresa(empresaToDelete.id, idUsuario);
+      log.info('Resposta da exclusão:', response);
+
+      if (response.code === "200" || response.code === 200) {
+        toast.success(`Empresa "${empresaToDelete.nome}" excluída com sucesso!`);
+        setEmpresas((prev) => prev.filter((e) => e.id !== empresaToDelete.id));
+      } else {
+        throw new Error(response.mensagem || "Erro ao excluir empresa");
+      }
+    } catch (err) {
+      log.error('Erro ao excluir empresa:', err);
+      toast.error("Erro ao excluir empresa. Tente novamente.");
+    } finally {
+      setDeleting(false);
+      setEmpresaToDelete(null);
+    }
   };
 
   return (
