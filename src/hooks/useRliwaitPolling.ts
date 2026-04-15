@@ -28,7 +28,7 @@ export const useRliwaitPolling = (transactionId: string | null, autoStart: boole
     error: null
   });
 
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isMountedRef = useRef(true);
 
   useEffect(() => {
