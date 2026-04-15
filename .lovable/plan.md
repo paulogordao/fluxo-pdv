@@ -1,33 +1,27 @@
 
 
-## Correcao: Implementar Delete no ConfigEmpresaEditarScreen
+## Plano: Habilitar edição do campo CNPJ
 
-### Problema
+### Alteração
 
-A rota `/config_empresa_list` renderiza `ConfigEmpresaEditarScreen.tsx`, onde o `handleDelete` apenas loga e nao faz nada:
+No arquivo `src/pages/ConfigEmpresaEditScreen.tsx`, o campo CNPJ está travado (`disabled`) com uma mensagem "CNPJ não pode ser alterado". A mudança consiste em:
 
-```typescript
-const handleDelete = (empresa: Empresa) => {
-  log.info('Apagar empresa:', empresa);
-  // Funcionalidade será implementada posteriormente
-};
-```
-
-### Solucao
-
-Alterar `src/pages/ConfigEmpresaEditarScreen.tsx` para:
-
-1. Adicionar estados `empresaToDelete` e `deleting`
-2. Importar `AlertDialog`, `Loader2`, `toast`
-3. Substituir `handleDelete` por logica que abre o modal de confirmacao
-4. Adicionar `handleDeleteConfirm` que chama `empresaService.deleteEmpresa(id, userId)` e atualiza a lista
-5. Adicionar o `AlertDialog` no JSX com botoes Cancelar/Excluir
+1. **Remover `disabled` e classe `bg-gray-100 cursor-not-allowed`** do input CNPJ
+2. **Adicionar máscara de formatação** (XX.XXX.XXX/XXXX-XX) usando `formatCNPJInput` de `src/utils/cnpjUtils.ts`
+3. **Adicionar validação** no schema zod para garantir 14 dígitos
+4. **Remover a mensagem** "🔒 CNPJ não pode ser alterado"
+5. **Normalizar o CNPJ** (remover máscara) antes de enviar ao backend no `onSubmit`
 
 ### Arquivo alterado
 
-| Arquivo | Alteracao |
+| Arquivo | Alteração |
 |---------|-----------|
-| `src/pages/ConfigEmpresaEditarScreen.tsx` | Implementar modal de confirmacao + chamada ao `deleteEmpresa` |
+| `src/pages/ConfigEmpresaEditScreen.tsx` | Habilitar campo CNPJ com máscara e validação |
 
-O servico `empresaService.deleteEmpresa` ja existe e esta correto (DELETE com header `id-usuario`).
+### Detalhes técnicos
+
+- Importar `formatCNPJInput`, `normalizeCNPJ`, `validateCNPJ` de `@/utils/cnpjUtils`
+- Criar `handleCnpjChange` similar ao `handleTelefoneChange` para aplicar máscara
+- Atualizar schema: `cnpj: z.string().min(1, "CNPJ é obrigatório").refine(val => validateCNPJ(val), "CNPJ deve ter 14 dígitos")`
+- No `onSubmit`, normalizar: `cnpj: normalizeCNPJ(data.cnpj)`
 
