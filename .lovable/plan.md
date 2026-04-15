@@ -1,57 +1,33 @@
 
 
-## Plano: Corrigir Build + Implementar Delete de Empresa
+## Correcao: Implementar Delete no ConfigEmpresaEditarScreen
 
-### 1. Corrigir erros de build (`NodeJS.Timeout`)
+### Problema
 
-Dois arquivos usam `NodeJS.Timeout` que nao existe no contexto browser/Vite. Trocar por `ReturnType<typeof setInterval>`:
-
-- **`src/hooks/useRliwaitPolling.ts`** (linha 31): `useRef<NodeJS.Timeout | null>` → `useRef<ReturnType<typeof setInterval> | null>`
-- **`src/pages/ConfirmacaoPagamentoScreen.tsx`** (linha 559): `let interval: NodeJS.Timeout` → `let interval: ReturnType<typeof setInterval>`
-
-### 2. Adicionar `deleteEmpresa` ao service
-
-**`src/services/empresaService.ts`** — novo metodo:
+A rota `/config_empresa_list` renderiza `ConfigEmpresaEditarScreen.tsx`, onde o `handleDelete` apenas loga e nao faz nada:
 
 ```typescript
-async deleteEmpresa(id: string, userId: string) {
-  const response = await fetch(`${API_CONFIG.baseUrl}/empresas?id=${id}`, {
-    method: 'DELETE',
-    headers: {
-      ...API_CONFIG.defaultHeaders,
-      'id-usuario': userId,
-    },
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Erro na requisição: ${response.status} - ${errorText}`);
-  }
-
-  return response.json();
-}
+const handleDelete = (empresa: Empresa) => {
+  log.info('Apagar empresa:', empresa);
+  // Funcionalidade será implementada posteriormente
+};
 ```
 
-O backend espera:
-- **DELETE** `simuladorPDV/empresas?id={empresa_id}`
-- Header `id-usuario` + `x-api-key`
-- Retorna `{ empresa_id, code, mensagem }`
+### Solucao
 
-### 3. Implementar delete na tela `ConfigEmpresaListScreen`
+Alterar `src/pages/ConfigEmpresaEditarScreen.tsx` para:
 
-- Adicionar modal de confirmacao (AlertDialog) antes de excluir
-- Mostrar nome da empresa no modal: "Tem certeza que deseja excluir a empresa X?"
-- Ao confirmar, chamar `empresaService.deleteEmpresa(empresa.id, userId)`
-- Exibir toast de sucesso ou erro
-- Recarregar a lista apos exclusao bem-sucedida
-- Estado de loading no botao durante a requisicao
+1. Adicionar estados `empresaToDelete` e `deleting`
+2. Importar `AlertDialog`, `Loader2`, `toast`
+3. Substituir `handleDelete` por logica que abre o modal de confirmacao
+4. Adicionar `handleDeleteConfirm` que chama `empresaService.deleteEmpresa(id, userId)` e atualiza a lista
+5. Adicionar o `AlertDialog` no JSX com botoes Cancelar/Excluir
 
-### Arquivos alterados
+### Arquivo alterado
 
 | Arquivo | Alteracao |
 |---------|-----------|
-| `src/hooks/useRliwaitPolling.ts` | Fix `NodeJS.Timeout` |
-| `src/pages/ConfirmacaoPagamentoScreen.tsx` | Fix `NodeJS.Timeout` |
-| `src/services/empresaService.ts` | Adicionar `deleteEmpresa` |
-| `src/pages/ConfigEmpresaListScreen.tsx` | Modal de confirmacao + logica de delete |
+| `src/pages/ConfigEmpresaEditarScreen.tsx` | Implementar modal de confirmacao + chamada ao `deleteEmpresa` |
+
+O servico `empresaService.deleteEmpresa` ja existe e esta correto (DELETE com header `id-usuario`).
 
