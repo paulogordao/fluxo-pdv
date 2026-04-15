@@ -20,7 +20,7 @@ import { formatCNPJInput, normalizeCNPJ, validateCNPJ } from "@/utils/cnpjUtils"
 
 const empresaEditSchema = z.object({
   nome: z.string().min(1, "Nome da empresa é obrigatório"),
-  cnpj: z.string().min(1, "CNPJ é obrigatório"),
+  cnpj: z.string().min(1, "CNPJ é obrigatório").refine(val => validateCNPJ(val), "CNPJ deve ter 14 dígitos válidos"),
   email: z.string().optional().refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), "Email deve ter um formato válido"),
   telefone: z.string().optional(),
   endereco: z.string().optional(),
@@ -97,7 +97,7 @@ const ConfigEmpresaEditScreen = () => {
       
       // Preencher o formulário com os dados recebidos
       setValue("nome", data.nome);
-      setValue("cnpj", data.cnpj);
+      setValue("cnpj", formatCNPJInput(data.cnpj || ""));
       setValue("email", data.email || "");
       setValue("telefone", data.telefone || "");
       setValue("endereco", data.endereco || "");
@@ -128,6 +128,11 @@ const ConfigEmpresaEditScreen = () => {
     setValue("telefone", formatted);
   };
 
+  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCNPJInput(e.target.value);
+    setValue("cnpj", formatted);
+  };
+
   const onSubmit = async (data: EmpresaEditFormData) => {
     if (!id || !empresaData) {
       toast.error("Erro: dados da empresa não encontrados.");
@@ -145,9 +150,14 @@ const ConfigEmpresaEditScreen = () => {
         return;
       }
 
-      console.log("Atualizando empresa:", id, "com dados:", data);
+      const submitData = {
+        ...data,
+        cnpj: normalizeCNPJ(data.cnpj),
+      };
 
-      const responseData = await empresaService.updateEmpresa(id, data, userUUID);
+      console.log("Atualizando empresa:", id, "com dados:", submitData);
+
+      const responseData = await empresaService.updateEmpresa(id, submitData, userUUID);
       console.log("Resposta da atualização:", responseData);
 
       if (responseData.code === "200" || responseData.code === 200) {
@@ -237,10 +247,12 @@ const ConfigEmpresaEditScreen = () => {
                     {...register("cnpj")}
                     placeholder="XX.XXX.XXX/XXXX-XX"
                     value={watch("cnpj") || ""}
-                    disabled
-                    className="bg-gray-100 cursor-not-allowed"
+                    onChange={handleCnpjChange}
+                    className={errors.cnpj ? "border-red-500" : ""}
                   />
-                  <p className="text-xs text-gray-500">🔒 CNPJ não pode ser alterado</p>
+                  {errors.cnpj && (
+                    <p className="text-sm text-red-500">{errors.cnpj.message}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
