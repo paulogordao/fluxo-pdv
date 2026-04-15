@@ -556,7 +556,7 @@ const ConfirmacaoPagamentoScreen = () => {
 
   // Success countdown effect
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     
     if (showSuccessMessage && countdown > 0) {
       interval = setInterval(() => {

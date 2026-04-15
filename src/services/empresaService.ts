@@ -134,5 +134,22 @@ export const empresaService = {
     }
 
     return response.json();
+  },
+
+  async deleteEmpresa(id: string, userId: string) {
+    const response = await fetch(`${API_CONFIG.baseUrl}/empresas?id=${id}`, {
+      method: 'DELETE',
+      headers: {
+        ...API_CONFIG.defaultHeaders,
+        'id-usuario': userId,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Erro na requisição: ${response.status} - ${errorText}`);
+    }
+
+    return response.json();
   }
 };
