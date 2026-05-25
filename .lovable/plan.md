@@ -1,29 +1,45 @@
-## Plano: Exibir opção BNPL em /meios_de_pagamento
+## Plano: Suportar novos slugs `otp-server` e `webapp` na resposta do RLIDEAL
 
-### Contexto
+### Roteamento atual (em `MeiosDePagamentoScreen.tsx`)
+Hoje, após RLIDEAL, o switch sobre `token.type` cobre:
+- `birthdate` → `/otp_data_nascimento`
+- `otp` → `/confirmacao_pagamento_token`
+- senão, app/none → telas existentes
 
-O serviço RLIFUND agora retorna um novo slug `bnpl` em `payment_options`. Hoje o hook `useFundPaymentOptions` mapeia apenas `app`, `outros_pagamentos`/`livelo` e `dotz` de forma hardcoded, ignorando qualquer outro slug — por isso BNPL não aparece. Conforme alinhado, a opção deve ser renderizada usando o `message` vindo do FUND e na **ordem** em que o backend retornar.
+### Mudanças
 
-### Alteração
+**1. `src/pages/MeiosDePagamentoScreen.tsx`**
+- Normalizar `token.type` para minúsculas uma vez.
+- Adicionar dois novos casos:
+  - `otp-server` → navegar para `/confirmacao_pagamento_token` (mesma tela do `otp`).
+  - `webapp` → navegar para nova rota `/confirmacao_pagamento_webapp`.
+- Demais comportamentos inalterados.
 
-Refatorar `src/hooks/useFundPaymentOptions.ts` para iterar dinamicamente sobre o array `payment_options` retornado pelo FUND ao invés de fazer lookup hardcoded por slug.
+**2. Nova tela `src/pages/ConfirmacaoPagamentoWebappScreen.tsx`**
+- Baseada em `ConfirmacaoPagamentoAppScreen.tsx`, reutilizando `useRliwaitPolling` com `transactionId` e o mesmo fluxo de cancel/conclusão.
+- Texto/visual ajustado: ao invés de "Aguardando confirmação no App", indicar que o cliente está concluindo o resgate no celular (webapp). Ícone/ilustração e copy adaptados.
+- `TechnicalFooter` com `slug="RLIDEALRLIWAIT"` e `sourceScreen="confirmacao_pagamento_webapp"`.
+- Mesma navegação pós-polling do fluxo app.
 
-1. Substituir os 3 `find()` (app, outros_pagamentos/livelo, dotz) por um `map()` que percorre `fundOptions` na ordem original.
-2. Para cada item, gerar `{ id: opt.option, label: \`${index+1}. ${opt.message}\`, available: true }`.
-3. Manter a opção fixa **"Nenhum"** sempre como último item da lista (não vem do FUND).
-4. Preservar compatibilidade: slug `livelo` continua sendo aceito como sinônimo de `outros_pagamentos` (já é o valor original retornado, então o `map` natural já cobre).
-5. Não alterar `getDefaultOptions()` (modo OFFLINE permanece igual).
+**3. `src/App.tsx`**
+- Registrar a rota `/confirmacao_pagamento_webapp` apontando para o novo componente.
 
-Nenhuma mudança necessária em `MeiosDePagamentoScreen.tsx`:
-- O `map(currentPaymentOptions)` já renderiza dinamicamente o que o hook devolver.
-- `handleRlidealCall` já encaminha qualquer `option` recebido como `payment_option` para o RLIDEAL — então clicar em BNPL fará a chamada padrão com `payment_option: "bnpl"`.
+### Detalhes técnicos
+- Em `handleRlidealCall`, substituir as comparações por:
+  ```ts
+  const tokenType = tokenInfo?.type?.toLowerCase();
+  if (tokenInfo?.required && tokenType === 'birthdate') navigate('/otp_data_nascimento');
+  else if (tokenInfo?.required && (tokenType === 'otp' || tokenType === 'otp-server')) navigate('/confirmacao_pagamento_token');
+  else if (tokenType === 'webapp') navigate('/confirmacao_pagamento_webapp');
+  else if (option === 'app') navigate('/confirmacao_pagamento_app');
+  else navigate('/confirmacao_pagamento', { state: { fromRlidealNoneOption: true } });
+  ```
+- Para `webapp`, o slug pode vir mesmo com `required=false`; por isso o teste de `webapp` ignora `required`. Confirmar comportamento na primeira execução real.
+- Nenhuma alteração em `comandoService` nem em `useRliwaitPolling`.
 
-### Fluxo pós-seleção
-
-Por ora, ao selecionar BNPL será disparado o fluxo RLIDEAL padrão (mesmo caminho de `livelo`/`dotz`), e a navegação subsequente seguirá a resposta do backend (token, app, etc.). Em uma próxima iteração trataremos um fluxo específico para BNPL quando você tiver mais informações.
-
-### Arquivo alterado
-
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/hooks/useFundPaymentOptions.ts` | Mapear `payment_options` dinamicamente na ordem do FUND para suportar `bnpl` e quaisquer novos slugs futuros |
+### Arquivos
+| Arquivo | Mudança |
+|---|---|
+| `src/pages/MeiosDePagamentoScreen.tsx` | Adicionar casos `otp-server` e `webapp` no roteamento pós-RLIDEAL |
+| `src/pages/ConfirmacaoPagamentoWebappScreen.tsx` | Nova tela com polling RLIWAIT e copy de webapp |
+| `src/App.tsx` | Registrar rota `/confirmacao_pagamento_webapp` |
