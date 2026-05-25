@@ -211,7 +211,7 @@ const ConfirmacaoPagamentoTokenScreen = () => {
           <CardContent className="pt-6">
             <div className="text-center mb-6">
               <h3 className="text-xl font-semibold mb-4">
-                Aguardando pagamento com Token no APP Cliente A
+                Aguardando pagamento com Token no APP
               </h3>
               
               {/* Display the entered token digits */}

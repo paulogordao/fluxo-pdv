@@ -426,7 +426,7 @@ const ConfirmacaoPagamentoAppScreen = () => {
             <EncerrarAtendimentoButton />
           </div>
           <div className="p-6 text-center">
-            <p className="text-lg mb-6">Aguardando pagamento no APP Cliente A.</p>
+            <p className="text-lg mb-6">Aguardando pagamento com Token no APP</p>
             {!isOnlineFlow && <div className="flex justify-center my-6">
                 <Loader2 className="h-10 w-10 animate-spin text-dotz-laranja" />
               </div>}
