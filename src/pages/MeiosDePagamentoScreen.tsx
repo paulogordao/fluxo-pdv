@@ -220,13 +220,17 @@ const MeiosDePagamentoScreen = () => {
 
       // Navigate based on payment option and token requirements
       const tokenInfo = response[0]?.response?.data?.token;
+      const tokenType = tokenInfo?.type?.toLowerCase();
       log.debug('Token info:', tokenInfo);
-      if (tokenInfo?.required === true && tokenInfo?.type?.toLowerCase() === 'birthdate') {
+      if (tokenInfo?.required === true && tokenType === 'birthdate') {
         log.info('Redirecting to /otp_data_nascimento for birthdate token');
         navigate('/otp_data_nascimento');
-      } else if (tokenInfo?.required === true && tokenInfo?.type?.toLowerCase() === 'otp') {
-        log.info('Redirecting to /confirmacao_pagamento_token for OTP token');
+      } else if (tokenInfo?.required === true && (tokenType === 'otp' || tokenType === 'otp-server')) {
+        log.info(`Redirecting to /confirmacao_pagamento_token for token type: ${tokenType}`);
         navigate('/confirmacao_pagamento_token');
+      } else if (tokenType === 'webapp') {
+        log.info('Redirecting to /confirmacao_pagamento_webapp for webapp token type');
+        navigate('/confirmacao_pagamento_webapp');
       } else if (option === "app") {
         log.info('Redirecting to /confirmacao_pagamento_app for app option');
         navigate('/confirmacao_pagamento_app');
