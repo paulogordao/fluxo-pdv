@@ -20,6 +20,7 @@ import InteressePagamentoScreen from "./pages/InteressePagamentoScreen";
 import MeiosDePagamentoScreen from "./pages/MeiosDePagamentoScreen";
 import OtpDataNascimentoScreen from "./pages/OtpDataNascimentoScreen";
 import ConfirmacaoPagamentoAppScreen from "./pages/ConfirmacaoPagamentoAppScreen";
+import ConfirmacaoPagamentoWebappScreen from "./pages/ConfirmacaoPagamentoWebappScreen";
 import ConfirmacaoPagamentoScreen from "./pages/ConfirmacaoPagamentoScreen";
 import ConfirmacaoPagamentoTokenScreen from "./pages/ConfirmacaoPagamentoTokenScreen";
 import ConfigHomeScreen from "./pages/ConfigHomeScreen";
@@ -60,6 +61,7 @@ const App = () => (
               <Route path="/meios_de_pagamento" element={<MeiosDePagamentoScreen />} />
               <Route path="/otp_data_nascimento" element={<OtpDataNascimentoScreen />} />
               <Route path="/confirmacao_pagamento_app" element={<ConfirmacaoPagamentoAppScreen />} />
+              <Route path="/confirmacao_pagamento_webapp" element={<ConfirmacaoPagamentoWebappScreen />} />
               <Route path="/confirmacao_pagamento" element={<ConfirmacaoPagamentoScreen />} />
               <Route path="/confirmacao_pagamento_token" element={<ConfirmacaoPagamentoTokenScreen />} />
               <Route path="/configuracoes" element={<ConfigHomeScreen />} />
