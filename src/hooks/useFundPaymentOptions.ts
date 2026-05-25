@@ -71,55 +71,27 @@ export const useFundPaymentOptions = () => {
     loadFundPaymentOptions();
   }, []);
 
-  // Mapear opções do FUND para o formato da tela
+  // Mapear opções do FUND para o formato da tela (preservando a ordem retornada pelo backend)
   const mapFundOptions = (fundOptions: FundPaymentOption[]): MappedPaymentOption[] => {
-    const mappedOptions: MappedPaymentOption[] = [];
-    
     log.debug('All available fund options:', fundOptions.map(opt => opt.option));
-    
-    // Buscar cada tipo de opção
-    const appOption = fundOptions.find(opt => opt.option === 'app');
-    // Map both 'outros_pagamentos' and 'livelo' for backward compatibility
-    const outrosPagamentosOption = fundOptions.find(opt => opt.option === 'outros_pagamentos' || opt.option === 'livelo');
-    const dotzOption = fundOptions.find(opt => opt.option === 'dotz');
-    
-    // Opção 1: App (sempre primeiro se disponível)
-    if (appOption) {
-      mappedOptions.push({
-        id: appOption.option, // Use original option value for correct RLIDEAL mapping
-        label: `1. ${appOption.message}`,
-        available: true
-      });
-    }
-    
-    // Opção 2: Outros pagamentos/Livelo
-    if (outrosPagamentosOption) {
-      mappedOptions.push({
-        id: outrosPagamentosOption.option, // Use original option value (livelo/outros_pagamentos)
-        label: `2. ${outrosPagamentosOption.message}`,
-        available: true
-      });
-    }
-    
-    // Opção 3: Dotz
-    if (dotzOption) {
-      mappedOptions.push({
-        id: dotzOption.option, // Use original option value for correct RLIDEAL mapping
-        label: `3. ${dotzOption.message}`,
-        available: true
-      });
-    }
-    
-    // Opção 4: Nenhum (sempre disponível)
+
+    const mappedOptions: MappedPaymentOption[] = fundOptions.map((opt, index) => ({
+      id: opt.option,
+      label: `${index + 1}. ${opt.message}`,
+      available: true,
+    }));
+
+    // Opção fixa "Nenhum" sempre como último item (não vem do FUND)
     mappedOptions.push({
       id: 'none',
-      label: '4. Nenhum',
-      available: true
+      label: `${mappedOptions.length + 1}. Nenhum`,
+      available: true,
     });
-    
+
     log.debug('Mapped options:', mappedOptions);
     return mappedOptions;
   };
+
 
   // Opções padrão para modo OFFLINE (baseado no comportamento atual)
   const getDefaultOptions = (): MappedPaymentOption[] => {
