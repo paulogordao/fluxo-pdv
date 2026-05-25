@@ -46,7 +46,7 @@ const ConfirmacaoPagamentoScreen = () => {
   const comingFromScanScreenIdeal = location.state?.fromScanScreenIdeal || false;
   
   // Check if coming from app screen (RLIWAIT -> RLIPAYS flow)
-  const comingFromAppScreen = location.state?.fromAppScreen || false;
+  const comingFromAppScreen = location.state?.fromAppScreen || location.state?.fromWebappScreen || false;
   
   // Check if coming from RLIDEAL with "none" option
   const comingFromRlidealNone = location.state?.fromRlidealNoneOption || false;

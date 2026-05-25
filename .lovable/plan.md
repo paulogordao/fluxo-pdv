@@ -1,16 +1,24 @@
 ## Objetivo
 
-Quando `token.type === 'otp-server'` no retorno do serviço RLIDEAL, exibir o título **"Aguardando pagamento com Token"** na tela `/confirmacao_pagamento_token` (sem o "no APP").
+Ao concluir o pagamento no fluxo `webapp` (tela `/confirmacao_pagamento_webapp`), navegar para `/confirmacao_pagamento` exibindo o checkout com valores pagos (mesma experiência do fluxo APP, conforme imagem anexada).
 
-Para `token.type === 'otp'` (fluxo já existente), manter o texto atual: **"Aguardando pagamento com Token no APP"**.
+## Diagnóstico
 
-## Mudanças
+- `ConfirmacaoPagamentoWebappScreen.tsx` já chama `navigate('/confirmacao_pagamento', { state: { fromWebappScreen: true } })` após o polling completar e grava `orderData` no localStorage.
+- Porém, `ConfirmacaoPagamentoScreen.tsx` só reconhece `fromAppScreen` / `fromTokenScreen`. Sem reconhecer `fromWebappScreen`, ele não monta o resumo do pagamento (subtotal, recebido, etc.) como na imagem.
 
-**`src/pages/ConfirmacaoPagamentoTokenScreen.tsx`**
+## Mudança
 
-1. No `useEffect` que faz parse de `rlidealResponse` (linhas ~49-72), extrair `token.type` da resposta e armazenar em um novo state `tokenType`.
-2. Substituir o `<h3>` fixo (linha 213-215) por um título condicional:
-   - `tokenType === 'otp-server'` → `"Aguardando pagamento com Token"`
-   - caso contrário → `"Aguardando pagamento com Token no APP"`
+**Arquivo:** `src/pages/ConfirmacaoPagamentoScreen.tsx`
 
-Nenhuma outra lógica (RLIAUTH, teclado, validação, modais) é alterada.
+1. Na linha 49, ampliar a flag para considerar também o fluxo webapp:
+   ```ts
+   const comingFromAppScreen = location.state?.fromAppScreen || location.state?.fromWebappScreen || false;
+   ```
+   Assim toda a lógica existente (carregamento de `orderData`, RLIPAYS, exibição do resumo, navegação) é reaproveitada sem duplicação.
+
+2. Nenhuma alteração na `ConfirmacaoPagamentoWebappScreen.tsx` (já envia `fromWebappScreen: true` e `orderData` no localStorage com a mesma estrutura usada pelo fluxo APP).
+
+## Resultado esperado
+
+- Cliente finaliza no webapp → polling detecta `next_step != RLIWAIT` → botão "Finalizar Pagamento" aparece → clique leva a `/confirmacao_pagamento` exibindo o checkout com SubTotal, Desconto, Recebido e meios de pagamento, idêntico ao fluxo APP.
