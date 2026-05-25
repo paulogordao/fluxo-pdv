@@ -34,6 +34,7 @@ const ConfirmacaoPagamentoTokenScreen = () => {
   const [technicalRequestData, setTechnicalRequestData] = useState<string | undefined>();
   const [technicalResponseData, setTechnicalResponseData] = useState<string | undefined>();
   const [technicalPreviousRequestData, setTechnicalPreviousRequestData] = useState<string | undefined>();
+  const [tokenType, setTokenType] = useState<string | undefined>();
 
   // Debug log to see the actual value
   log.debug('tipo_simulacao:', tipo_simulacao);
@@ -61,6 +62,9 @@ const ConfirmacaoPagamentoTokenScreen = () => {
           if (parsedData[0].response) {
             setTechnicalResponseData(JSON.stringify(parsedData[0].response, null, 2));
           }
+          // Extract token.type from RLIDEAL response
+          const type = parsedData[0]?.response?.data?.token?.type;
+          if (type) setTokenType(String(type).toLowerCase());
         }
       } catch (error) {
         log.error('Erro ao parsear rlidealResponse:', error);
@@ -211,7 +215,7 @@ const ConfirmacaoPagamentoTokenScreen = () => {
           <CardContent className="pt-6">
             <div className="text-center mb-6">
               <h3 className="text-xl font-semibold mb-4">
-                Aguardando pagamento com Token no APP
+                {tokenType === 'otp-server' ? 'Aguardando pagamento com Token' : 'Aguardando pagamento com Token no APP'}
               </h3>
               
               {/* Display the entered token digits */}

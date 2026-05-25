@@ -1,45 +1,16 @@
-## Plano: Suportar novos slugs `otp-server` e `webapp` na resposta do RLIDEAL
+## Objetivo
 
-### Roteamento atual (em `MeiosDePagamentoScreen.tsx`)
-Hoje, após RLIDEAL, o switch sobre `token.type` cobre:
-- `birthdate` → `/otp_data_nascimento`
-- `otp` → `/confirmacao_pagamento_token`
-- senão, app/none → telas existentes
+Quando `token.type === 'otp-server'` no retorno do serviço RLIDEAL, exibir o título **"Aguardando pagamento com Token"** na tela `/confirmacao_pagamento_token` (sem o "no APP").
 
-### Mudanças
+Para `token.type === 'otp'` (fluxo já existente), manter o texto atual: **"Aguardando pagamento com Token no APP"**.
 
-**1. `src/pages/MeiosDePagamentoScreen.tsx`**
-- Normalizar `token.type` para minúsculas uma vez.
-- Adicionar dois novos casos:
-  - `otp-server` → navegar para `/confirmacao_pagamento_token` (mesma tela do `otp`).
-  - `webapp` → navegar para nova rota `/confirmacao_pagamento_webapp`.
-- Demais comportamentos inalterados.
+## Mudanças
 
-**2. Nova tela `src/pages/ConfirmacaoPagamentoWebappScreen.tsx`**
-- Baseada em `ConfirmacaoPagamentoAppScreen.tsx`, reutilizando `useRliwaitPolling` com `transactionId` e o mesmo fluxo de cancel/conclusão.
-- Texto/visual ajustado: ao invés de "Aguardando confirmação no App", indicar que o cliente está concluindo o resgate no celular (webapp). Ícone/ilustração e copy adaptados.
-- `TechnicalFooter` com `slug="RLIDEALRLIWAIT"` e `sourceScreen="confirmacao_pagamento_webapp"`.
-- Mesma navegação pós-polling do fluxo app.
+**`src/pages/ConfirmacaoPagamentoTokenScreen.tsx`**
 
-**3. `src/App.tsx`**
-- Registrar a rota `/confirmacao_pagamento_webapp` apontando para o novo componente.
+1. No `useEffect` que faz parse de `rlidealResponse` (linhas ~49-72), extrair `token.type` da resposta e armazenar em um novo state `tokenType`.
+2. Substituir o `<h3>` fixo (linha 213-215) por um título condicional:
+   - `tokenType === 'otp-server'` → `"Aguardando pagamento com Token"`
+   - caso contrário → `"Aguardando pagamento com Token no APP"`
 
-### Detalhes técnicos
-- Em `handleRlidealCall`, substituir as comparações por:
-  ```ts
-  const tokenType = tokenInfo?.type?.toLowerCase();
-  if (tokenInfo?.required && tokenType === 'birthdate') navigate('/otp_data_nascimento');
-  else if (tokenInfo?.required && (tokenType === 'otp' || tokenType === 'otp-server')) navigate('/confirmacao_pagamento_token');
-  else if (tokenType === 'webapp') navigate('/confirmacao_pagamento_webapp');
-  else if (option === 'app') navigate('/confirmacao_pagamento_app');
-  else navigate('/confirmacao_pagamento', { state: { fromRlidealNoneOption: true } });
-  ```
-- Para `webapp`, o slug pode vir mesmo com `required=false`; por isso o teste de `webapp` ignora `required`. Confirmar comportamento na primeira execução real.
-- Nenhuma alteração em `comandoService` nem em `useRliwaitPolling`.
-
-### Arquivos
-| Arquivo | Mudança |
-|---|---|
-| `src/pages/MeiosDePagamentoScreen.tsx` | Adicionar casos `otp-server` e `webapp` no roteamento pós-RLIDEAL |
-| `src/pages/ConfirmacaoPagamentoWebappScreen.tsx` | Nova tela com polling RLIWAIT e copy de webapp |
-| `src/App.tsx` | Registrar rota `/confirmacao_pagamento_webapp` |
+Nenhuma outra lógica (RLIAUTH, teclado, validação, modais) é alterada.
