@@ -23,13 +23,30 @@ const log = createLogger('ConfigEmpresaScreen');
 
 const empresaSchema = z.object({
   nome: z.string().min(1, "Nome da empresa é obrigatório"),
-  cnpj: z.string().min(1, "CNPJ é obrigatório").regex(/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, "CNPJ deve estar no formato XX.XXX.XXX/XXXX-XX"),
+  cnpj: z.string().min(1, "Campo obrigatório"),
   email: z.string().optional().refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), "Email deve ter um formato válido"),
   telefone: z.string().optional(),
   endereco: z.string().optional(),
   descricao: z.string().optional(),
   tipo_simulacao: z.string().optional(),
   id_credencial: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.tipo_simulacao === "Totvs - Versão 2") {
+    const n = parseInt(data.cnpj, 10);
+    if (!/^\d{3}$/.test(data.cnpj) || isNaN(n) || n < 1 || n > 999) {
+      ctx.addIssue({
+        path: ["cnpj"],
+        code: z.ZodIssueCode.custom,
+        message: "Identificador deve ter 3 dígitos (001 a 999)",
+      });
+    }
+  } else if (!/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/.test(data.cnpj)) {
+    ctx.addIssue({
+      path: ["cnpj"],
+      code: z.ZodIssueCode.custom,
+      message: "CNPJ deve estar no formato XX.XXX.XXX/XXXX-XX",
+    });
+  }
 });
 
 type EmpresaFormData = z.infer<typeof empresaSchema>;
@@ -171,6 +188,11 @@ const ConfigEmpresaScreen = () => {
   };
 
   const handleCNPJChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (watch("tipo_simulacao") === "Totvs - Versão 2") {
+      const onlyDigits = e.target.value.replace(/\D/g, "").slice(0, 3);
+      setValue("cnpj", onlyDigits, { shouldValidate: true });
+      return;
+    }
     const formatted = formatCNPJ(e.target.value);
     setValue("cnpj", formatted);
 
@@ -318,12 +340,14 @@ const ConfigEmpresaScreen = () => {
                       <Input
                         id="cnpj"
                         {...register("cnpj")}
-                        placeholder="XX.XXX.XXX/XXXX-XX"
+                        placeholder={watch("tipo_simulacao") === "Totvs - Versão 2" ? "001" : "XX.XXX.XXX/XXXX-XX"}
+                        maxLength={watch("tipo_simulacao") === "Totvs - Versão 2" ? 3 : 18}
+                        inputMode={watch("tipo_simulacao") === "Totvs - Versão 2" ? "numeric" : "text"}
                         onChange={handleCNPJChange}
                         value={watch("cnpj") || ""}
                         className={errors.cnpj ? "border-red-500" : ""}
                       />
-                      {isFetchingCNPJ && (
+                      {isFetchingCNPJ && watch("tipo_simulacao") !== "Totvs - Versão 2" && (
                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                           <Loader2 className="h-4 w-4 animate-spin text-dotz-laranja" />
                         </div>
@@ -332,9 +356,11 @@ const ConfigEmpresaScreen = () => {
                     {errors.cnpj && (
                       <p className="text-sm text-red-500">{errors.cnpj.message}</p>
                     )}
-                    <p className="text-xs text-gray-500">
-                      Os dados serão preenchidos automaticamente ao digitar um CNPJ válido
-                    </p>
+                    {watch("tipo_simulacao") !== "Totvs - Versão 2" && (
+                      <p className="text-xs text-gray-500">
+                        Os dados serão preenchidos automaticamente ao digitar um CNPJ válido
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">

@@ -20,13 +20,30 @@ import { formatCNPJInput, normalizeCNPJ, validateCNPJ } from "@/utils/cnpjUtils"
 
 const empresaEditSchema = z.object({
   nome: z.string().min(1, "Nome da empresa é obrigatório"),
-  cnpj: z.string().min(1, "CNPJ é obrigatório").refine(val => validateCNPJ(val), "CNPJ deve ter 14 dígitos válidos"),
+  cnpj: z.string().min(1, "Campo obrigatório"),
   email: z.string().optional().refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), "Email deve ter um formato válido"),
   telefone: z.string().optional(),
   endereco: z.string().optional(),
   descricao: z.string().optional(),
   tipo_simulacao: z.string().optional(),
   id_credencial: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.tipo_simulacao === "Totvs - Versão 2") {
+    const n = parseInt(data.cnpj, 10);
+    if (!/^\d{3}$/.test(data.cnpj) || isNaN(n) || n < 1 || n > 999) {
+      ctx.addIssue({
+        path: ["cnpj"],
+        code: z.ZodIssueCode.custom,
+        message: "Identificador deve ter 3 dígitos (001 a 999)",
+      });
+    }
+  } else if (!validateCNPJ(data.cnpj)) {
+    ctx.addIssue({
+      path: ["cnpj"],
+      code: z.ZodIssueCode.custom,
+      message: "CNPJ deve ter 14 dígitos válidos",
+    });
+  }
 });
 
 type EmpresaEditFormData = z.infer<typeof empresaEditSchema>;
@@ -97,7 +114,7 @@ const ConfigEmpresaEditScreen = () => {
       
       // Preencher o formulário com os dados recebidos
       setValue("nome", data.nome);
-      setValue("cnpj", formatCNPJInput(data.cnpj || ""));
+      setValue("cnpj", data.tipo_simulacao === "Totvs - Versão 2" ? (data.cnpj || "") : formatCNPJInput(data.cnpj || ""));
       setValue("email", data.email || "");
       setValue("telefone", data.telefone || "");
       setValue("endereco", data.endereco || "");
@@ -129,6 +146,11 @@ const ConfigEmpresaEditScreen = () => {
   };
 
   const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (watch("tipo_simulacao") === "Totvs - Versão 2") {
+      const onlyDigits = e.target.value.replace(/\D/g, "").slice(0, 3);
+      setValue("cnpj", onlyDigits, { shouldValidate: true });
+      return;
+    }
     const formatted = formatCNPJInput(e.target.value);
     setValue("cnpj", formatted);
   };
@@ -152,7 +174,7 @@ const ConfigEmpresaEditScreen = () => {
 
       const submitData = {
         ...data,
-        cnpj: normalizeCNPJ(data.cnpj),
+        cnpj: data.tipo_simulacao === "Totvs - Versão 2" ? data.cnpj : normalizeCNPJ(data.cnpj),
       };
 
       console.log("Atualizando empresa:", id, "com dados:", submitData);
@@ -249,7 +271,9 @@ const ConfigEmpresaEditScreen = () => {
                   <Input
                     id="cnpj"
                     {...register("cnpj")}
-                    placeholder="XX.XXX.XXX/XXXX-XX"
+                    placeholder={watch("tipo_simulacao") === "Totvs - Versão 2" ? "001" : "XX.XXX.XXX/XXXX-XX"}
+                    maxLength={watch("tipo_simulacao") === "Totvs - Versão 2" ? 3 : 18}
+                    inputMode={watch("tipo_simulacao") === "Totvs - Versão 2" ? "numeric" : "text"}
                     value={watch("cnpj") || ""}
                     onChange={handleCnpjChange}
                     className={errors.cnpj ? "border-red-500" : ""}
