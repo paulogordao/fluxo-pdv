@@ -340,12 +340,14 @@ const ConfigEmpresaScreen = () => {
                       <Input
                         id="cnpj"
                         {...register("cnpj")}
-                        placeholder="XX.XXX.XXX/XXXX-XX"
+                        placeholder={watch("tipo_simulacao") === "Totvs - Versão 2" ? "001" : "XX.XXX.XXX/XXXX-XX"}
+                        maxLength={watch("tipo_simulacao") === "Totvs - Versão 2" ? 3 : 18}
+                        inputMode={watch("tipo_simulacao") === "Totvs - Versão 2" ? "numeric" : "text"}
                         onChange={handleCNPJChange}
                         value={watch("cnpj") || ""}
                         className={errors.cnpj ? "border-red-500" : ""}
                       />
-                      {isFetchingCNPJ && (
+                      {isFetchingCNPJ && watch("tipo_simulacao") !== "Totvs - Versão 2" && (
                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                           <Loader2 className="h-4 w-4 animate-spin text-dotz-laranja" />
                         </div>
@@ -354,9 +356,11 @@ const ConfigEmpresaScreen = () => {
                     {errors.cnpj && (
                       <p className="text-sm text-red-500">{errors.cnpj.message}</p>
                     )}
-                    <p className="text-xs text-gray-500">
-                      Os dados serão preenchidos automaticamente ao digitar um CNPJ válido
-                    </p>
+                    {watch("tipo_simulacao") !== "Totvs - Versão 2" && (
+                      <p className="text-xs text-gray-500">
+                        Os dados serão preenchidos automaticamente ao digitar um CNPJ válido
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
