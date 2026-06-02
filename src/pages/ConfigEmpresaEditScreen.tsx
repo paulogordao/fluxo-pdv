@@ -271,7 +271,9 @@ const ConfigEmpresaEditScreen = () => {
                   <Input
                     id="cnpj"
                     {...register("cnpj")}
-                    placeholder="XX.XXX.XXX/XXXX-XX"
+                    placeholder={watch("tipo_simulacao") === "Totvs - Versão 2" ? "001" : "XX.XXX.XXX/XXXX-XX"}
+                    maxLength={watch("tipo_simulacao") === "Totvs - Versão 2" ? 3 : 18}
+                    inputMode={watch("tipo_simulacao") === "Totvs - Versão 2" ? "numeric" : "text"}
                     value={watch("cnpj") || ""}
                     onChange={handleCnpjChange}
                     className={errors.cnpj ? "border-red-500" : ""}
