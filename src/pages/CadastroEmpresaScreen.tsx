@@ -135,7 +135,11 @@ const CadastroEmpresaScreen = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="cnpj">CNPJ *</Label>
+                  <Label htmlFor="cnpj">
+                    {watch("tipo_simulacao") === "Totvs - Versão 2"
+                      ? "Identificador loja (ID STORE) *"
+                      : "CNPJ *"}
+                  </Label>
                   <Input
                     id="cnpj"
                     {...register("cnpj")}
@@ -187,6 +191,7 @@ const CadastroEmpresaScreen = () => {
                       <SelectItem value="OFFLINE">OFFLINE</SelectItem>
                       <SelectItem value="Versão 1">Versão 1</SelectItem>
                       <SelectItem value="Versão 2">Versão 2</SelectItem>
+                      <SelectItem value="Totvs - Versão 2">Totvs - Versão 2</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
